@@ -67,7 +67,11 @@ export function AuthPage() {
         if (signInError) throw signInError;
         navigate(from, { replace: true });
       } else {
-        const { error: signUpError } = await supabase.auth.signUp({ email, password });
+        const { error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: window.location.origin },
+        });
         if (signUpError) throw signUpError;
         setMessage('Compte créé ! Vérifie ton email pour confirmer ton inscription.');
       }
