@@ -1,0 +1,133 @@
+import { Link } from 'react-router-dom';
+import { useRevealOnScroll } from '../hooks/useRevealOnScroll';
+
+interface FeatureCard {
+  title: string;
+  free: boolean;
+  description: string;
+  items: string[];
+}
+
+const FEATURES: FeatureCard[] = [
+  {
+    title: 'Poids Mystique',
+    free: true,
+    description:
+      "Le calcul du poids mystique est basé sur la table Abjad islamique traditionnelle, qui attribue une valeur numérique à chaque lettre arabe. En combinant le poids de ton prénom et de celui de ta mère, tu obtiens un nombre unique qui révèle ton élément dominant et les grandes lignes de ta personnalité.",
+    items: ['Translittération en arabe', 'Poids de chaque lettre', 'PM total calculé', 'Élément dominant', 'Chiffres arabes-indiens'],
+  },
+  {
+    title: 'Destin Complet',
+    free: false,
+    description:
+      "Le destin complet révèle 17 points mystiques de ton profil spirituel : ton élément, ta planète, ton nom divin personnel, un verset coranique adapté, et bien plus. Une lecture profonde et personnalisée de ta destinée.",
+    items: ['17 points mystiques complets', 'Nom divin personnalisé', 'Verset coranique', 'Talisman avec carré magique', 'Sacrifice recommandé', 'Plante mystique', 'Export PDF', 'Lecture vocale'],
+  },
+  {
+    title: 'Carrés Magiques',
+    free: false,
+    description:
+      "Génère ton carré magique personnel selon la tradition islamique, de 3x3 Moussalas à 9x9 Moutassi'ou. Chaque carré est calculé mathématiquement à partir de ton poids mystique, avec vérification de la somme magique.",
+    items: ['7 types de carrés (3x3 à 9x9)', 'Calcul basé sur ton poids mystique', 'Vérification automatique de la somme', 'Export en image', 'Chiffres en français et en arabe'],
+  },
+  {
+    title: 'Géomancie',
+    free: false,
+    description:
+      "L'art divinatoire ancestral du Khatt ar-Raml, pratiqué depuis des siècles en Afrique de l'Ouest. Pose ta question et reçois un thème géomantique complet basé sur les 16 figures traditionnelles.",
+    items: ['16 figures géomantiques', 'Thème complet sur les 16 maisons', 'Lecture ciblée pour ta question', 'Sacrifices et plantes recommandés', 'Figure dominante identifiée'],
+  },
+  {
+    title: 'Interprétation des Rêves',
+    free: false,
+    description:
+      "Comprends le sens caché de tes rêves selon la tradition islamique (tabir al-ru'ya) et la sagesse spirituelle africaine. Une analyse complète des symboles et du message que ton rêve te transmet.",
+    items: ['Analyse symbole par symbole', 'Vision islamique et africaine', 'Invocation et nom divin recommandés', 'Plan d\'action pratique', 'Sacrifice si nécessaire'],
+  },
+  {
+    title: 'Secrets Mystiques',
+    free: false,
+    description:
+      "Des secrets spirituels ciblés selon ton objectif précis : protection, amour, richesse, santé, élévation spirituelle... Un talisman personnalisé pour t'accompagner.",
+    items: ['Objectif personnalisé', 'Nom divin et verset adaptés', 'Talisman avec carré magique', 'Sacrifice recommandé', 'Export PDF'],
+  },
+  {
+    title: 'Plantes Mystiques',
+    free: false,
+    description:
+      "Découvre les plantes sacrées d'Afrique de l'Ouest et leurs usages spirituels selon ton objectif. De 1 à 7 plantes selon la complexité de ta situation, avec un rituel complet.",
+    items: ['1 à 7 plantes selon ton besoin', 'Nom scientifique et bambara', 'Préparation du rituel complet', 'Versets coraniques associés', 'Sacrifice recommandé'],
+  },
+  {
+    title: 'Pour Attraper',
+    free: false,
+    description:
+      "Génère un talisman personnalisé basé sur les noms arabes de deux personnes pour atteindre un objectif précis : mariage, réconciliation, travail, protection...",
+    items: ['Basé sur 2 profils (toi et ta cible)', '2 noms divins combinés', 'Carré magique sur mesure', 'Zikr quotidien avec audio', 'Plantes et parfum recommandés'],
+  },
+  {
+    title: 'Tutoriels',
+    free: true,
+    description:
+      "15 tutoriels détaillés pour apprendre à utiliser chaque outil pas à pas : calculs, constructions de carrés magiques, interprétation des symboles et bien plus.",
+    items: ['15 tutoriels complets', 'Filtrage par catégorie et niveau', 'Exemples pratiques résolus', 'Erreurs courantes à éviter', 'Accès illimité et gratuit'],
+  },
+];
+
+function Separateur() {
+  return (
+    <div className="separateur">
+      <span>———</span>
+      <span>✦</span>
+      <span>———</span>
+    </div>
+  );
+}
+
+export function FonctionnalitesPage() {
+  useRevealOnScroll();
+
+  return (
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-center font-bold text-or text-[2rem]">Fonctionnalités</h1>
+        <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>
+          Tout ce que Secret Divin peut faire pour toi
+        </p>
+
+        <Separateur />
+
+        <div className="flex flex-col gap-5">
+          {FEATURES.map((feature) => (
+            <div key={feature.title} className="reveal carte rounded-lg">
+              <span
+                className="inline-block px-3 py-1 rounded-full text-xs font-bold mb-4"
+                style={feature.free ? { background: '#1b3a1f', color: '#4caf50' } : { background: 'rgba(37,99,235,0.1)', color: '#2563EB' }}
+              >
+                {feature.free ? 'GRATUIT' : '2 crédits par génération'}
+              </span>
+              <h2 className="text-white font-bold text-xl">{feature.title}</h2>
+              <p className="mt-3" style={{ color: '#b0b8d4' }}>{feature.description}</p>
+
+              <p className="text-or font-bold mt-5 mb-2">Ce que tu obtiens</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {feature.items.map((item, i) => (
+                  <p key={i} className="text-white text-sm">✦ {item}</p>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <Separateur />
+
+        <div className="reveal carte rounded-lg text-center">
+          <h2 className="text-white font-bold text-xl">Prêt à découvrir tes secrets ?</h2>
+          <Link to="/auth?mode=register" className="btn-principal rounded mt-5 inline-block">
+            Créer mon compte gratuitement
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
