@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
+import { buildFullName } from '../utils/auth';
 
 interface Profile {
   prenom: string | null;
+  nom: string | null;
+  fullName: string;
   credits: number;
   isAdmin: boolean;
 }
@@ -12,6 +15,7 @@ interface AuthState {
   loading: boolean;
   user: User | null;
   profile: Profile | null;
+  signOut: () => Promise<void>;
 }
 
 export function useAuth(): AuthState {
@@ -24,13 +28,17 @@ export function useAuth(): AuthState {
 
     async function loadProfile(userId: string) {
       const [{ data: profileRow }, { data: creditsRow }, { data: roleRow }] = await Promise.all([
-        supabase.from('profiles').select('first_name, display_name').eq('user_id', userId).single(),
+        supabase.from('profiles').select('first_name, last_name, display_name').eq('user_id', userId).single(),
         supabase.from('user_credits').select('balance').eq('user_id', userId).single(),
         supabase.from('user_roles').select('role').eq('user_id', userId).single(),
       ]);
       if (active) {
+        const prenom = profileRow?.first_name || profileRow?.display_name || null;
+        const nom = profileRow?.last_name || null;
         setProfile({
-          prenom: profileRow?.first_name || profileRow?.display_name || null,
+          prenom,
+          nom,
+          fullName: buildFullName(prenom, nom) || profileRow?.display_name || '',
           credits: creditsRow?.balance ?? 0,
           isAdmin: roleRow?.role === 'admin',
         });
@@ -56,5 +64,9 @@ export function useAuth(): AuthState {
     };
   }, []);
 
-  return { loading, user, profile };
+  async function signOut() {
+    await supabase.auth.signOut();
+  }
+
+  return { loading, user, profile, signOut };
 }

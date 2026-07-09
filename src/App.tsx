@@ -5,6 +5,8 @@ import { AdminRoute } from './components/AdminRoute';
 
 import { LandingPage } from './pages/LandingPage';
 import { AuthPage } from './pages/AuthPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { FonctionnalitesPage } from './pages/FonctionnalitesPage';
 import { CreditsPage } from './pages/CreditsPage';
 import { BlogPage } from './pages/BlogPage';
@@ -38,6 +40,8 @@ function App() {
         {/* Routes publiques */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/fonctionnalites" element={<FonctionnalitesPage />} />
         <Route path="/credits" element={<CreditsPage />} />
         <Route path="/blog" element={<BlogPage />} />

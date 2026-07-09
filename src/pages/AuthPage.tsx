@@ -1,62 +1,68 @@
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Navigate, useNavigate, useLocation, Link } from 'react-router-dom';
 import type { Location } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
+import { useAuth } from '../hooks/useAuth';
+import { isValidEmail, isValidName } from '../utils/security';
+import { validatePassword, getPasswordStrength, translateAuthError } from '../utils/auth';
 
 type Tab = 'login' | 'signup';
 
-// N'est appliqué qu'à l'inscription : durcir cette règle sur la connexion
-// bloquerait les comptes existants dont le mot de passe (créé sous l'ancienne
-// règle, 6 caractères minimum) ne la respecte pas.
-function validatePassword(password: string): { isValid: boolean; message: string } {
-  if (password.length < 8) {
-    return { isValid: false, message: 'Minimum 8 caractères requis.' };
-  }
-  if (!/[A-Z]/.test(password)) {
-    return { isValid: false, message: 'Au moins une majuscule requise.' };
-  }
-  if (!/[0-9]/.test(password)) {
-    return { isValid: false, message: 'Au moins un chiffre requis.' };
-  }
-  return { isValid: true, message: 'Mot de passe valide.' };
-}
-
-function getPasswordStrength(pwd: string): { level: number; label: string; color: string } {
-  let score = 0;
-  if (pwd.length >= 8) score++;
-  if (pwd.length >= 12) score++;
-  if (/[A-Z]/.test(pwd)) score++;
-  if (/[0-9]/.test(pwd)) score++;
-  if (/[^A-Za-z0-9]/.test(pwd)) score++;
-
-  if (score <= 2) return { level: 1, label: 'Faible', color: '#e53935' };
-  if (score <= 3) return { level: 2, label: 'Moyen', color: '#ff9800' };
-  return { level: 3, label: 'Fort', color: '#4caf50' };
+interface FieldErrors {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  password?: string;
 }
 
 export function AuthPage() {
+  const { user, loading: authLoading } = useAuth();
   const [tab, setTab] = useState<Tab>('login');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
 
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: Location })?.from?.pathname || '/dashboard';
 
+  // Redirige loin de /auth un utilisateur déjà connecté (ex: revient sur
+  // cette page via l'historique du navigateur) au lieu de lui montrer le
+  // formulaire de connexion alors qu'il est déjà authentifié.
+  if (!authLoading && user) {
+    return <Navigate to={from} replace />;
+  }
+
+  function validateSignupFields(): boolean {
+    const errors: FieldErrors = {};
+
+    if (!isValidName(firstName)) errors.firstName = 'Prénom requis (2 à 100 caractères).';
+    if (!isValidName(lastName)) errors.lastName = 'Nom requis (2 à 100 caractères).';
+    if (!isValidEmail(email)) errors.email = 'Adresse email invalide.';
+
+    const passwordCheck = validatePassword(password);
+    if (!passwordCheck.isValid) errors.password = passwordCheck.message;
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setMessage(null);
+    setFieldErrors({});
 
     if (tab === 'signup') {
-      const check = validatePassword(password);
-      if (!check.isValid) {
-        setError(check.message);
-        return;
-      }
+      if (!validateSignupFields()) return;
+    } else if (!isValidEmail(email)) {
+      setFieldErrors({ email: 'Adresse email invalide.' });
+      return;
     }
 
     setLoading(true);
@@ -70,13 +76,18 @@ export function AuthPage() {
         const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: window.location.origin },
+          options: {
+            emailRedirectTo: window.location.origin,
+            data: { first_name: firstName.trim(), last_name: lastName.trim() },
+          },
         });
         if (signUpError) throw signUpError;
-        setMessage('Compte créé ! Vérifie ton email pour confirmer ton inscription.');
+        setMessage('Compte créé ! Vérifie ton email pour confirmer ton inscription avant de te connecter.');
+        setTab('login');
+        setPassword('');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Une erreur est survenue.');
+      setError(err instanceof Error ? translateAuthError(err.message) : 'Une erreur est survenue.');
     } finally {
       setLoading(false);
     }
@@ -88,15 +99,24 @@ export function AuthPage() {
       provider: 'google',
       options: { redirectTo: `${window.location.origin}${from}` },
     });
-    if (oauthError) setError(oauthError.message);
+    if (oauthError) setError(translateAuthError(oauthError.message));
   }
+
+  function switchTab(newTab: Tab) {
+    setTab(newTab);
+    setError(null);
+    setMessage(null);
+    setFieldErrors({});
+  }
+
+  const strength = tab === 'signup' && password ? getPasswordStrength(password) : null;
 
   return (
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-12">
       <div className="carte w-full max-w-md rounded-lg">
         <div className="flex mb-6 border-b border-or/20">
           <button
-            onClick={() => { setTab('login'); setError(null); setMessage(null); }}
+            onClick={() => switchTab('login')}
             className={`flex-1 py-3 text-sm font-bold transition ${
               tab === 'login' ? 'text-or border-b-2 border-or' : 'text-gray-400'
             }`}
@@ -104,7 +124,7 @@ export function AuthPage() {
             Se connecter
           </button>
           <button
-            onClick={() => { setTab('signup'); setError(null); setMessage(null); }}
+            onClick={() => switchTab('signup')}
             className={`flex-1 py-3 text-sm font-bold transition ${
               tab === 'signup' ? 'text-or border-b-2 border-or' : 'text-gray-400'
             }`}
@@ -114,6 +134,33 @@ export function AuthPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          {tab === 'signup' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Prénom</label>
+                <input
+                  type="text"
+                  required
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
+                />
+                {fieldErrors.firstName && <p className="text-red-400 text-xs mt-1">{fieldErrors.firstName}</p>}
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Nom</label>
+                <input
+                  type="text"
+                  required
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
+                />
+                {fieldErrors.lastName && <p className="text-red-400 text-xs mt-1">{fieldErrors.lastName}</p>}
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm text-gray-400 mb-1">Email</label>
             <input
@@ -123,9 +170,17 @@ export function AuthPage() {
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
             />
+            {fieldErrors.email && <p className="text-red-400 text-xs mt-1">{fieldErrors.email}</p>}
           </div>
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Mot de passe</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm text-gray-400">Mot de passe</label>
+              {tab === 'login' && (
+                <Link to="/forgot-password" className="text-xs text-or hover:underline">
+                  Mot de passe oublié ?
+                </Link>
+              )}
+            </div>
             <input
               type="password"
               required
@@ -134,19 +189,17 @@ export function AuthPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
             />
-            {tab === 'signup' && password && (
+            {fieldErrors.password && <p className="text-red-400 text-xs mt-1">{fieldErrors.password}</p>}
+            {strength && (
               <div className="mt-2">
                 <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: '#1a1a2e' }}>
                   <div
                     className="h-full transition-all"
-                    style={{
-                      width: `${(getPasswordStrength(password).level / 3) * 100}%`,
-                      background: getPasswordStrength(password).color,
-                    }}
+                    style={{ width: `${(strength.level / 3) * 100}%`, background: strength.color }}
                   />
                 </div>
-                <p className="text-xs mt-1" style={{ color: getPasswordStrength(password).color }}>
-                  {getPasswordStrength(password).label}
+                <p className="text-xs mt-1" style={{ color: strength.color }}>
+                  {strength.label}
                 </p>
               </div>
             )}

@@ -14,6 +14,7 @@ CREATE TABLE profiles (
   email text,
   display_name text,
   first_name text,
+  last_name text,
   mother_name text,
   gender text CHECK (gender IN ('homme','femme')),
   religion text,
@@ -222,9 +223,19 @@ CREATE INDEX idx_marabout_abonnements_marabout_id ON marabout_abonnements(marabo
 
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  v_first_name text := NEW.raw_user_meta_data->>'first_name';
+  v_last_name text := NEW.raw_user_meta_data->>'last_name';
+  v_display_name text := NULLIF(trim(concat_ws(' ', v_first_name, v_last_name)), '');
 BEGIN
-  INSERT INTO profiles (user_id, email, display_name)
-    VALUES (NEW.id, NEW.email, split_part(NEW.email, '@', 1));
+  INSERT INTO profiles (user_id, email, display_name, first_name, last_name)
+    VALUES (
+      NEW.id,
+      NEW.email,
+      COALESCE(v_display_name, split_part(NEW.email, '@', 1)),
+      v_first_name,
+      v_last_name
+    );
   INSERT INTO user_roles (user_id, role)
     VALUES (NEW.id, 'user');
   INSERT INTO user_credits (user_id, balance, total_purchased)

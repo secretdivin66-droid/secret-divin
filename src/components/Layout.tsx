@@ -9,8 +9,13 @@ import { MobileBar } from './MobileBar';
 const INACTIVITY_TIMEOUT = 30 * 60 * 1000;
 
 export function Layout() {
-  const { user, profile } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
+
+  async function handleSignOut() {
+    await signOut();
+    navigate('/auth');
+  }
   const inactivityTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Ne s'applique qu'aux sessions connectées : un visiteur anonyme n'a rien
@@ -39,7 +44,7 @@ export function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header user={user} profile={profile} />
+      <Header user={user} profile={profile} onSignOut={handleSignOut} />
       <main className="flex-1 pb-16 md:pb-0">
         <Outlet />
       </main>

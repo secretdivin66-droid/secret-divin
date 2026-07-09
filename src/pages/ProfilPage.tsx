@@ -4,12 +4,14 @@ import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { callGeminiProxy } from '../lib/geminiProxy';
 import { calculateWeight, GENDER_BONUS } from '../utils/mystique';
+import { buildFullName } from '../utils/auth';
 
 type Gender = 'homme' | 'femme';
 
 interface Profile {
   display_name: string | null;
   first_name: string | null;
+  last_name: string | null;
   mother_name: string | null;
   gender: Gender | null;
   religion: string | null;
@@ -174,6 +176,7 @@ export function ProfilPage() {
   const [editMode, setEditMode] = useState(false);
   const [displayName, setDisplayName] = useState('');
   const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [motherName, setMotherName] = useState('');
   const [gender, setGender] = useState<Gender>('homme');
   const [religion, setReligion] = useState(RELIGIONS[0]);
@@ -231,6 +234,7 @@ export function ProfilPage() {
 
       setDisplayName(profileData?.display_name ?? '');
       setFirstName(profileData?.first_name ?? '');
+      setLastName(profileData?.last_name ?? '');
       setMotherName(profileData?.mother_name ?? '');
       setGender(profileData?.gender ?? 'homme');
       setReligion(profileData?.religion ?? RELIGIONS[0]);
@@ -284,12 +288,13 @@ export function ProfilPage() {
         user_id: authUser.id,
         display_name: displayName,
         first_name: firstName,
+        last_name: lastName,
         mother_name: motherName,
         gender,
         religion,
         updated_at: new Date().toISOString(),
       });
-      setProfile((prev) => ({ ...(prev ?? { language: 'fr' } as Profile), display_name: displayName, first_name: firstName, mother_name: motherName, gender, religion }));
+      setProfile((prev) => ({ ...(prev ?? { language: 'fr' } as Profile), display_name: displayName, first_name: firstName, last_name: lastName, mother_name: motherName, gender, religion }));
       setEditMode(false);
       setSaveMessage('Profil mis à jour avec succès');
       setTimeout(() => setSaveMessage(null), 3000);
@@ -304,6 +309,7 @@ export function ProfilPage() {
   function handleCancelEdit() {
     setDisplayName(profile?.display_name ?? '');
     setFirstName(profile?.first_name ?? '');
+    setLastName(profile?.last_name ?? '');
     setMotherName(profile?.mother_name ?? '');
     setGender(profile?.gender ?? 'homme');
     setReligion(profile?.religion ?? RELIGIONS[0]);
@@ -388,9 +394,9 @@ export function ProfilPage() {
           style={{ background: 'linear-gradient(160deg, #1a237e, #111a55)', border: '1px solid #2563EB' }}
         >
           <div className="w-16 h-16 rounded-full bg-or text-white font-bold flex items-center justify-center mx-auto text-2xl">
-            {(profile?.display_name || authUser?.email || '?').charAt(0).toUpperCase()}
+            {(buildFullName(profile?.first_name, profile?.last_name) || profile?.display_name || authUser?.email || '?').charAt(0).toUpperCase()}
           </div>
-          <p className="text-or font-bold mt-4">{profile?.display_name || authUser?.email}</p>
+          <p className="text-or font-bold mt-4">{buildFullName(profile?.first_name, profile?.last_name) || profile?.display_name || authUser?.email}</p>
           <p className="text-sm mt-1" style={{ color: '#b0b8d4' }}>{authUser?.email}</p>
 
           <div className="flex justify-center gap-2 mt-4 flex-wrap">
@@ -438,6 +444,7 @@ export function ProfilPage() {
             <div className="flex flex-col gap-3">
               <p className="text-white"><span className="font-bold" style={{ color: '#b0b8d4' }}>Nom affiché : </span>{profile?.display_name || '—'}</p>
               <p className="text-white"><span className="font-bold" style={{ color: '#b0b8d4' }}>Prénom : </span>{profile?.first_name || '—'}</p>
+              <p className="text-white"><span className="font-bold" style={{ color: '#b0b8d4' }}>Nom : </span>{profile?.last_name || '—'}</p>
               <p className="text-white"><span className="font-bold" style={{ color: '#b0b8d4' }}>Prénom de ta mère : </span>{profile?.mother_name || '—'}</p>
               <p className="text-white"><span className="font-bold" style={{ color: '#b0b8d4' }}>Sexe : </span>{profile?.gender === 'femme' ? 'Femme' : 'Homme'}</p>
               <p className="text-white"><span className="font-bold" style={{ color: '#b0b8d4' }}>Religion : </span>{profile?.religion || '—'}</p>
@@ -452,6 +459,10 @@ export function ProfilPage() {
               <div>
                 <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Ton prénom</label>
                 <input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or" />
+              </div>
+              <div>
+                <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Ton nom</label>
+                <input value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or" />
               </div>
               <div>
                 <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Prénom de ta mère</label>

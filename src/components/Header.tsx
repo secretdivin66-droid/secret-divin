@@ -4,6 +4,8 @@ import { CreditBadge } from './CreditBadge';
 
 interface Profile {
   prenom: string | null;
+  nom: string | null;
+  fullName: string;
   credits: number;
   isAdmin: boolean;
 }
@@ -11,10 +13,12 @@ interface Profile {
 interface Props {
   user: User | null;
   profile: Profile | null;
+  onSignOut: () => void;
 }
 
-export function Header({ user, profile }: Props) {
+export function Header({ user, profile, onSignOut }: Props) {
   const isAdmin = profile?.isAdmin ?? false;
+  const displayName = profile?.fullName || profile?.prenom || user?.email;
 
   return (
     <header className="bg-bleu border-b border-or/20 overflow-x-hidden">
@@ -55,9 +59,19 @@ export function Header({ user, profile }: Props) {
           {user ? (
             <>
               <CreditBadge userId={user.id} />
-              <Link to="/profil" className="text-white hover:text-or transition text-sm truncate max-w-[100px] sm:max-w-none">
-                {profile?.prenom || user.email}
+              <Link
+                to="/profil"
+                className="text-white hover:text-or transition text-sm truncate max-w-[80px] sm:max-w-none"
+                title={user.email}
+              >
+                {displayName}
               </Link>
+              <button
+                onClick={onSignOut}
+                className="border border-or/40 text-or rounded font-bold transition text-xs px-2.5 py-1.5 whitespace-nowrap hover:bg-or/10"
+              >
+                Déconnexion
+              </button>
             </>
           ) : (
             <>
