@@ -15,6 +15,9 @@ CREATE TABLE profiles (
   display_name text,
   first_name text,
   last_name text,
+  avatar_url text,
+  phone text,
+  country text,
   mother_name text,
   gender text CHECK (gender IN ('homme','femme')),
   religion text,
@@ -720,3 +723,27 @@ $$;
 
 REVOKE ALL ON FUNCTION check_gemini_rate_limit(integer, integer) FROM public, anon;
 GRANT EXECUTE ON FUNCTION check_gemini_rate_limit(integer, integer) TO authenticated;
+
+-- ============================================================
+-- STORAGE : photos de profil
+-- Bucket public (une photo de profil n'est pas une donnée sensible, ce qui
+-- évite d'avoir à gérer des URLs signées côté client). Convention de
+-- chemin : "<user_id>/avatar-<timestamp>.<ext>" — les policies vérifient
+-- que le premier segment du chemin correspond à l'utilisateur connecté.
+-- ============================================================
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('avatars', 'avatars', true)
+ON CONFLICT (id) DO NOTHING;
+
+CREATE POLICY "avatar_public_read" ON storage.objects
+  FOR SELECT USING (bucket_id = 'avatars');
+
+CREATE POLICY "avatar_user_insert" ON storage.objects
+  FOR INSERT WITH CHECK (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
+
+CREATE POLICY "avatar_user_update" ON storage.objects
+  FOR UPDATE USING (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
+
+CREATE POLICY "avatar_user_delete" ON storage.objects
+  FOR DELETE USING (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);

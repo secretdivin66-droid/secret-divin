@@ -34,6 +34,11 @@ export function isValidName(name: string): boolean {
   return nameRegex.test(name.trim());
 }
 
+export function isValidPhone(phone: string): boolean {
+  const phoneRegex = /^[+]?[0-9\s\-().]{6,20}$/;
+  return phoneRegex.test(phone.trim());
+}
+
 // Garde-fou client uniquement (fast-fail UX : évite un aller-retour réseau
 // pour un usage manifestement abusif). Ne remplace pas une vraie limite —
 // voir check_gemini_rate_limit() côté serveur (supabase/schema.sql), qui est
