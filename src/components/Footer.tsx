@@ -9,6 +9,7 @@ export function Footer() {
           <ul className="space-y-2 text-sm text-gray-400">
             <li><Link to="/fonctionnalites" className="hover:text-or transition">Fonctionnalités</Link></li>
             <li><Link to="/credits" className="hover:text-or transition">Tarifs</Link></li>
+            <li><Link to="/pricing" className="hover:text-or transition">Abonnements</Link></li>
             <li><Link to="/marabouts" className="hover:text-or transition">Marabouts</Link></li>
             <li><Link to="/formation" className="hover:text-or transition">Formation</Link></li>
           </ul>

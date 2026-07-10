@@ -38,6 +38,7 @@ export function Header({ user, profile, onSignOut }: Props) {
           <nav className="hidden md:flex items-center gap-4 text-sm">
             <Link to="/dashboard" className="text-white hover:text-or transition">Dashboard</Link>
             <Link to="/credits" className="text-white hover:text-or transition">Tarifs</Link>
+            <Link to="/pricing" className="text-white hover:text-or transition">Abonnements</Link>
             <Link to="/marabouts" className="text-white hover:text-or transition">Marabouts</Link>
             <Link to="/blog" className="text-white hover:text-or transition">Blog</Link>
             <Link to="/contact" className="text-white hover:text-or transition">Contact</Link>
@@ -49,6 +50,7 @@ export function Header({ user, profile, onSignOut }: Props) {
           <nav className="hidden md:flex items-center gap-4 text-sm">
             <Link to="/fonctionnalites" className="text-white hover:text-or transition">Fonctionnalités</Link>
             <Link to="/credits" className="text-white hover:text-or transition">Tarifs</Link>
+            <Link to="/pricing" className="text-white hover:text-or transition">Abonnements</Link>
             <Link to="/marabouts" className="text-white hover:text-or transition">Marabouts</Link>
             <Link to="/blog" className="text-white hover:text-or transition">Blog</Link>
             <Link to="/contact" className="text-white hover:text-or transition">Contact</Link>
@@ -59,6 +61,12 @@ export function Header({ user, profile, onSignOut }: Props) {
           {user ? (
             <>
               <CreditBadge userId={user.id} />
+              <Link
+                to="/billing"
+                className="hidden sm:inline text-white hover:text-or transition text-sm whitespace-nowrap"
+              >
+                Facturation
+              </Link>
               <Link
                 to="/profil"
                 className="text-white hover:text-or transition text-sm truncate max-w-[80px] sm:max-w-none"

@@ -43,14 +43,56 @@ CREATE TABLE user_credits (
   UNIQUE (user_id)
 );
 
+-- Plans d'abonnement (Free / Premium / Pro). Lecture publique, écriture
+-- réservée à l'administration (aucune policy INSERT/UPDATE/DELETE).
+CREATE TABLE plans (
+  id text PRIMARY KEY,
+  name text NOT NULL,
+  price integer NOT NULL DEFAULT 0,
+  monthly_credits integer NOT NULL DEFAULT 0,
+  is_unlimited boolean NOT NULL DEFAULT false,
+  features text[] NOT NULL DEFAULT '{}',
+  sort_order integer NOT NULL DEFAULT 0,
+  created_at timestamp DEFAULT now()
+);
+
+INSERT INTO plans (id, name, price, monthly_credits, is_unlimited, features, sort_order) VALUES
+  ('free', 'Free', 0, 0, false,
+    ARRAY['Poids mystique et tutoriels gratuits', 'Paiement à l''usage avec des crédits', 'Crédits sans expiration'],
+    0),
+  ('premium', 'Premium', 9900, 80, false,
+    ARRAY['80 crédits offerts chaque mois', 'Crédits cumulables, sans expiration', 'Support prioritaire par WhatsApp'],
+    1),
+  ('pro', 'Pro', 49000, 0, true,
+    ARRAY['Accès illimité à tous les outils', 'Aucun crédit à gérer', 'Support prioritaire par WhatsApp'],
+    2);
+
 CREATE TABLE subscriptions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
   plan text DEFAULT 'unlimited',
+  plan_id text REFERENCES plans(id),
+  provider text,
+  provider_reference text,
+  status text NOT NULL DEFAULT 'active' CHECK (status IN ('pending','active','cancelled','expired')),
   price integer DEFAULT 49000,
   started_at timestamp DEFAULT now(),
   expires_at timestamp,
   is_active boolean DEFAULT true,
+  created_at timestamp DEFAULT now()
+);
+
+-- Historique de facturation (page /billing). Lecture seule pour le client,
+-- écrit uniquement par grant_subscription() (SECURITY DEFINER).
+CREATE TABLE billing_events (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  plan_id text REFERENCES plans(id),
+  provider text,
+  provider_reference text,
+  amount integer,
+  status text CHECK (status IN ('pending','succeeded','failed','cancelled')),
+  description text,
   created_at timestamp DEFAULT now()
 );
 
@@ -210,6 +252,7 @@ CREATE INDEX idx_user_roles_user_id ON user_roles(user_id);
 CREATE INDEX idx_user_credits_user_id ON user_credits(user_id);
 CREATE INDEX idx_subscriptions_user_id ON subscriptions(user_id);
 CREATE INDEX idx_credit_transactions_user_id ON credit_transactions(user_id);
+CREATE INDEX idx_billing_events_user_id ON billing_events(user_id);
 CREATE INDEX idx_saved_rituals_user_id ON saved_rituals(user_id);
 CREATE INDEX idx_formation_progress_user_id ON formation_progress(user_id);
 CREATE INDEX idx_formation_modules_user_id ON formation_modules(user_id);
@@ -261,6 +304,8 @@ ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_credits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE billing_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE credit_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE saved_rituals ENABLE ROW LEVEL SECURITY;
 ALTER TABLE formation_progress ENABLE ROW LEVEL SECURITY;
@@ -301,6 +346,15 @@ CREATE POLICY "user_own_progress" ON formation_progress
 
 CREATE POLICY "user_own_transactions" ON credit_transactions
   FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "public_read_plans" ON plans
+  FOR SELECT USING (true);
+
+CREATE POLICY "user_read_own_billing" ON billing_events
+  FOR SELECT USING (auth.uid() = user_id);
+
+REVOKE INSERT, UPDATE, DELETE ON billing_events FROM authenticated, anon;
+GRANT SELECT ON billing_events TO authenticated;
 
 -- Lecture seule : comme user_credits, un abonnement ne peut pas être
 -- créé/activé par le client lui-même (voir grant_subscription() plus bas),
@@ -503,13 +557,18 @@ $$;
 REVOKE ALL ON FUNCTION grant_credits(uuid, integer, text, text) FROM public, anon, authenticated;
 GRANT EXECUTE ON FUNCTION grant_credits(uuid, integer, text, text) TO service_role;
 
--- grant_subscription() : seul chemin autorisé pour activer un abonnement.
--- Réservé à service_role, mêmes raisons que grant_credits().
+-- grant_subscription() : seul chemin autorisé pour activer un abonnement à
+-- un plan (Free/Premium/Pro). Réservé à service_role, mêmes raisons que
+-- grant_credits() — destinée à être appelée depuis le webhook du futur
+-- fournisseur de paiement (voir src/lib/payments), jamais depuis le
+-- navigateur. Journalise l'événement dans billing_events et crédite
+-- automatiquement les crédits mensuels du plan le cas échéant (Premium).
 CREATE OR REPLACE FUNCTION grant_subscription(
   p_user_id uuid,
-  p_plan text DEFAULT 'unlimited',
-  p_price integer DEFAULT 49000,
-  p_duration_days integer DEFAULT 30
+  p_plan_id text,
+  p_duration_days integer DEFAULT 30,
+  p_provider text DEFAULT NULL,
+  p_provider_reference text DEFAULT NULL
 )
 RETURNS uuid
 LANGUAGE plpgsql
@@ -517,24 +576,56 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
+  v_plan plans%ROWTYPE;
   v_new_id uuid;
 BEGIN
   IF p_duration_days IS NULL OR p_duration_days <= 0 THEN
     RAISE EXCEPTION 'INVALID_DURATION';
   END IF;
 
-  UPDATE subscriptions SET is_active = false WHERE user_id = p_user_id AND is_active = true;
+  SELECT * INTO v_plan FROM plans WHERE id = p_plan_id;
+  IF v_plan.id IS NULL THEN
+    RAISE EXCEPTION 'UNKNOWN_PLAN';
+  END IF;
 
-  INSERT INTO subscriptions (user_id, plan, price, expires_at, is_active)
-    VALUES (p_user_id, p_plan, p_price, now() + (p_duration_days || ' days')::interval, true)
+  UPDATE subscriptions SET is_active = false, status = 'expired'
+    WHERE user_id = p_user_id AND is_active = true;
+
+  INSERT INTO subscriptions (user_id, plan, plan_id, price, started_at, expires_at, is_active, status, provider, provider_reference)
+    VALUES (p_user_id, v_plan.id, v_plan.id, v_plan.price, now(), now() + (p_duration_days || ' days')::interval, true, 'active', p_provider, p_provider_reference)
     RETURNING id INTO v_new_id;
+
+  INSERT INTO billing_events (user_id, plan_id, provider, provider_reference, amount, status, description)
+    VALUES (p_user_id, v_plan.id, p_provider, p_provider_reference, v_plan.price, 'succeeded', 'Abonnement ' || v_plan.name);
+
+  IF v_plan.monthly_credits > 0 THEN
+    PERFORM grant_credits(p_user_id, v_plan.monthly_credits, v_plan.id, 'Crédits mensuels ' || v_plan.name);
+  END IF;
 
   RETURN v_new_id;
 END;
 $$;
 
-REVOKE ALL ON FUNCTION grant_subscription(uuid, text, integer, integer) FROM public, anon, authenticated;
-GRANT EXECUTE ON FUNCTION grant_subscription(uuid, text, integer, integer) TO service_role;
+REVOKE ALL ON FUNCTION grant_subscription(uuid, text, integer, text, text) FROM public, anon, authenticated;
+GRANT EXECUTE ON FUNCTION grant_subscription(uuid, text, integer, text, text) TO service_role;
+
+-- cancel_own_subscription() : self-service, ne fait que désactiver
+-- l'abonnement de l'appelant (auth.uid()) — ne peut donc jamais affecter
+-- un autre compte ni accorder quoi que ce soit.
+CREATE OR REPLACE FUNCTION cancel_own_subscription()
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE subscriptions SET is_active = false, status = 'cancelled'
+    WHERE user_id = auth.uid() AND is_active = true;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION cancel_own_subscription() FROM public, anon;
+GRANT EXECUTE ON FUNCTION cancel_own_subscription() TO authenticated;
 
 -- increment_blog_views() : seule écriture publique autorisée sur
 -- blog_articles. Le blog est accessible sans connexion, donc n'importe

@@ -11,6 +11,8 @@ import { ConfidentialitePage } from './pages/ConfidentialitePage';
 import { ConditionsPage } from './pages/ConditionsPage';
 import { MentionsLegalesPage } from './pages/MentionsLegalesPage';
 import { RemboursementPage } from './pages/RemboursementPage';
+import { PricingPage } from './pages/PricingPage';
+import { BillingPage } from './pages/BillingPage';
 import { FonctionnalitesPage } from './pages/FonctionnalitesPage';
 import { CreditsPage } from './pages/CreditsPage';
 import { BlogPage } from './pages/BlogPage';
@@ -58,6 +60,7 @@ function App() {
         <Route path="/conditions" element={<ConditionsPage />} />
         <Route path="/mentions-legales" element={<MentionsLegalesPage />} />
         <Route path="/remboursement" element={<RemboursementPage />} />
+        <Route path="/pricing" element={<PricingPage />} />
 
         {/* Routes protégées */}
         <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
@@ -74,6 +77,7 @@ function App() {
         <Route path="/tutoriels" element={<PrivateRoute><TutorielsPage /></PrivateRoute>} />
         <Route path="/formation" element={<PrivateRoute><FormationPage /></PrivateRoute>} />
         <Route path="/profil" element={<PrivateRoute><ProfilPage /></PrivateRoute>} />
+        <Route path="/billing" element={<PrivateRoute><BillingPage /></PrivateRoute>} />
         <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
         <Route path="/marabout-dashboard" element={<PrivateRoute><MaraboutDashboardPage /></PrivateRoute>} />
       </Route>
