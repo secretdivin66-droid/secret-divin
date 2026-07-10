@@ -110,7 +110,7 @@ export function ContactPage() {
 
             <div>
               <p className="text-sm" style={{ color: '#b0b8d4' }}>Email</p>
-              <p className="text-white">contact@secretdivin.com</p>
+              <p className="text-white">contact@secredivin66.com</p>
             </div>
 
             <div>

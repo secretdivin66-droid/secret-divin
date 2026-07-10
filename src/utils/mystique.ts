@@ -112,7 +112,7 @@ export const PACKS = [
   { id:'unlimited', name:'Illimité', credits:null, price:49000, currency:'FCFA', period:'mois', description: 'Accès total à tous les outils pendant 1 mois.' },
 ];
 
-export const WHATSAPP_NUMBER = 'TON_NUMERO_ICI';
+export const WHATSAPP_NUMBER = '224624279200';
 
 export const SQUARE_INFO: Record<number, { name: string; planet: string }> = {
   3: { name: 'Moussalas', planet: 'Saturne' },

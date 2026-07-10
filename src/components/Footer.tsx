@@ -16,7 +16,14 @@ export function Footer() {
         <div>
           <h3 className="text-or font-bold mb-3">À propos</h3>
           <ul className="space-y-2 text-sm text-gray-400">
+            <li><Link to="/fonctionnalites" className="hover:text-or transition">Fonctionnalités</Link></li>
+            <li><Link to="/credits" className="hover:text-or transition">Tarifs</Link></li>
             <li><Link to="/blog" className="hover:text-or transition">Blog</Link></li>
+            <li><Link to="/contact" className="hover:text-or transition">Contact</Link></li>
+            <li><Link to="/confidentialite" className="hover:text-or transition">Confidentialité</Link></li>
+            <li><Link to="/conditions" className="hover:text-or transition">Conditions</Link></li>
+            <li><Link to="/mentions-legales" className="hover:text-or transition">Mentions légales</Link></li>
+            <li><Link to="/remboursement" className="hover:text-or transition">Remboursement</Link></li>
             <li><Link to="/marabouts/inscrire" className="hover:text-or transition">Devenir marabout</Link></li>
           </ul>
         </div>
