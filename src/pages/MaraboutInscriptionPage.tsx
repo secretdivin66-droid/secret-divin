@@ -4,6 +4,7 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
 import { SPECIALITES, PAYS_LIST, LANGUES, ABONNEMENT_PRIX_FCFA, whatsappContactUrl } from '../utils/marabouts';
 import { WHATSAPP_NUMBER } from '../utils/mystique';
+import { PhotoUpload } from '../components/PhotoUpload';
 
 const AVANTAGES = [
   'Profil visible sur la plateforme',
@@ -291,8 +292,12 @@ export function MaraboutInscriptionPage() {
           </div>
 
           <div>
-            <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>URL de votre photo</label>
-            <input value={photoUrl} onChange={(e) => setPhotoUrl(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or" />
+            <label className="block text-sm mb-1 text-center" style={{ color: '#b0b8d4' }}>Votre photo (optionnelle)</label>
+            <PhotoUpload
+              userId={user?.id ?? ''}
+              currentPhotoUrl={photoUrl}
+              onUploadSuccess={(url) => setPhotoUrl(url)}
+            />
           </div>
 
           <label className="flex items-start gap-2">

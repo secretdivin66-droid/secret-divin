@@ -7,6 +7,7 @@ import { calculateWeight, GENDER_BONUS } from '../utils/mystique';
 import { buildFullName } from '../utils/auth';
 import { isValidName, isValidPhone } from '../utils/security';
 import { AvatarUploader } from '../components/AvatarUploader';
+import { deleteMaraboutPhoto } from '../utils/upload';
 
 type Gender = 'homme' | 'femme';
 
@@ -384,6 +385,14 @@ export function ProfilPage() {
     if (deleteConfirmText !== 'DELETE') return;
     setDeleting(true);
     try {
+      // Le Storage n'est pas couvert par le ON DELETE CASCADE des tables
+      // (voir juste en dessous) : sans cet appel, une photo marabout
+      // resterait orpheline dans le bucket "marabout-photos". Sans risque
+      // pour un compte non-marabout : le dossier est simplement vide.
+      if (authUser) {
+        await deleteMaraboutPhoto(authUser.id);
+      }
+
       // Supprime le compte auth.users lui-même via une fonction serveur :
       // toutes les tables applicatives référencent auth.users(id)
       // ON DELETE CASCADE, donc cette seule opération nettoie tout et

@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabaseClient';
 import { SPECIALITES, PAYS_LIST, LANGUES, ABONNEMENT_PRIX_FCFA, averageNote, whatsappContactUrl } from '../utils/marabouts';
 import { WHATSAPP_NUMBER } from '../utils/mystique';
 import type { Marabout } from '../utils/marabouts';
+import { PhotoUpload } from '../components/PhotoUpload';
 
 function formatDate(dateString: string | null): string {
   if (!dateString) return '—';
@@ -266,8 +267,12 @@ export function MaraboutDashboardPage() {
           </div>
 
           <div>
-            <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>URL de votre photo</label>
-            <input value={photoUrl} onChange={(e) => setPhotoUrl(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or" />
+            <label className="block text-sm mb-1 text-center" style={{ color: '#b0b8d4' }}>Votre photo</label>
+            <PhotoUpload
+              userId={user?.id ?? ''}
+              currentPhotoUrl={photoUrl}
+              onUploadSuccess={(url) => setPhotoUrl(url)}
+            />
           </div>
 
           <button onClick={handleUpdateProfile} disabled={saving} className="btn-principal rounded disabled:opacity-50">
