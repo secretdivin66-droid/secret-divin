@@ -9,6 +9,17 @@ export function CreditBadge({ userId }: Props) {
 
   if (credits.loading) return null;
 
+  if (credits.isAdmin) {
+    return (
+      <span
+        onClick={() => navigate('/credits')}
+        style={{ background: '#f9a825', color: '#1a237e', padding: '4px 12px', fontWeight: 'bold', fontSize: '0.8rem', cursor: 'pointer', borderRadius: '9999px' }}
+      >
+        Admin — Accès illimité
+      </span>
+    );
+  }
+
   if (credits.isUnlimited) {
     return (
       <span

@@ -8,6 +8,7 @@ import { AudioButton } from '../components/AudioButton';
 import { calculateWeight, GENDER_BONUS, generateSquare, JOURS_DATA } from '../utils/mystique';
 import type { SpendCreditsResult } from '../utils/mystique';
 import { callGeminiProxy } from '../lib/geminiProxy';
+import { isAdminUser } from '../utils/roles';
 
 type Gender = 'homme' | 'femme';
 
@@ -309,6 +310,8 @@ export function JoursPage() {
       } = await supabase.auth.getUser();
       if (!user) throw new Error('no-user');
 
+      const isAdmin = await isAdminUser(user.id);
+
       const { data: credits } = await supabase
         .from('user_credits')
         .select('balance')
@@ -316,7 +319,7 @@ export function JoursPage() {
         .maybeSingle();
       const balance = credits?.balance ?? 0;
 
-      if (balance < 2) {
+      if (!isAdmin && balance < 2) {
         setModalBalance(balance);
         setShowCreditModal(true);
         setLoading(false);
@@ -352,21 +355,23 @@ export function JoursPage() {
 
       const newResult: CachedResult = { data, PM, PMtotal };
 
-      // Débit atomique et journalisé côté serveur (fonction SECURITY DEFINER) :
-      // le client ne peut plus écrire dans user_credits directement.
-      const { data: spendData, error: spendError } = await supabase
-        .rpc('spend_credits', {
-          p_tool: 'jours',
-          p_description: 'Jours — ' + firstName + ' — ' + selectedDay,
-        })
-        .single();
-      const spend = spendData as SpendCreditsResult | null;
+      if (!isAdmin) {
+        // Débit atomique et journalisé côté serveur (fonction SECURITY DEFINER) :
+        // le client ne peut plus écrire dans user_credits directement.
+        const { data: spendData, error: spendError } = await supabase
+          .rpc('spend_credits', {
+            p_tool: 'jours',
+            p_description: 'Jours — ' + firstName + ' — ' + selectedDay,
+          })
+          .single();
+        const spend = spendData as SpendCreditsResult | null;
 
-      if (spendError || !spend?.success) {
-        setModalBalance(spend?.balance ?? balance);
-        setShowCreditModal(true);
-        setLoading(false);
-        return;
+        if (spendError || !spend?.success) {
+          setModalBalance(spend?.balance ?? balance);
+          setShowCreditModal(true);
+          setLoading(false);
+          return;
+        }
       }
 
       sessionStorage.setItem(cacheKey, JSON.stringify(newResult));

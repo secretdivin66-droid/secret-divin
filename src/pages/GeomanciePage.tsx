@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabaseClient';
 import { CreditModal } from '../components/CreditModal';
 import { AudioButton } from '../components/AudioButton';
 import { callGeminiProxy } from '../lib/geminiProxy';
+import { isAdminUser } from '../utils/roles';
 import type { SpendCreditsResult } from '../utils/mystique';
 import { FIGURES, MAISONS, HOUSE_GROUPS, influenceColor } from '../utils/geomancie';
 
@@ -206,6 +207,8 @@ export function GeomanciePage() {
       } = await supabase.auth.getUser();
       if (!user) throw new Error('no-user');
 
+      const isAdmin = await isAdminUser(user.id);
+
       const { data: credits } = await supabase
         .from('user_credits')
         .select('balance')
@@ -213,7 +216,7 @@ export function GeomanciePage() {
         .maybeSingle();
       const balance = credits?.balance ?? 0;
 
-      if (balance < 2) {
+      if (!isAdmin && balance < 2) {
         setModalBalance(balance);
         setShowCreditModal(true);
         setLoading(false);
@@ -226,21 +229,23 @@ export function GeomanciePage() {
         maxOutputTokens: 3000,
       });
 
-      // Débit atomique et journalisé côté serveur (fonction SECURITY DEFINER) :
-      // le client ne peut plus écrire dans user_credits directement.
-      const { data: spendData, error: spendError } = await supabase
-        .rpc('spend_credits', {
-          p_tool: 'geomancie',
-          p_description: 'Consultation géomancie',
-        })
-        .single();
-      const spend = spendData as SpendCreditsResult | null;
+      if (!isAdmin) {
+        // Débit atomique et journalisé côté serveur (fonction SECURITY DEFINER) :
+        // le client ne peut plus écrire dans user_credits directement.
+        const { data: spendData, error: spendError } = await supabase
+          .rpc('spend_credits', {
+            p_tool: 'geomancie',
+            p_description: 'Consultation géomancie',
+          })
+          .single();
+        const spend = spendData as SpendCreditsResult | null;
 
-      if (spendError || !spend?.success) {
-        setModalBalance(spend?.balance ?? balance);
-        setShowCreditModal(true);
-        setLoading(false);
-        return;
+        if (spendError || !spend?.success) {
+          setModalBalance(spend?.balance ?? balance);
+          setShowCreditModal(true);
+          setLoading(false);
+          return;
+        }
       }
 
       sessionStorage.setItem(cacheKey, JSON.stringify(data));

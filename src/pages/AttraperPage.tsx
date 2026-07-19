@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabaseClient';
 import { CreditModal } from '../components/CreditModal';
 import { AudioButton } from '../components/AudioButton';
 import { callGeminiProxy } from '../lib/geminiProxy';
+import { isAdminUser } from '../utils/roles';
 import { calculateWeight, GENDER_BONUS, generateSquare, LAYOUTS, toArabicIndic } from '../utils/mystique';
 import type { SpendCreditsResult } from '../utils/mystique';
 
@@ -329,6 +330,8 @@ export function AttraperPage() {
       } = await supabase.auth.getUser();
       if (!user) throw new Error('no-user');
 
+      const isAdmin = await isAdminUser(user.id);
+
       const { data: credits } = await supabase
         .from('user_credits')
         .select('balance')
@@ -336,7 +339,7 @@ export function AttraperPage() {
         .maybeSingle();
       const balance = credits?.balance ?? 0;
 
-      if (balance < 2) {
+      if (!isAdmin && balance < 2) {
         setModalBalance(balance);
         setShowCreditModal(true);
         setLoading(false);
@@ -373,21 +376,23 @@ export function AttraperPage() {
       const invocationWeight = calculateWeight(data.invocation.arabicNoHarakat);
       const cells = generateSquare(invocationWeight, squareSize);
 
-      // Débit atomique et journalisé côté serveur (fonction SECURITY DEFINER) :
-      // le client ne peut plus écrire dans user_credits directement.
-      const { data: spendData, error: spendError } = await supabase
-        .rpc('spend_credits', {
-          p_tool: 'attraper',
-          p_description: 'Talisman attraper — ' + userName + ' → ' + targetName,
-        })
-        .single();
-      const spend = spendData as SpendCreditsResult | null;
+      if (!isAdmin) {
+        // Débit atomique et journalisé côté serveur (fonction SECURITY DEFINER) :
+        // le client ne peut plus écrire dans user_credits directement.
+        const { data: spendData, error: spendError } = await supabase
+          .rpc('spend_credits', {
+            p_tool: 'attraper',
+            p_description: 'Talisman attraper — ' + userName + ' → ' + targetName,
+          })
+          .single();
+        const spend = spendData as SpendCreditsResult | null;
 
-      if (spendError || !spend?.success) {
-        setModalBalance(spend?.balance ?? balance);
-        setShowCreditModal(true);
-        setLoading(false);
-        return;
+        if (spendError || !spend?.success) {
+          setModalBalance(spend?.balance ?? balance);
+          setShowCreditModal(true);
+          setLoading(false);
+          return;
+        }
       }
 
       const newResult: CachedResult = {

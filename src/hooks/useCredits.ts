@@ -6,19 +6,20 @@ import type { SpendCreditsResult } from '../utils/mystique';
 interface Credits {
   balance: number;
   isUnlimited: boolean;
+  isAdmin: boolean;
   expiresAt: string | null;
   loading: boolean;
 }
 
 export function useCredits(userId: string | null) {
   const [credits, setCredits] = useState<Credits>({
-    balance: 0, isUnlimited: false, expiresAt: null, loading: true
+    balance: 0, isUnlimited: false, isAdmin: false, expiresAt: null, loading: true
   });
 
   const loadCredits = useCallback(async () => {
     if (!userId) return;
 
-    const [{ data: creditData }, { data: subData }] = await Promise.all([
+    const [{ data: creditData }, { data: subData }, { data: roleData }] = await Promise.all([
       supabase.from('user_credits').select('balance').eq('user_id', userId).maybeSingle(),
       supabase
         .from('subscriptions')
@@ -27,11 +28,13 @@ export function useCredits(userId: string | null) {
         .eq('is_active', true)
         .gt('expires_at', new Date().toISOString())
         .maybeSingle(),
+      supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
     ]);
 
     setCredits({
       balance: creditData?.balance ?? 0,
       isUnlimited: !!subData,
+      isAdmin: roleData?.role === 'admin',
       expiresAt: subData?.expires_at ?? null,
       loading: false,
     });
@@ -52,7 +55,7 @@ export function useCredits(userId: string | null) {
   async function deductCredits(tool: string, description: string): Promise<boolean> {
     if (!userId) return false;
     if (TOOL_COSTS[tool] === 0) return true;
-    if (credits.isUnlimited) return true;
+    if (credits.isAdmin || credits.isUnlimited) return true;
 
     const { data, error } = await supabase
       .rpc('spend_credits', { p_tool: tool, p_description: description })
@@ -70,7 +73,7 @@ export function useCredits(userId: string | null) {
 
   function canUseTool(tool: string): boolean {
     if (TOOL_COSTS[tool] === 0) return true;
-    if (credits.isUnlimited) return true;
+    if (credits.isAdmin || credits.isUnlimited) return true;
     return credits.balance >= 2;
   }
 
