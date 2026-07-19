@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { calculateWeight, toArabicIndic, GENDER_BONUS, ABJAD } from '../utils/mystique';
+import { calculateWeight, ABJAD } from '../utils/mystique';
 
-type Gender = 'homme' | 'femme';
+interface LetterBreakdown {
+  letter: string;
+  value: number;
+}
 
 interface PMResult {
-  arabicInput: string;
-  nameWeight: number;
-  PM: number;
-  element: string;
-  elementColor: string;
+  inputText: string;
+  totalWeight: number;
+  breakdown: LetterBreakdown[];
 }
 
 // Au moins une lettre arabe (bloc Unicode Arabic de base) : suffisant pour
@@ -19,6 +20,19 @@ interface PMResult {
 function containsArabic(text: string): boolean {
   const arabicRegex = /[\u0600-\u06FF]/;
   return arabicRegex.test(text);
+}
+
+// Décomposition affichée dans le Bloc 2 : ne garde que les caractères
+// présents dans la table ABJAD (mêmes caractères que ceux comptés par
+// calculateWeight) — espaces, ponctuation, harakat et lettres latines
+// éventuelles sont ignorés ici aussi plutôt que d'afficher "= undefined".
+function buildBreakdown(text: string): LetterBreakdown[] {
+  const breakdown: LetterBreakdown[] = [];
+  for (const letter of text) {
+    const value = ABJAD[letter];
+    if (value !== undefined) breakdown.push({ letter, value });
+  }
+  return breakdown;
 }
 
 function Separateur() {
@@ -44,63 +58,42 @@ function FadeIn({ children }: { children: ReactNode }) {
   );
 }
 
-const ELEMENT_DESCRIPTIONS: Record<string, string> = {
-  Feu: "Personnalité ardente, passionnée et déterminée. Énergie solaire, leadership naturel et courage.",
-  Terre: "Personnalité stable, persévérante et fiable. Ancrage, patience et sens des responsabilités.",
-  Air: "Personnalité vive, intelligente et communicative. Créativité, adaptabilité et ouverture d'esprit.",
-  Eau: "Personnalité intuitive, sensible et profonde. Spiritualité, empathie et connexion avec l'invisible.",
-};
-
 export function PoidsMystiquePage() {
   const navigate = useNavigate();
 
-  const [arabicInput, setArabicInput] = useState('');
-  const [gender, setGender] = useState<Gender>('homme');
-
+  const [inputText, setInputText] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PMResult | null>(null);
   const [abjadOpen, setAbjadOpen] = useState(false);
 
-  const isDisabled = !arabicInput.trim();
+  const isDisabled = !inputText.trim();
 
   function handleCalculate() {
     setError(null);
 
-    if (!containsArabic(arabicInput)) {
-      setError('Merci d\'écrire ton prénom en caractères arabes (مثال: محمد)');
+    if (!containsArabic(inputText)) {
+      setError('Merci de coller ou écrire un texte en caractères arabes.');
       return;
     }
 
-    const cacheKey = `pm_arabic_${arabicInput}_${gender}`;
+    const cacheKey = `pm_${inputText}`;
     const cached = sessionStorage.getItem(cacheKey);
     if (cached) {
       setResult(JSON.parse(cached));
       return;
     }
 
-    const nameWeight = calculateWeight(arabicInput.trim());
-    const bonus = GENDER_BONUS[gender];
-    const PM = nameWeight + bonus;
+    const totalWeight = calculateWeight(inputText.trim());
+    const breakdown = buildBreakdown(inputText.trim());
 
-    const mod = PM % 4;
-    const element = mod === 1 ? 'Feu' : mod === 2 ? 'Terre' : mod === 3 ? 'Air' : 'Eau';
-    const elementColor = mod === 1 ? '#e53935' : mod === 2 ? '#795548' : mod === 3 ? '#64b5f6' : '#1565c0';
-
-    const newResult: PMResult = {
-      arabicInput,
-      nameWeight,
-      PM,
-      element,
-      elementColor,
-    };
+    const newResult: PMResult = { inputText, totalWeight, breakdown };
 
     sessionStorage.setItem(cacheKey, JSON.stringify(newResult));
     setResult(newResult);
   }
 
   function handleReset() {
-    setArabicInput('');
-    setGender('homme');
+    setInputText('');
     setResult(null);
     setError(null);
     setAbjadOpen(false);
@@ -132,46 +125,15 @@ export function PoidsMystiquePage() {
         {!result && (
           <div className="carte rounded-lg max-w-[600px] mx-auto flex flex-col gap-5">
             <div>
-              <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>
-                Ton prénom en arabe
-              </label>
-              <input
-                type="text"
-                value={arabicInput}
-                onChange={(e) => setArabicInput(e.target.value)}
-                placeholder="محمد"
-                className="arabic w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
+              <textarea
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                placeholder="Colle ton texte arabe ici"
+                rows={3}
+                className="arabic w-full min-h-[120px] sm:min-h-[100px] rounded px-3 py-2 text-white focus:outline-none focus:border-or"
+                style={{ background: '#0a0e2e', border: '1px solid rgba(249,168,37,0.3)' }}
               />
-              <p className="text-xs mt-1" style={{ color: '#b0b8d4' }}>
-                Écris ton prénom directement en caractères arabes
-              </p>
               {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm mb-2" style={{ color: '#b0b8d4' }}>
-                Ton sexe
-              </label>
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => setGender('homme')}
-                  className={`flex-1 py-2 rounded font-bold transition ${
-                    gender === 'homme' ? 'bg-or text-white' : 'border border-or text-or bg-transparent'
-                  }`}
-                >
-                  Homme
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setGender('femme')}
-                  className={`flex-1 py-2 rounded font-bold transition ${
-                    gender === 'femme' ? 'bg-or text-white' : 'border border-or text-or bg-transparent'
-                  }`}
-                >
-                  Femme
-                </button>
-              </div>
             </div>
 
             <button
@@ -179,80 +141,63 @@ export function PoidsMystiquePage() {
               disabled={isDisabled}
               className="btn-principal w-full rounded disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              CALCULER MON POIDS MYSTIQUE
+              CALCULER
             </button>
           </div>
         )}
 
-        {/* SECTION 5 — RÉSULTATS */}
+        {/* SECTION 3 — RÉSULTATS */}
         {result && (
           <FadeIn>
             <Separateur />
 
-            {/* BLOC 1 — Prénom en arabe */}
+            {/* BLOC 1 — Texte saisi */}
             <div className="carte rounded-lg text-center max-w-[600px] mx-auto">
               <p className="text-xs uppercase tracking-widest" style={{ color: '#b0b8d4' }}>
-                Ton prénom
+                Ton texte
               </p>
-              <p className="arabic text-or text-[2rem] mt-2">{result.arabicInput}</p>
-              <p className="text-sm mt-2" style={{ color: '#b0b8d4' }}>
-                Poids : {result.nameWeight}
-              </p>
+              <p className="arabic text-or text-[2rem] mt-2">{result.inputText}</p>
             </div>
 
             <Separateur />
 
-            {/* BLOC 2 — Poids Mystique */}
+            {/* BLOC 2 — Détail du calcul */}
+            <div className="carte rounded-lg text-center max-w-[600px] mx-auto">
+              <p className="text-xs uppercase tracking-widest" style={{ color: '#b0b8d4' }}>
+                Détail du calcul
+              </p>
+              <div className="flex flex-wrap justify-center items-center gap-x-3 gap-y-2 mt-4" style={{ fontSize: '1.1em' }}>
+                {result.breakdown.map((item, i) => (
+                  <span key={i} className="flex items-center gap-3">
+                    <span>
+                      <span className="arabic text-or">{item.letter}</span>
+                      <span className="text-white"> = {item.value}</span>
+                    </span>
+                    {i < result.breakdown.length - 1 && <span className="text-white">+</span>}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <Separateur />
+
+            {/* BLOC 3 — Poids Mystique */}
             <div className="carte rounded-lg text-center">
               <p className="text-sm tracking-widest" style={{ color: '#b0b8d4' }}>
-                TON POIDS MYSTIQUE
+                POIDS MYSTIQUE DE TON TEXTE
               </p>
-              <p className="text-or font-bold text-center text-[3rem] md:text-[4rem]">{result.PM}</p>
-              <p className="text-sm text-center" style={{ color: '#b0b8d4' }}>
-                {result.nameWeight} + {GENDER_BONUS[gender]} ({gender}) = {result.PM}
-              </p>
+              <p className="text-or font-bold text-center text-[3rem] md:text-[4rem]">{result.totalWeight}</p>
             </div>
 
             <Separateur />
 
-            {/* BLOC 3 — Élément */}
-            <div className="carte rounded-lg text-center" style={{ borderColor: result.elementColor, borderWidth: 2 }}>
-              <p className="text-sm" style={{ color: '#b0b8d4' }}>
-                TON ÉLÉMENT
-              </p>
-              <p className="font-bold text-[2rem] mt-2" style={{ color: result.elementColor }}>
-                {result.element}
-              </p>
-              <p className="mt-3 text-white">{ELEMENT_DESCRIPTIONS[result.element]}</p>
-            </div>
-
-            <Separateur />
-
-            {/* BLOC 4 — Chiffres arabes-indiens */}
-            <div className="carte rounded-lg text-center">
-              <p className="text-sm" style={{ color: '#b0b8d4' }}>
-                EN CHIFFRES ARABES-INDIENS
-              </p>
-              <p className="arabic text-or mt-2" style={{ textAlign: 'center', fontSize: '3rem' }}>
-                {toArabicIndic(result.PM)}
-              </p>
-            </div>
-
-            <Separateur />
-
-            {/* BLOC 5 — Boutons d'action */}
+            {/* BLOC 4 — Boutons d'action */}
             <div className="flex flex-col md:flex-row gap-3">
               <button
-                onClick={() => navigate(`/carres-magiques?pm=${result.PM}`)}
+                onClick={() => navigate(`/carres-magiques?pm=${result.totalWeight}`)}
                 className="btn-principal rounded w-full md:flex-1"
               >
                 Générer mes carrés magiques
-              </button>
-              <button
-                onClick={() => navigate('/destin')}
-                className="btn-secondaire rounded w-full md:flex-1"
-              >
-                Découvrir mon destin complet
               </button>
               <button onClick={handleReset} className="btn-secondaire rounded w-full md:flex-1">
                 Nouveau calcul
@@ -261,7 +206,7 @@ export function PoidsMystiquePage() {
 
             <Separateur />
 
-            {/* BLOC 6 — Explication Abjad */}
+            {/* SECTION — Accordéon Abjad */}
             <div className="carte rounded-lg">
               <button
                 onClick={() => setAbjadOpen(!abjadOpen)}
@@ -275,12 +220,12 @@ export function PoidsMystiquePage() {
                   <p className="text-white">
                     Le système Abjad est une méthode ancestrale islamique qui attribue une valeur numérique à
                     chaque lettre de l'alphabet arabe. Cette science, appelée Ilm al-Huruf (science des
-                    lettres), permet de calculer le poids mystique d'un nom afin de révéler ses influences
+                    lettres), permet de calculer le poids mystique d'un texte afin de révéler ses influences
                     spirituelles.
                   </p>
                   <p className="text-white mt-4">
-                    Le Poids Mystique (PM) est calculé en additionnant les valeurs Abjad de chaque lettre du
-                    prénom, et en ajoutant un bonus selon le genre (+52 pour l'homme, +452 pour la femme).
+                    Le Poids Mystique de ton texte est calculé en additionnant les valeurs Abjad de chaque
+                    lettre qui le compose.
                   </p>
 
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 mt-5 text-sm">
