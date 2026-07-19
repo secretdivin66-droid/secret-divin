@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { validatePassword, getPasswordStrength, translateAuthError } from '../utils/auth';
+import { PasswordVisibilityToggle } from '../components/PasswordVisibilityToggle';
 
 type LinkState = 'checking' | 'valid' | 'invalid';
 
@@ -9,7 +10,9 @@ export function ResetPasswordPage() {
   const navigate = useNavigate();
   const [linkState, setLinkState] = useState<LinkState>('checking');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -97,12 +100,13 @@ export function ResetPasswordPage() {
             <div>
               <label className="block text-sm text-gray-400 mb-1">Nouveau mot de passe</label>
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
               />
+              <PasswordVisibilityToggle checked={showPassword} onChange={setShowPassword} />
               {strength && (
                 <div className="mt-2">
                   <div className="w-full h-1 rounded-full overflow-hidden" style={{ background: '#1a1a2e' }}>
@@ -120,12 +124,13 @@ export function ResetPasswordPage() {
             <div>
               <label className="block text-sm text-gray-400 mb-1">Confirmer le mot de passe</label>
               <input
-                type="password"
+                type={showConfirmPassword ? 'text' : 'password'}
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
               />
+              <PasswordVisibilityToggle checked={showConfirmPassword} onChange={setShowConfirmPassword} />
             </div>
 
             {error && <p className="text-red-400 text-sm">{error}</p>}

@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../hooks/useAuth';
 import { isValidEmail, isValidName } from '../utils/security';
 import { validatePassword, getPasswordStrength, translateAuthError } from '../utils/auth';
+import { PasswordVisibilityToggle } from '../components/PasswordVisibilityToggle';
 
 type Tab = 'login' | 'signup';
 
@@ -22,6 +23,7 @@ export function AuthPage() {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -182,13 +184,14 @@ export function AuthPage() {
               )}
             </div>
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               required
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
             />
+            <PasswordVisibilityToggle checked={showPassword} onChange={setShowPassword} />
             {fieldErrors.password && <p className="text-red-400 text-xs mt-1">{fieldErrors.password}</p>}
             {strength && (
               <div className="mt-2">
