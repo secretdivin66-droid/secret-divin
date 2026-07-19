@@ -54,7 +54,7 @@ export function BlogArticlePage() {
         .select('*')
         .eq('slug', slug)
         .eq('is_published', true)
-        .single();
+        .maybeSingle();
 
       if (!active) return;
 

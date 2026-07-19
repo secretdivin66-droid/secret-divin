@@ -85,7 +85,7 @@ export function MaraboutInscriptionPage() {
         .from('marabouts')
         .select('id, is_verified, abonnement_actif')
         .eq('user_id', authUser.id)
-        .single();
+        .maybeSingle();
 
       if (existing?.is_verified) {
         navigate('/marabout-dashboard');

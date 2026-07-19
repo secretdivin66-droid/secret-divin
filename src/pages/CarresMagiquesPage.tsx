@@ -152,7 +152,7 @@ export function CarresMagiquesPage() {
         .from('user_credits')
         .select('balance')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       const balance = creditsRow?.balance ?? 0;
 
       if (balance < 2) {

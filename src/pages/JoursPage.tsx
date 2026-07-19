@@ -313,7 +313,7 @@ export function JoursPage() {
         .from('user_credits')
         .select('balance')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       const balance = credits?.balance ?? 0;
 
       if (balance < 2) {

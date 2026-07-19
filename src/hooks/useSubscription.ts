@@ -43,7 +43,7 @@ export function useSubscription(userId: string | null) {
             .eq('is_active', true)
             .eq('status', 'active')
             .gt('expires_at', new Date().toISOString())
-            .single()
+            .maybeSingle()
         : Promise.resolve({ data: null }),
     ]);
 

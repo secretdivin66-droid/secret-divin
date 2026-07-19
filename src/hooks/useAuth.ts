@@ -28,9 +28,9 @@ export function useAuth(): AuthState {
 
     async function loadProfile(userId: string) {
       const [{ data: profileRow }, { data: creditsRow }, { data: roleRow }] = await Promise.all([
-        supabase.from('profiles').select('first_name, last_name, display_name').eq('user_id', userId).single(),
-        supabase.from('user_credits').select('balance').eq('user_id', userId).single(),
-        supabase.from('user_roles').select('role').eq('user_id', userId).single(),
+        supabase.from('profiles').select('first_name, last_name, display_name').eq('user_id', userId).maybeSingle(),
+        supabase.from('user_credits').select('balance').eq('user_id', userId).maybeSingle(),
+        supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
       ]);
       if (active) {
         const prenom = profileRow?.first_name || profileRow?.display_name || null;

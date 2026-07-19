@@ -49,7 +49,7 @@ export function MaraboutProfilPage() {
         .select(`*, marabout_avis (note, commentaire, created_at, user_id)`)
         .eq('id', id)
         .eq('is_verified', true)
-        .single();
+        .maybeSingle();
 
       if (!active) return;
 

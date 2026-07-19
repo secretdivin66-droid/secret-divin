@@ -221,15 +221,15 @@ export function ProfilPage() {
 
       const [{ data: profileData }, { data: creditsData }, { data: subData }, { data: consultationsData }, { data: modulesData }] =
         await Promise.all([
-          supabase.from('profiles').select('*').eq('user_id', user.id).single(),
-          supabase.from('user_credits').select('balance, total_purchased').eq('user_id', user.id).single(),
+          supabase.from('profiles').select('*').eq('user_id', user.id).maybeSingle(),
+          supabase.from('user_credits').select('balance, total_purchased').eq('user_id', user.id).maybeSingle(),
           supabase
             .from('subscriptions')
             .select('*')
             .eq('user_id', user.id)
             .eq('is_active', true)
             .gt('expires_at', new Date().toISOString())
-            .single(),
+            .maybeSingle(),
           supabase.from('saved_rituals').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
           supabase.from('formation_modules').select('*').eq('user_id', user.id),
         ]);

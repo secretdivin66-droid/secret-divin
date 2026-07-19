@@ -19,14 +19,14 @@ export function useCredits(userId: string | null) {
     if (!userId) return;
 
     const [{ data: creditData }, { data: subData }] = await Promise.all([
-      supabase.from('user_credits').select('balance').eq('user_id', userId).single(),
+      supabase.from('user_credits').select('balance').eq('user_id', userId).maybeSingle(),
       supabase
         .from('subscriptions')
         .select('*')
         .eq('user_id', userId)
         .eq('is_active', true)
         .gt('expires_at', new Date().toISOString())
-        .single(),
+        .maybeSingle(),
     ]);
 
     setCredits({

@@ -87,7 +87,7 @@ export function MaraboutDashboardPage() {
       .from('marabouts')
       .select(`*, marabout_avis (note, commentaire, created_at)`)
       .eq('user_id', authUser.id)
-      .single();
+      .maybeSingle();
 
     if (!data) {
       navigate('/marabouts/inscrire');
