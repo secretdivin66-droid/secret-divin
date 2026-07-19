@@ -2,54 +2,23 @@ import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { calculateWeight, toArabicIndic, GENDER_BONUS, ABJAD } from '../utils/mystique';
-import { callGeminiProxy } from '../lib/geminiProxy';
 
 type Gender = 'homme' | 'femme';
 
 interface PMResult {
-  nameArabic: string;
-  motherArabic: string;
+  arabicInput: string;
   nameWeight: number;
-  motherWeight: number;
   PM: number;
   element: string;
   elementColor: string;
 }
 
-interface GeminiNameResult {
-  arabic: string;
-  weight?: number;
-}
-
-function buildPrompt(name: string): string {
-  return `Tu es expert en translittération arabe des noms ouest-africains selon l'orthographe islamique traditionnelle.
-Translittère ce nom en arabe SANS harakat.
-Retourne UNIQUEMENT du JSON valide sans markdown :
-{ "arabic": "النص", "weight": 0 }
-Nom : ${name}`;
-}
-
-async function callGemini(prompt: string): Promise<GeminiNameResult> {
-  const json = await callGeminiProxy('gemini-2.0-flash', {
-    contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0.1, maxOutputTokens: 200 },
-  });
-  const text = json?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error('empty');
-  const clean = text.replace(/```json|```/g, '').trim();
-  return JSON.parse(clean);
-}
-
-async function translateName(name: string): Promise<GeminiNameResult> {
-  const prompt = buildPrompt(name);
-  try {
-    return await callGemini(prompt);
-  } catch (err) {
-    if (err instanceof SyntaxError) {
-      return await callGemini(prompt);
-    }
-    throw err;
-  }
+// Au moins une lettre arabe (bloc Unicode Arabic de base) : suffisant pour
+// rejeter une saisie purement latine tapée par erreur, sans être trop
+// strict sur les harakat/ponctuation qui tombent hors de ce bloc.
+function containsArabic(text: string): boolean {
+  const arabicRegex = /[\u0600-\u06FF]/;
+  return arabicRegex.test(text);
 }
 
 function Separateur() {
@@ -85,65 +54,52 @@ const ELEMENT_DESCRIPTIONS: Record<string, string> = {
 export function PoidsMystiquePage() {
   const navigate = useNavigate();
 
-  const [firstName, setFirstName] = useState('');
-  const [motherName, setMotherName] = useState('');
+  const [arabicInput, setArabicInput] = useState('');
   const [gender, setGender] = useState<Gender>('homme');
 
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<PMResult | null>(null);
   const [abjadOpen, setAbjadOpen] = useState(false);
 
-  const isDisabled = !firstName.trim() && !motherName.trim();
+  const isDisabled = !arabicInput.trim();
 
-  async function handleCalculate() {
+  function handleCalculate() {
     setError(null);
 
-    const cacheKey = `pm_${firstName}_${motherName}_${gender}`;
+    if (!containsArabic(arabicInput)) {
+      setError('Merci d\'écrire ton prénom en caractères arabes (مثال: محمد)');
+      return;
+    }
+
+    const cacheKey = `pm_arabic_${arabicInput}_${gender}`;
     const cached = sessionStorage.getItem(cacheKey);
     if (cached) {
       setResult(JSON.parse(cached));
       return;
     }
 
-    setLoading(true);
-    try {
-      const [nameResult, motherResult] = await Promise.all([
-        translateName(firstName),
-        translateName(motherName),
-      ]);
+    const nameWeight = calculateWeight(arabicInput.trim());
+    const bonus = GENDER_BONUS[gender];
+    const PM = nameWeight + bonus;
 
-      const nameWeight = calculateWeight(nameResult.arabic);
-      const motherWeight = calculateWeight(motherResult.arabic);
-      const bonus = GENDER_BONUS[gender];
-      const PM = nameWeight + motherWeight + bonus;
+    const mod = PM % 4;
+    const element = mod === 1 ? 'Feu' : mod === 2 ? 'Terre' : mod === 3 ? 'Air' : 'Eau';
+    const elementColor = mod === 1 ? '#e53935' : mod === 2 ? '#795548' : mod === 3 ? '#64b5f6' : '#1565c0';
 
-      const mod = PM % 4;
-      const element = mod === 1 ? 'Feu' : mod === 2 ? 'Terre' : mod === 3 ? 'Air' : 'Eau';
-      const elementColor = mod === 1 ? '#e53935' : mod === 2 ? '#795548' : mod === 3 ? '#64b5f6' : '#1565c0';
+    const newResult: PMResult = {
+      arabicInput,
+      nameWeight,
+      PM,
+      element,
+      elementColor,
+    };
 
-      const newResult: PMResult = {
-        nameArabic: nameResult.arabic,
-        motherArabic: motherResult.arabic,
-        nameWeight,
-        motherWeight,
-        PM,
-        element,
-        elementColor,
-      };
-
-      sessionStorage.setItem(cacheKey, JSON.stringify(newResult));
-      setResult(newResult);
-    } catch {
-      setError('Erreur de connexion. Vérifie ta clé API et réessaie.');
-    } finally {
-      setLoading(false);
-    }
+    sessionStorage.setItem(cacheKey, JSON.stringify(newResult));
+    setResult(newResult);
   }
 
   function handleReset() {
-    setFirstName('');
-    setMotherName('');
+    setArabicInput('');
     setGender('homme');
     setResult(null);
     setError(null);
@@ -177,28 +133,19 @@ export function PoidsMystiquePage() {
           <div className="carte rounded-lg max-w-[600px] mx-auto flex flex-col gap-5">
             <div>
               <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>
-                Ton prénom (en français)
+                Ton prénom en arabe
               </label>
               <input
                 type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                placeholder="Ex: Mohamed, Aissatou, Ibrahim..."
-                className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
+                value={arabicInput}
+                onChange={(e) => setArabicInput(e.target.value)}
+                placeholder="محمد"
+                className="arabic w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
               />
-            </div>
-
-            <div>
-              <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>
-                Prénom de ta mère (en français)
-              </label>
-              <input
-                type="text"
-                value={motherName}
-                onChange={(e) => setMotherName(e.target.value)}
-                placeholder="Ex: Fatoumata, Mariama..."
-                className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
-              />
+              <p className="text-xs mt-1" style={{ color: '#b0b8d4' }}>
+                Écris ton prénom directement en caractères arabes
+              </p>
+              {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
             </div>
 
             <div>
@@ -229,28 +176,10 @@ export function PoidsMystiquePage() {
 
             <button
               onClick={handleCalculate}
-              disabled={isDisabled || loading}
+              disabled={isDisabled}
               className="btn-principal w-full rounded disabled:opacity-50 disabled:cursor-not-allowed"
             >
               CALCULER MON POIDS MYSTIQUE
-            </button>
-          </div>
-        )}
-
-        {/* SECTION 3 — CHARGEMENT */}
-        {loading && (
-          <div className="flex flex-col items-center gap-3 mt-6">
-            <div className="w-10 h-10 border-4 border-or border-t-transparent rounded-full animate-spin" />
-            <p style={{ color: '#b0b8d4' }}>Translittération en cours...</p>
-          </div>
-        )}
-
-        {/* SECTION 7 — ERREUR */}
-        {error && (
-          <div className="carte rounded-lg mt-6 text-center" style={{ border: '1px solid #e53935' }}>
-            <p className="text-red-400 mb-4">{error}</p>
-            <button onClick={handleCalculate} className="btn-principal rounded">
-              Réessayer
             </button>
           </div>
         )}
@@ -260,28 +189,15 @@ export function PoidsMystiquePage() {
           <FadeIn>
             <Separateur />
 
-            {/* BLOC 1 — Prénoms en arabe */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="carte rounded-lg text-center">
-                <p className="text-xs uppercase tracking-widest" style={{ color: '#b0b8d4' }}>
-                  Ton prénom
-                </p>
-                <p className="text-white font-bold mt-2">{firstName}</p>
-                <p className="arabic text-or text-[1.8em] mt-2">{result.nameArabic}</p>
-                <p className="text-sm mt-2" style={{ color: '#b0b8d4' }}>
-                  Poids : {result.nameWeight}
-                </p>
-              </div>
-              <div className="carte rounded-lg text-center">
-                <p className="text-xs uppercase tracking-widest" style={{ color: '#b0b8d4' }}>
-                  Prénom de ta mère
-                </p>
-                <p className="text-white font-bold mt-2">{motherName}</p>
-                <p className="arabic text-or text-[1.8em] mt-2">{result.motherArabic}</p>
-                <p className="text-sm mt-2" style={{ color: '#b0b8d4' }}>
-                  Poids : {result.motherWeight}
-                </p>
-              </div>
+            {/* BLOC 1 — Prénom en arabe */}
+            <div className="carte rounded-lg text-center max-w-[600px] mx-auto">
+              <p className="text-xs uppercase tracking-widest" style={{ color: '#b0b8d4' }}>
+                Ton prénom
+              </p>
+              <p className="arabic text-or text-[2rem] mt-2">{result.arabicInput}</p>
+              <p className="text-sm mt-2" style={{ color: '#b0b8d4' }}>
+                Poids : {result.nameWeight}
+              </p>
             </div>
 
             <Separateur />
@@ -293,7 +209,7 @@ export function PoidsMystiquePage() {
               </p>
               <p className="text-or font-bold text-center text-[3rem] md:text-[4rem]">{result.PM}</p>
               <p className="text-sm text-center" style={{ color: '#b0b8d4' }}>
-                {result.nameWeight} + {result.motherWeight} + {GENDER_BONUS[gender]} ({gender}) = {result.PM}
+                {result.nameWeight} + {GENDER_BONUS[gender]} ({gender}) = {result.PM}
               </p>
             </div>
 
@@ -364,8 +280,7 @@ export function PoidsMystiquePage() {
                   </p>
                   <p className="text-white mt-4">
                     Le Poids Mystique (PM) est calculé en additionnant les valeurs Abjad de chaque lettre du
-                    prénom, du prénom de la mère, et en ajoutant un bonus selon le genre (+52 pour l'homme,
-                    +452 pour la femme).
+                    prénom, et en ajoutant un bonus selon le genre (+52 pour l'homme, +452 pour la femme).
                   </p>
 
                   <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 mt-5 text-sm">
