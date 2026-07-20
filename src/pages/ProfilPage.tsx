@@ -312,7 +312,11 @@ export function ProfilPage() {
 
     setSaving(true);
     try {
-      await supabase.from('profiles').upsert({
+      // onConflict non précisé = la contrainte par défaut de la table est
+      // utilisée pour résoudre le upsert. Ici c'est correct : `profiles`
+      // n'a pas de colonne `id` du tout, sa clé primaire EST `user_id`
+      // (voir schema.sql) — d'où l'absence volontaire de `onConflict`.
+      const payload = {
         user_id: authUser.id,
         display_name: displayName,
         first_name: firstName,
@@ -323,7 +327,11 @@ export function ProfilPage() {
         gender,
         religion,
         updated_at: new Date().toISOString(),
-      });
+      };
+      console.log('payload:', payload);
+      const { error } = await supabase.from('profiles').upsert(payload);
+      console.log('error:', error);
+      if (error) throw error;
       setProfile((prev) => ({
         ...(prev ?? { language: 'fr' } as Profile),
         display_name: displayName,
@@ -339,7 +347,8 @@ export function ProfilPage() {
       setSaveMessage('Profil mis à jour avec succès');
       setTimeout(() => setSaveMessage(null), 3000);
       if (firstName && motherName) loadPM(firstName, motherName, gender);
-    } catch {
+    } catch (err) {
+      console.error('[ProfilPage] Échec de handleSaveProfile :', err);
       setSaveError('Erreur lors de la sauvegarde. Réessaie dans quelques instants.');
     } finally {
       setSaving(false);
@@ -362,14 +371,19 @@ export function ProfilPage() {
     if (!authUser) return;
     setPrefsSaving(true);
     try {
-      await supabase.from('profiles').upsert({
+      const payload = {
         user_id: authUser.id,
         language,
         updated_at: new Date().toISOString(),
-      });
+      };
+      console.log('payload:', payload);
+      const { error } = await supabase.from('profiles').upsert(payload);
+      console.log('error:', error);
+      if (error) throw error;
       setPrefsMessage('Préférences enregistrées');
       setTimeout(() => setPrefsMessage(null), 3000);
-    } catch {
+    } catch (err) {
+      console.error('[ProfilPage] Échec de handleSavePreferences :', err);
       setPrefsMessage('Erreur lors de la sauvegarde.');
     } finally {
       setPrefsSaving(false);
