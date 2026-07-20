@@ -48,11 +48,17 @@ export function AvatarUploader({ userId, avatarUrl, fallbackLabel, onChange }: P
       await clearExistingFiles(userId);
 
       const ext = file.name.split('.').pop() || 'jpg';
+      // Convention documentée par la policy RLS de 0009_profile_avatar_
+      // contact.sql : (storage.foldername(name))[1] = auth.uid()::text —
+      // seul le premier segment de dossier (userId) compte, le nom de
+      // fichier lui-même (avatar-<timestamp>.<ext>) est libre.
       const path = `${userId}/avatar-${Date.now()}.${ext}`;
 
-      const { error: uploadError } = await supabase.storage
+      console.log('[Supabase Storage] upload avatars —', { path, contentType: file.type, size: file.size });
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(path, file, { upsert: true, contentType: file.type });
+      console.log('[Supabase Storage] réponse upload avatars —', { data: uploadData, error: uploadError });
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
@@ -61,10 +67,12 @@ export function AvatarUploader({ userId, avatarUrl, fallbackLabel, onChange }: P
         .from('profiles')
         .update({ avatar_url: urlData.publicUrl, updated_at: new Date().toISOString() })
         .eq('user_id', userId);
+      console.log('[Supabase] update profiles.avatar_url —', { error: updateError });
       if (updateError) throw updateError;
 
       onChange(urlData.publicUrl);
-    } catch {
+    } catch (err) {
+      console.error("[AvatarUploader] Échec de l'envoi de la photo :", err);
       setError("Échec de l'envoi de la photo. Réessaie dans quelques instants.");
     } finally {
       setUploading(false);
@@ -84,7 +92,8 @@ export function AvatarUploader({ userId, avatarUrl, fallbackLabel, onChange }: P
       if (updateError) throw updateError;
 
       onChange(null);
-    } catch {
+    } catch (err) {
+      console.error('[AvatarUploader] Échec de la suppression de la photo :', err);
       setError('Échec de la suppression de la photo. Réessaie dans quelques instants.');
     } finally {
       setUploading(false);
