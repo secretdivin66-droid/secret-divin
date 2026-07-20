@@ -81,11 +81,25 @@ export function MaraboutInscriptionPage() {
       }
       setUser(authUser);
 
-      const { data: existing } = await supabase
+      console.log('[Supabase] SELECT marabouts — vérification profil existant', {
+        table: 'marabouts',
+        select: 'id, is_verified, abonnement_actif',
+        filter: { user_id: authUser.id },
+      });
+      const { data: existing, error: existingError } = await supabase
         .from('marabouts')
         .select('id, is_verified, abonnement_actif')
         .eq('user_id', authUser.id)
         .maybeSingle();
+      console.log('[Supabase] Réponse SELECT marabouts (vérification) :', { data: existing, error: existingError });
+      if (existingError) {
+        console.error('[Supabase] Erreur SELECT marabouts (vérification) :', {
+          code: existingError.code,
+          message: existingError.message,
+          details: existingError.details,
+          hint: existingError.hint,
+        });
+      }
 
       if (existing?.is_verified) {
         navigate('/marabout-dashboard');
@@ -121,7 +135,7 @@ export function MaraboutInscriptionPage() {
     setSubmitting(true);
     setError(null);
     try {
-      const { error: insertError } = await supabase.from('marabouts').insert({
+      const payload = {
         user_id: user.id,
         nom_complet: nomComplet,
         photo_url: photoUrl || null,
@@ -136,10 +150,26 @@ export function MaraboutInscriptionPage() {
         is_verified: false,
         is_active: true,
         abonnement_actif: false,
+      };
+      console.log('[Supabase] INSERT marabouts — soumission inscription', {
+        table: 'marabouts',
+        operation: 'insert',
+        payload,
       });
-      if (insertError) throw insertError;
+      const { data: insertData, error: insertError } = await supabase.from('marabouts').insert(payload).select();
+      console.log('[Supabase] Réponse INSERT marabouts :', { data: insertData, error: insertError });
+      if (insertError) {
+        console.error('[Supabase] Erreur INSERT marabouts :', {
+          code: insertError.code,
+          message: insertError.message,
+          details: insertError.details,
+          hint: insertError.hint,
+        });
+        throw insertError;
+      }
       setSubmitted(true);
-    } catch {
+    } catch (err) {
+      console.error('[MaraboutInscriptionPage] Échec de la soumission :', err);
       setError('Erreur lors de la soumission. Réessaie dans quelques instants.');
     } finally {
       setSubmitting(false);
