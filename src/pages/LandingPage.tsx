@@ -10,14 +10,14 @@ const STATS = [
 
 const OUTILS = [
   { title: 'Poids Mystique', desc: 'Calcul selon la table Abjad islamique traditionnelle.', cost: 'GRATUIT', free: true },
-  { title: 'Destin Complet', desc: '17 points mystiques pour une lecture complète de ta destinée.', cost: '2 crédits par génération', free: false },
-  { title: 'Carrés Magiques', desc: '7 types de carrés, de 3x3 à 9x9, selon ton poids mystique.', cost: '2 crédits par génération', free: false },
-  { title: 'Géomancie', desc: "Les 16 figures géomantiques de la tradition africaine.", cost: '2 crédits par génération', free: false },
-  { title: 'Interprétation des Rêves', desc: 'Tradition islamique et africaine réunies.', cost: '2 crédits', free: false },
-  { title: 'Secrets Mystiques', desc: 'Un talisman personnalisé selon ton objectif.', cost: '2 crédits', free: false },
-  { title: 'Plantes Mystiques', desc: 'Les plantes sacrées africaines et leurs rituels.', cost: '2 crédits', free: false },
-  { title: 'Pour Attraper', desc: 'Un talisman basé sur les noms arabes de deux personnes.', cost: '2 crédits', free: false },
-  { title: 'Tutoriels', desc: '15 tutoriels détaillés pour apprendre pas à pas.', cost: 'GRATUIT', free: true },
+  { title: 'Secret de ton Destin', titleArabic: 'سر قدرك', desc: '17 points mystiques pour une lecture complète de ta destinée.', cost: '2 crédits par génération', free: false },
+  { title: 'Carrés Magiques', titleArabic: 'المربعات السحرية', desc: '7 types de carrés, de 3x3 à 9x9, selon ton poids mystique.', cost: '2 crédits par génération', free: false },
+  { title: 'Géomancie', titleArabic: 'علم الرمل', desc: "Les 16 figures géomantiques de la tradition africaine.", cost: '2 crédits par génération', free: false },
+  { title: 'Interprétation des Rêves', titleArabic: 'تفسير الأحلام', desc: 'Tradition islamique et africaine réunies.', cost: '2 crédits', free: false },
+  { title: 'Secrets mystiques', titleArabic: 'الأسرار الروحانية', desc: 'Un talisman personnalisé selon ton objectif.', cost: '2 crédits', free: false },
+  { title: 'Secrets des Plantes', titleArabic: 'أسرار النباتات', desc: 'Les plantes sacrées africaines et leurs rituels.', cost: '2 crédits', free: false },
+  { title: 'Attraper ou Réconcilier', titleArabic: 'الجذب أو المصالحة', desc: 'Un talisman basé sur les noms arabes de deux personnes.', cost: '2 crédits', free: false },
+  { title: 'Tutoriels', titleArabic: 'الدروس التعليمية', desc: '15 tutoriels détaillés pour apprendre pas à pas.', cost: 'GRATUIT', free: true },
 ];
 
 const STEPS = [
@@ -106,6 +106,11 @@ export function LandingPage() {
                 <span className="self-center sm:self-start px-2 py-1 rounded-full text-xs font-bold" style={{ background: '#1b3a1f', color: '#4caf50' }}>
                   GRATUIT
                 </span>
+              )}
+              {o.titleArabic && (
+                <p className="arabic font-bold text-[1.1em]" style={{ color: '#f9a825' }}>
+                  {o.titleArabic}
+                </p>
               )}
               <h3 className="font-bold text-white">{o.title}</h3>
               <p className="text-sm" style={{ color: '#b0b8d4' }}>{o.desc}</p>

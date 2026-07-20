@@ -4,19 +4,19 @@ import { useCredits } from '../hooks/useCredits';
 import { supabase } from '../lib/supabaseClient';
 import { PACKS, WHATSAPP_NUMBER } from '../utils/mystique';
 
-const OUTIL_COSTS_DISPLAY: { label: string; cost: string; free: boolean }[] = [
+const OUTIL_COSTS_DISPLAY: { label: string; labelArabic?: string; cost: string; free: boolean }[] = [
   { label: 'Poids mystique', cost: 'GRATUIT', free: true },
-  { label: 'Tutoriels', cost: 'GRATUIT', free: true },
-  { label: 'Destin complet', cost: '2 crédits', free: false },
-  { label: 'Pour attraper', cost: '2 crédits', free: false },
-  { label: 'Secrets mystiques', cost: '2 crédits', free: false },
-  { label: 'Géomancie', cost: '2 crédits', free: false },
-  { label: 'Compatibilité', cost: '2 crédits', free: false },
-  { label: 'Carrés magiques', cost: '2 crédits', free: false },
-  { label: 'Rêves', cost: '2 crédits', free: false },
-  { label: 'Plantes mystiques', cost: '2 crédits', free: false },
-  { label: 'Jours naissance', cost: '2 crédits', free: false },
-  { label: 'Formation (leçon)', cost: '2 crédits', free: false },
+  { label: 'Tutoriels', labelArabic: 'الدروس التعليمية', cost: 'GRATUIT', free: true },
+  { label: 'Secret de ton Destin', labelArabic: 'سر قدرك', cost: '2 crédits', free: false },
+  { label: 'Attraper ou Réconcilier', labelArabic: 'الجذب أو المصالحة', cost: '2 crédits', free: false },
+  { label: 'Secrets mystiques', labelArabic: 'الأسرار الروحانية', cost: '2 crédits', free: false },
+  { label: 'Géomancie', labelArabic: 'علم الرمل', cost: '2 crédits', free: false },
+  { label: 'Compatibilité', labelArabic: 'التوافق', cost: '2 crédits', free: false },
+  { label: 'Carrés magiques', labelArabic: 'المربعات السحرية', cost: '2 crédits', free: false },
+  { label: 'Interprétation des Rêves', labelArabic: 'تفسير الأحلام', cost: '2 crédits', free: false },
+  { label: 'Secrets des Plantes', labelArabic: 'أسرار النباتات', cost: '2 crédits', free: false },
+  { label: 'Secret de ton Jour', labelArabic: 'سر يومك', cost: '2 crédits', free: false },
+  { label: 'Formation (leçon)', labelArabic: 'التكوين', cost: '2 crédits', free: false },
 ];
 
 const STEPS = [
@@ -164,7 +164,14 @@ export function CreditsPage() {
                 className="flex items-center justify-between py-3"
                 style={i > 0 ? { borderTop: '1px solid rgba(37,99,235,0.1)' } : undefined}
               >
-                <span className="text-white">{row.label}</span>
+                <span>
+                  {row.labelArabic && (
+                    <span className="arabic block font-bold text-[1.1em]" style={{ color: '#f9a825' }}>
+                      {row.labelArabic}
+                    </span>
+                  )}
+                  <span className="text-white block">{row.label}</span>
+                </span>
                 <span className={`font-bold ${row.free ? 'text-green-400' : 'text-or'}`}>{row.cost}</span>
               </div>
             ))}

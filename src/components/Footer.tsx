@@ -11,7 +11,12 @@ export function Footer() {
             <li><Link to="/credits" className="hover:text-or transition">Tarifs</Link></li>
             <li><Link to="/pricing" className="hover:text-or transition">Abonnements</Link></li>
             <li><Link to="/marabouts" className="hover:text-or transition">Marabouts</Link></li>
-            <li><Link to="/formation" className="hover:text-or transition">Formation</Link></li>
+            <li>
+              <Link to="/formation" className="hover:text-or transition block">
+                <span className="arabic block text-xs" style={{ color: '#f9a825' }}>التكوين</span>
+                Formation
+              </Link>
+            </li>
           </ul>
         </div>
         <div>

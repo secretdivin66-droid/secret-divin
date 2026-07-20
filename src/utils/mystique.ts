@@ -84,24 +84,24 @@ export const TOOL_COSTS: Record<string, number> = {
 export interface ToolInfo {
   id: string;
   name: string;
+  nameArabic?: string;
   route: string;
-  icon: string;
   description: string;
 }
 
 export const TOOLS: ToolInfo[] = [
-  { id: 'poids-mystique', name: 'Poids Mystique', route: '/poids-mystique', icon: '⚖️', description: "Ton poids mystique selon la numérologie Abjad — la base de tous les autres outils." },
-  { id: 'destin', name: 'Destin', route: '/destin', icon: '🔮', description: "Une lecture profonde de ta destinée à travers ton nom et celui de ta mère." },
-  { id: 'jours', name: 'Jours Fastes', route: '/jours', icon: '📅', description: "Les jours les plus favorables selon les correspondances planétaires." },
-  { id: 'secrets', name: 'Secrets', route: '/secrets', icon: '🗝️', description: "Des secrets spirituels ciblés selon ton objectif : protection, amour, richesse..." },
-  { id: 'carres-magiques', name: 'Carrés Magiques', route: '/carres-magiques', icon: '🔢', description: "Ton carré magique personnel, de 3×3 à 9×9, selon ton poids mystique." },
-  { id: 'geomancie', name: 'Géomancie', route: '/geomancie', icon: '🌍', description: "L'art divinatoire ancestral du Khatt ar-Raml pour éclairer tes décisions." },
-  { id: 'reves', name: 'Interprétation des Rêves', route: '/reves', icon: '💭', description: "Le sens caché de tes rêves selon la tradition islamique." },
-  { id: 'plantes', name: 'Plantes Sacrées', route: '/plantes', icon: '🌿', description: "Les plantes et leurs vertus spirituelles, adaptées à ton profil." },
-  { id: 'compatibilite', name: 'Compatibilité', route: '/compatibilite', icon: '💞', description: "L'harmonie entre deux personnes à travers leurs poids mystiques." },
-  { id: 'attraper', name: 'Attraper la Chance', route: '/attraper', icon: '✨', description: "Des pratiques pour attirer la chance et les opportunités dans ta vie." },
-  { id: 'tutoriels', name: 'Tutoriels', route: '/tutoriels', icon: '🎓', description: "Apprends à utiliser chaque outil pas à pas." },
-  { id: 'formation', name: 'Formation', route: '/formation', icon: '📚', description: "Une formation complète pour approfondir tes connaissances mystiques." },
+  { id: 'poids-mystique', name: 'Poids Mystique', route: '/poids-mystique', description: "Ton poids mystique selon la numérologie Abjad — la base de tous les autres outils." },
+  { id: 'destin', name: 'Secret de ton Destin', nameArabic: 'سر قدرك', route: '/destin', description: "Une lecture profonde de ta destinée à travers ton nom et celui de ta mère." },
+  { id: 'jours', name: 'Secret de ton Jour', nameArabic: 'سر يومك', route: '/jours', description: "Les jours les plus favorables selon les correspondances planétaires." },
+  { id: 'secrets', name: 'Secrets mystiques', nameArabic: 'الأسرار الروحانية', route: '/secrets', description: "Des secrets spirituels ciblés selon ton objectif : protection, amour, richesse..." },
+  { id: 'carres-magiques', name: 'Carrés Magiques', nameArabic: 'المربعات السحرية', route: '/carres-magiques', description: "Ton carré magique personnel, de 3×3 à 9×9, selon ton poids mystique." },
+  { id: 'geomancie', name: 'Géomancie', nameArabic: 'علم الرمل', route: '/geomancie', description: "L'art divinatoire ancestral du Khatt ar-Raml pour éclairer tes décisions." },
+  { id: 'reves', name: 'Interprétation des Rêves', nameArabic: 'تفسير الأحلام', route: '/reves', description: "Le sens caché de tes rêves selon la tradition islamique." },
+  { id: 'plantes', name: 'Secrets des Plantes', nameArabic: 'أسرار النباتات', route: '/plantes', description: "Les plantes et leurs vertus spirituelles, adaptées à ton profil." },
+  { id: 'compatibilite', name: 'Compatibilité', nameArabic: 'التوافق', route: '/compatibilite', description: "L'harmonie entre deux personnes à travers leurs poids mystiques." },
+  { id: 'attraper', name: 'Attraper ou Réconcilier', nameArabic: 'الجذب أو المصالحة', route: '/attraper', description: "Des pratiques pour attirer la chance et les opportunités dans ta vie." },
+  { id: 'tutoriels', name: 'Tutoriels', nameArabic: 'الدروس التعليمية', route: '/tutoriels', description: "Apprends à utiliser chaque outil pas à pas." },
+  { id: 'formation', name: 'Formation', nameArabic: 'التكوين', route: '/formation', description: "Une formation complète pour approfondir tes connaissances mystiques." },
 ];
 
 export const PACKS = [

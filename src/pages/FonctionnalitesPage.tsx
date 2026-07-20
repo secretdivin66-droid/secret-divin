@@ -3,6 +3,7 @@ import { useRevealOnScroll } from '../hooks/useRevealOnScroll';
 
 interface FeatureCard {
   title: string;
+  titleArabic?: string;
   free: boolean;
   description: string;
   items: string[];
@@ -17,7 +18,8 @@ const FEATURES: FeatureCard[] = [
     items: ['Translittération en arabe', 'Poids de chaque lettre', 'PM total calculé', 'Élément dominant', 'Chiffres arabes-indiens'],
   },
   {
-    title: 'Destin Complet',
+    title: 'Secret de ton Destin',
+    titleArabic: 'سر قدرك',
     free: false,
     description:
       "Le destin complet révèle 17 points mystiques de ton profil spirituel : ton élément, ta planète, ton nom divin personnel, un verset coranique adapté, et bien plus. Une lecture profonde et personnalisée de ta destinée.",
@@ -25,6 +27,7 @@ const FEATURES: FeatureCard[] = [
   },
   {
     title: 'Carrés Magiques',
+    titleArabic: 'المربعات السحرية',
     free: false,
     description:
       "Génère ton carré magique personnel selon la tradition islamique, de 3x3 Moussalas à 9x9 Moutassi'ou. Chaque carré est calculé mathématiquement à partir de ton poids mystique, avec vérification de la somme magique.",
@@ -32,6 +35,7 @@ const FEATURES: FeatureCard[] = [
   },
   {
     title: 'Géomancie',
+    titleArabic: 'علم الرمل',
     free: false,
     description:
       "L'art divinatoire ancestral du Khatt ar-Raml, pratiqué depuis des siècles en Afrique de l'Ouest. Pose ta question et reçois un thème géomantique complet basé sur les 16 figures traditionnelles.",
@@ -39,27 +43,31 @@ const FEATURES: FeatureCard[] = [
   },
   {
     title: 'Interprétation des Rêves',
+    titleArabic: 'تفسير الأحلام',
     free: false,
     description:
       "Comprends le sens caché de tes rêves selon la tradition islamique (tabir al-ru'ya) et la sagesse spirituelle africaine. Une analyse complète des symboles et du message que ton rêve te transmet.",
     items: ['Analyse symbole par symbole', 'Vision islamique et africaine', 'Invocation et nom divin recommandés', 'Plan d\'action pratique', 'Sacrifice si nécessaire'],
   },
   {
-    title: 'Secrets Mystiques',
+    title: 'Secrets mystiques',
+    titleArabic: 'الأسرار الروحانية',
     free: false,
     description:
       "Des secrets spirituels ciblés selon ton objectif précis : protection, amour, richesse, santé, élévation spirituelle... Un talisman personnalisé pour t'accompagner.",
     items: ['Objectif personnalisé', 'Nom divin et verset adaptés', 'Talisman avec carré magique', 'Sacrifice recommandé', 'Export PDF'],
   },
   {
-    title: 'Plantes Mystiques',
+    title: 'Secrets des Plantes',
+    titleArabic: 'أسرار النباتات',
     free: false,
     description:
       "Découvre les plantes sacrées d'Afrique de l'Ouest et leurs usages spirituels selon ton objectif. De 1 à 7 plantes selon la complexité de ta situation, avec un rituel complet.",
     items: ['1 à 7 plantes selon ton besoin', 'Nom scientifique et bambara', 'Préparation du rituel complet', 'Versets coraniques associés', 'Sacrifice recommandé'],
   },
   {
-    title: 'Pour Attraper',
+    title: 'Attraper ou Réconcilier',
+    titleArabic: 'الجذب أو المصالحة',
     free: false,
     description:
       "Génère un talisman personnalisé basé sur les noms arabes de deux personnes pour atteindre un objectif précis : mariage, réconciliation, travail, protection...",
@@ -67,6 +75,7 @@ const FEATURES: FeatureCard[] = [
   },
   {
     title: 'Tutoriels',
+    titleArabic: 'الدروس التعليمية',
     free: true,
     description:
       "15 tutoriels détaillés pour apprendre à utiliser chaque outil pas à pas : calculs, constructions de carrés magiques, interprétation des symboles et bien plus.",
@@ -106,6 +115,11 @@ export function FonctionnalitesPage() {
               >
                 {feature.free ? 'GRATUIT' : '2 crédits par génération'}
               </span>
+              {feature.titleArabic && (
+                <p className="arabic font-bold text-[1.15em]" style={{ color: '#f9a825' }}>
+                  {feature.titleArabic}
+                </p>
+              )}
               <h2 className="text-white font-bold text-xl">{feature.title}</h2>
               <p className="mt-3" style={{ color: '#b0b8d4' }}>{feature.description}</p>
 

@@ -27,13 +27,17 @@ export function DashboardPage() {
           const cost = TOOL_COSTS[tool.id];
           return (
             <Link key={tool.id} to={tool.route} className="carte rounded-lg hover:border-or/50 flex flex-col gap-3">
-              <div className="text-3xl">{tool.icon}</div>
-              <div className="flex items-center justify-between">
+              <div>
+                {tool.nameArabic && (
+                  <p className="arabic font-bold text-[1.15em] mb-1" style={{ color: '#f9a825' }}>
+                    {tool.nameArabic}
+                  </p>
+                )}
                 <h2 className="font-bold text-white">{tool.name}</h2>
-                <span className={`text-xs font-bold px-2 py-1 rounded ${cost === 0 ? 'bg-green-600/20 text-green-400' : 'bg-or/10 text-or'}`}>
-                  {cost === 0 ? 'Gratuit' : `${cost} crédits`}
-                </span>
               </div>
+              <span className={`self-start text-xs font-bold px-2 py-1 rounded ${cost === 0 ? 'bg-green-600/20 text-green-400' : 'bg-or/10 text-or'}`}>
+                {cost === 0 ? 'Gratuit' : `${cost} crédits`}
+              </span>
             </Link>
           );
         })}
