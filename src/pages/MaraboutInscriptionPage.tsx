@@ -166,7 +166,7 @@ export function MaraboutInscriptionPage() {
         nom_complet: nomComplet,
         photo_url: photoUrl || null,
         description,
-        specialite: selectedSpecialites,
+        specialite: selectedSpecialites ?? [],
         pays,
         ville,
         langues: selectedLangues,
