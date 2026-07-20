@@ -12,7 +12,8 @@ import {
   SQUARE_PARAMS,
   LAYOUTS,
   generateSquare,
-  verifyRowSum,
+  verifyMagicSquare,
+  magicSquareSum,
 } from '../utils/mystique';
 import type { SpendCreditsResult } from '../utils/mystique';
 import { callGeminiProxy } from '../lib/geminiProxy';
@@ -166,7 +167,7 @@ export function CarresMagiquesPage() {
       }
 
       const cells = generateSquare(pm, squareSize);
-      verifyRowSum(cells, squareSize, pm);
+      verifyMagicSquare(cells, squareSize);
 
       const newResult: CarreResult = {
         cells,
@@ -224,7 +225,8 @@ export function CarresMagiquesPage() {
   }
 
   const desktopCellSize = CELL_SIZES[result?.squareSize ?? squareSize];
-  const rowOk = result ? verifyRowSum(result.cells, result.squareSize, result.PM) : false;
+  const rowOk = result ? verifyMagicSquare(result.cells, result.squareSize) : false;
+  const magicSum = result ? magicSquareSum(result.cells, result.squareSize) : 0;
   const { subtract, divisor } = result ? SQUARE_PARAMS[result.squareSize] : { subtract: 0, divisor: 1 };
   const entry = result ? Math.floor((result.PM - subtract) / divisor) : 0;
   const remainder = result ? (result.PM - subtract) % divisor : 0;
@@ -422,7 +424,7 @@ export function CarresMagiquesPage() {
                   className="px-4 py-2 rounded-full text-sm font-bold"
                   style={{ background: '#1b3a1f', color: '#4caf50' }}
                 >
-                  ✓ Somme magique = {result.PM}
+                  ✓ Somme magique = {magicSum}
                 </span>
               ) : (
                 <span

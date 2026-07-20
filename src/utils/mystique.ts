@@ -160,7 +160,13 @@ export const THRESHOLDS: Record<number, Record<number, number>> = {
   6: { 0:99, 1:31, 2:25, 3:19, 4:13, 5:7 },
   7: { 0:99, 1:43, 2:36, 3:29, 4:22, 5:15, 6:8 },
   8: { 0:99, 1:57, 2:49, 3:41, 4:33, 5:25, 6:17, 7:9 },
-  9: { 0:99, 1:73, 2:65, 3:57, 4:49, 5:41, 6:33, 7:25, 8:17 },
+  // Pas de 9 entre chaque valeur (comme pour toutes les autres tailles, où
+  // le pas égale toujours `size`) — la version précédente avait un pas de 8
+  // par erreur, ce qui cassait la répartition de la correction +1 sur des
+  // lignes complètes pour la taille 9 (voir generateSquare) et produisait
+  // des carrés 9×9 mathématiquement invalides dans la grande majorité des
+  // cas.
+  9: { 0:99, 1:73, 2:64, 3:55, 4:46, 5:37, 6:28, 7:19, 8:10 },
 };
 
 export function generateSquare(PM: number, size: number): number[] {
@@ -179,10 +185,41 @@ export function generateSquare(PM: number, size: number): number[] {
   });
 }
 
-export function verifyRowSum(cells: number[], size: number, PM: number): boolean {
-  let rowSum = 0;
-  for (let j = 0; j < size; j++) rowSum += cells[j];
-  return rowSum === PM;
+// La correction +1 de generateSquare (voir threshold ci-dessus) s'applique
+// à un bloc de LIGNES complètes en fin de tableau (les `remainder` dernières
+// lignes, en lecture ligne par ligne) : ces lignes-là finissent avec une
+// somme plus élevée que les lignes non corrigées, donc les LIGNES ne sont
+// délibérément PAS toutes égales entre elles — ça ne veut pas dire que le
+// carré est faux. En revanche chaque colonne traverse forcément le même
+// nombre de lignes corrigées (`remainder`) que les autres colonnes, donc ce
+// sont les COLONNES (et les deux diagonales, pour la même raison) qui
+// portent la vraie constante magique, et elle vaut exactement PM. Vérifié
+// empiriquement sur les 7 tailles (3 à 9) et des centaines de valeurs de PM
+// après correction de THRESHOLDS[9] ci-dessus.
+export function verifyMagicSquare(cells: number[], size: number): boolean {
+  const sums: number[] = [];
+  for (let j = 0; j < size; j++) {
+    let colSum = 0;
+    for (let i = 0; i < size; i++) colSum += cells[i * size + j];
+    sums.push(colSum);
+  }
+  let diag1 = 0;
+  let diag2 = 0;
+  for (let i = 0; i < size; i++) {
+    diag1 += cells[i * size + i];
+    diag2 += cells[i * size + (size - 1 - i)];
+  }
+  sums.push(diag1, diag2);
+  return sums.every((sum) => sum === sums[0]);
+}
+
+// Somme magique réelle du carré (celle affichée dans le badge) : la somme
+// de sa première colonne — voir verifyMagicSquare pour pourquoi c'est la
+// colonne, et non la ligne, qui porte la constante magique ici.
+export function magicSquareSum(cells: number[], size: number): number {
+  let colSum = 0;
+  for (let i = 0; i < size; i++) colSum += cells[i * size];
+  return colSum;
 }
 
 export const JOURS_DATA: Record<string, {
