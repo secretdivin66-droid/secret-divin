@@ -131,28 +131,38 @@ export function MaraboutInscriptionPage() {
     !acceptedTerms;
 
   async function handleSubmit() {
-    // Si `user` est null ici, le bouton est de toute façon désactivé
-    // (voir `disabled={isDisabled || submitting}` plus bas) : cette page
-    // redirige vers /auth dès le montage si `supabase.auth.getUser()` ne
-    // renvoie personne (voir l'effet plus haut), donc handleSubmit ne
-    // peut normalement pas être appelé sans session active. Ce garde-fou
-    // reste utile si l'utilisateur se déconnecte dans un autre onglet
-    // pendant qu'il remplit ce formulaire.
-    if (!user) {
-      console.warn('[MaraboutInscriptionPage] handleSubmit appelé sans utilisateur authentifié (session expirée ?).');
-      return;
-    }
     if (isDisabled) return;
     setSubmitting(true);
     setError(null);
     try {
+      // --- DIAGNOSTIC AUTH (frontend uniquement, aucune policy touchée) ---
+      // Vérification "live" au moment de la soumission, distincte du
+      // `user` en state (posé une seule fois au montage par l'effet plus
+      // haut) : si la session a expiré entre-temps, ce `user` de state
+      // resterait un objet obsolète alors que Supabase le rejetterait déjà.
+      const { data: sessionData } = await supabase.auth.getSession();
+      console.log('SESSION', sessionData.session);
+
+      const { data: userData } = await supabase.auth.getUser();
+      console.log('USER', userData.user);
+
+      if (!userData.user) {
+        console.error('[MaraboutInscriptionPage] Aucun utilisateur retourné par getUser() — session absente ou expirée côté Supabase, alors que la page a pu être atteinte avec un `user` de state non-null.');
+        setError('Utilisateur non connecté.');
+        setSubmitting(false);
+        return;
+      }
+
+      const authUserId = userData.user.id;
+      console.log('USER.ID utilisé pour user_id du payload :', authUserId);
+
       // Colonnes réelles de la table marabouts (confirmées le 2026-07-20,
       // complétées par 0013_marabouts_add_missing_columns.sql pour
       // langues/tarifs_description/annees_experience) : whatsapp/
       // specialite(s) restent nommées numero_whatsapp/specialite côté
       // base, d'où les renommages ci-dessous.
       const payload = {
-        user_id: user.id,
+        user_id: authUserId,
         nom_complet: nomComplet,
         photo_url: photoUrl || null,
         description,
@@ -167,11 +177,22 @@ export function MaraboutInscriptionPage() {
         is_active: true,
         abonnement_actif: false,
       };
-      console.log('[Supabase] INSERT marabouts — objet exact envoyé :', payload);
+      console.log(
+        'payload.user_id === userData.user.id ?',
+        payload.user_id === userData.user.id,
+      );
+      console.log('PAYLOAD complet envoyé à marabouts.insert() :', payload);
+
+      // Un seul client Supabase existe dans tout le projet (voir
+      // src/lib/supabaseClient.ts, seul appel à createClient()) et c'est
+      // ce même `supabase` importé en haut de ce fichier qui sert à la
+      // fois pour .auth.getSession()/.getUser() ci-dessus et pour
+      // .from('marabouts').insert() ci-dessous — donc pas de désynchro
+      // possible entre deux instances différentes du client.
       const { data: insertData, error: insertError } = await supabase.from('marabouts').insert(payload).select();
-      console.log('[Supabase] Réponse INSERT marabouts — data :', insertData);
-      console.log(insertError);
-      console.log(JSON.stringify(insertError, null, 2));
+      console.log('INSERT marabouts — data :', insertData);
+      console.log('INSERT marabouts — error :', insertError);
+      console.log('INSERT marabouts — error (JSON) :', JSON.stringify(insertError, null, 2));
       if (insertError) {
         throw insertError;
       }
