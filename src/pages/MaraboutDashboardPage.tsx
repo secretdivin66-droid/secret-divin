@@ -97,11 +97,11 @@ export function MaraboutDashboardPage() {
     const m = data as Marabout;
     setMarabout(m);
     setNomComplet(m.nom_complet);
-    setWhatsapp(m.whatsapp);
+    setWhatsapp(m.numero_whatsapp);
     setPays(m.pays);
     setVille(m.ville);
     setExperience(String(m.annees_experience));
-    setSelectedSpecialites(m.specialites);
+    setSelectedSpecialites(m.specialite);
     setSelectedLangues(m.langues);
     setDescription(m.description);
     setTarifs(m.tarifs_description ?? '');
@@ -122,16 +122,20 @@ export function MaraboutDashboardPage() {
     setSaving(true);
     setSaveMessage(null);
     try {
+      // Colonnes réelles : numero_whatsapp/specialite, pas whatsapp/
+      // specialites (voir 0013_marabouts_add_missing_columns.sql pour
+      // langues/tarifs_description/annees_experience/updated_at, qui
+      // manquaient aussi jusque-là).
       await supabase
         .from('marabouts')
         .update({
           nom_complet: nomComplet,
           description,
-          specialites: selectedSpecialites,
+          specialite: selectedSpecialites,
           pays,
           ville,
           langues: selectedLangues,
-          whatsapp,
+          numero_whatsapp: whatsapp,
           tarifs_description: tarifs || null,
           annees_experience: parseInt(experience) || 0,
           photo_url: photoUrl || null,

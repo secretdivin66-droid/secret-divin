@@ -146,15 +146,11 @@ export function MaraboutInscriptionPage() {
     setSubmitting(true);
     setError(null);
     try {
-      // Colonnes réelles de la table marabouts (confirmées le 2026-07-20) :
-      // id, nom_complet, numero_whatsapp, specialite, pays, ville,
-      // description, photo_url, created_at, is_verified, is_active,
-      // abonnement_actif, user_id — PAS de langues/tarifs_description/
-      // annees_experience, et whatsapp/specialite(s) sont nommées
-      // différemment de ce que ce payload envoyait avant. Ces 3 champs
-      // du formulaire (langues, tarifs, années d'expérience) restent
-      // collectés côté UI mais ne sont plus envoyés : la table n'a pas
-      // où les stocker tant qu'elle n'a pas ces colonnes.
+      // Colonnes réelles de la table marabouts (confirmées le 2026-07-20,
+      // complétées par 0013_marabouts_add_missing_columns.sql pour
+      // langues/tarifs_description/annees_experience) : whatsapp/
+      // specialite(s) restent nommées numero_whatsapp/specialite côté
+      // base, d'où les renommages ci-dessous.
       const payload = {
         user_id: user.id,
         nom_complet: nomComplet,
@@ -163,7 +159,10 @@ export function MaraboutInscriptionPage() {
         specialite: selectedSpecialites,
         pays,
         ville,
+        langues: selectedLangues,
         numero_whatsapp: whatsapp,
+        tarifs_description: tarifs || null,
+        annees_experience: parseInt(experience) || 0,
         is_verified: false,
         is_active: true,
         abonnement_actif: false,

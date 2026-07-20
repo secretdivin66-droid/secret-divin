@@ -44,11 +44,11 @@ export interface Marabout {
   nom_complet: string;
   photo_url: string | null;
   description: string;
-  specialites: string[];
+  specialite: string[];
   pays: string;
   ville: string;
   langues: string[];
-  whatsapp: string;
+  numero_whatsapp: string;
   tarifs_description: string | null;
   annees_experience: number;
   is_verified: boolean;

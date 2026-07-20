@@ -149,7 +149,7 @@ export function MaraboutProfilPage() {
             ))}
           </div>
           <button
-            onClick={() => window.open(whatsappContactUrl(marabout.whatsapp, contactMessage), '_blank', 'noopener,noreferrer')}
+            onClick={() => window.open(whatsappContactUrl(marabout.numero_whatsapp, contactMessage), '_blank', 'noopener,noreferrer')}
             className="rounded font-bold py-3 px-8 mt-6"
             style={{ background: '#25D366', color: 'white' }}
           >
@@ -166,7 +166,7 @@ export function MaraboutProfilPage() {
 
         <h2 className="text-or font-bold mb-3">Spécialités</h2>
         <div className="flex flex-wrap gap-2">
-          {marabout.specialites.map((s) => (
+          {marabout.specialite.map((s) => (
             <span key={s} className="px-3 py-2 rounded text-sm text-white" style={{ background: '#111a55', border: '1px solid rgba(37,99,235,0.2)' }}>
               ✦ {s}
             </span>
@@ -246,7 +246,7 @@ export function MaraboutProfilPage() {
         <div className="rounded-lg p-8 text-center" style={{ background: '#1a237e', border: '1px solid #2563EB' }}>
           <p className="text-white font-bold mb-4">Besoin des services de {marabout.nom_complet} ?</p>
           <button
-            onClick={() => window.open(whatsappContactUrl(marabout.whatsapp, contactMessage), '_blank', 'noopener,noreferrer')}
+            onClick={() => window.open(whatsappContactUrl(marabout.numero_whatsapp, contactMessage), '_blank', 'noopener,noreferrer')}
             className="rounded font-bold py-3 w-full"
             style={{ background: '#25D366', color: 'white' }}
           >

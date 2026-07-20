@@ -38,7 +38,7 @@ export function MaraboutsPage() {
   }, []);
 
   const filtered = marabouts.filter((m) => {
-    const matchSpecialite = specialite === 'Toutes' || m.specialites.includes(specialite);
+    const matchSpecialite = specialite === 'Toutes' || m.specialite.includes(specialite);
     const matchPays = pays === 'Tous' || m.pays === pays;
     const matchLangue = langue === 'Toutes' || m.langues.includes(langue);
     const matchSearch = !search.trim() || m.nom_complet.toLowerCase().includes(search.trim().toLowerCase());
@@ -47,7 +47,7 @@ export function MaraboutsPage() {
 
   function handleContact(m: Marabout) {
     window.open(
-      whatsappContactUrl(m.whatsapp, 'Bonjour, je vous contacte depuis Secret Divin. J\'aurais besoin de vos services.'),
+      whatsappContactUrl(m.numero_whatsapp, 'Bonjour, je vous contacte depuis Secret Divin. J\'aurais besoin de vos services.'),
       '_blank',
       'noopener,noreferrer'
     );
@@ -111,8 +111,8 @@ export function MaraboutsPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((m) => {
             const note = averageNote(m.marabout_avis);
-            const visibleSpecialites = m.specialites.slice(0, 3);
-            const remaining = m.specialites.length - visibleSpecialites.length;
+            const visibleSpecialites = m.specialite.slice(0, 3);
+            const remaining = m.specialite.length - visibleSpecialites.length;
             return (
               <div key={m.id} className="rounded-lg overflow-hidden flex flex-col" style={{ background: '#111a55', border: '1px solid rgba(37,99,235,0.15)' }}>
                 <div className="p-5 text-center" style={{ background: 'linear-gradient(160deg, #1a237e, #111a55)' }}>
