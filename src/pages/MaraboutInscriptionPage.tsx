@@ -131,40 +131,49 @@ export function MaraboutInscriptionPage() {
     !acceptedTerms;
 
   async function handleSubmit() {
-    if (!user || isDisabled) return;
+    // Si `user` est null ici, le bouton est de toute façon désactivé
+    // (voir `disabled={isDisabled || submitting}` plus bas) : cette page
+    // redirige vers /auth dès le montage si `supabase.auth.getUser()` ne
+    // renvoie personne (voir l'effet plus haut), donc handleSubmit ne
+    // peut normalement pas être appelé sans session active. Ce garde-fou
+    // reste utile si l'utilisateur se déconnecte dans un autre onglet
+    // pendant qu'il remplit ce formulaire.
+    if (!user) {
+      console.warn('[MaraboutInscriptionPage] handleSubmit appelé sans utilisateur authentifié (session expirée ?).');
+      return;
+    }
+    if (isDisabled) return;
     setSubmitting(true);
     setError(null);
     try {
+      // Colonnes réelles de la table marabouts (confirmées le 2026-07-20) :
+      // id, nom_complet, numero_whatsapp, specialite, pays, ville,
+      // description, photo_url, created_at, is_verified, is_active,
+      // abonnement_actif, user_id — PAS de langues/tarifs_description/
+      // annees_experience, et whatsapp/specialite(s) sont nommées
+      // différemment de ce que ce payload envoyait avant. Ces 3 champs
+      // du formulaire (langues, tarifs, années d'expérience) restent
+      // collectés côté UI mais ne sont plus envoyés : la table n'a pas
+      // où les stocker tant qu'elle n'a pas ces colonnes.
       const payload = {
         user_id: user.id,
         nom_complet: nomComplet,
         photo_url: photoUrl || null,
         description,
-        specialites: selectedSpecialites,
+        specialite: selectedSpecialites,
         pays,
         ville,
-        langues: selectedLangues,
-        whatsapp,
-        tarifs_description: tarifs || null,
-        annees_experience: parseInt(experience) || 0,
+        numero_whatsapp: whatsapp,
         is_verified: false,
         is_active: true,
         abonnement_actif: false,
       };
-      console.log('[Supabase] INSERT marabouts — soumission inscription', {
-        table: 'marabouts',
-        operation: 'insert',
-        payload,
-      });
+      console.log('[Supabase] INSERT marabouts — objet exact envoyé :', payload);
       const { data: insertData, error: insertError } = await supabase.from('marabouts').insert(payload).select();
-      console.log('[Supabase] Réponse INSERT marabouts :', { data: insertData, error: insertError });
+      console.log('[Supabase] Réponse INSERT marabouts — data :', insertData);
+      console.log(insertError);
+      console.log(JSON.stringify(insertError, null, 2));
       if (insertError) {
-        console.error('[Supabase] Erreur INSERT marabouts :', {
-          code: insertError.code,
-          message: insertError.message,
-          details: insertError.details,
-          hint: insertError.hint,
-        });
         throw insertError;
       }
       setSubmitted(true);
