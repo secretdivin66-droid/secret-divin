@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom';
 export function Footer() {
   return (
     <footer className="bg-bleu border-t border-or/20 mt-auto">
+      <div className="max-w-7xl mx-auto px-4 pt-8 flex items-center gap-3">
+        <img src="/logo.svg" alt="Secrets Divins" className="h-10 w-10 rounded-full" />
+        <span className="text-or font-bold">Secret Divin</span>
+      </div>
       <div className="max-w-7xl mx-auto px-4 py-8 grid grid-cols-1 sm:grid-cols-3 gap-5">
         <div>
           <h3 className="text-or font-bold mb-3">Services</h3>

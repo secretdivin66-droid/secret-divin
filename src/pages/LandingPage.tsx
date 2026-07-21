@@ -52,12 +52,12 @@ export function LandingPage() {
         className="px-4 pt-16 pb-16 text-center flex flex-col items-center gap-5"
         style={{ background: '#0a0f2e' }}
       >
-        <div
-          className="reveal w-20 h-20 rounded-full flex items-center justify-center text-or font-bold text-3xl shrink-0"
-          style={{ background: 'rgba(245,200,66,0.1)', border: '2px solid #f5c842' }}
-        >
-          ✦
-        </div>
+        <img
+          src="/logo.svg"
+          alt="Secrets Divins"
+          className="reveal h-24 w-24 rounded-full shrink-0"
+          style={{ filter: 'drop-shadow(0 0 15px #f5c842)' }}
+        />
 
         <p className="reveal arabic text-or font-bold" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.25rem)' }}>
           بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ

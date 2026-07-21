@@ -45,9 +45,7 @@ export function Header({ user, profile, onSignOut }: Props) {
     <header className="bg-bleu border-b border-or/20 overflow-x-hidden relative">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between gap-2 sm:gap-4">
         <Link to="/" className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-or/10 border border-or flex items-center justify-center text-or font-bold shrink-0">
-            ✦
-          </div>
+          <img src="/logo.svg" alt="Secrets Divins" className="h-10 w-10 rounded-full" />
           <div className="flex flex-col leading-tight min-w-0">
             <span className="text-or font-bold text-sm sm:text-lg truncate">Secret Divin</span>
             <span className="text-gray-400 text-[0.65rem] tracking-widest hidden sm:block">SAGESSE SPIRITUELLE</span>
