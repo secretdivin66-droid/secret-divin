@@ -229,5 +229,5 @@ export function influenceColor(influence: string): { bg: string; text: string } 
   if (lower.includes('défavorable') || lower.includes('négative')) return { bg: '#3a1b1b', text: '#e57373' };
   if (lower.includes('très favorable') || lower.includes('positive')) return { bg: '#1b3a1f', text: '#4caf50' };
   if (lower.includes('favorable')) return { bg: '#1b3a1f', text: '#81c784' };
-  return { bg: '#1E3A8A', text: '#2563EB' };
+  return { bg: '#1E3A8A', text: '#f5c842' };
 }

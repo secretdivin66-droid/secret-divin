@@ -92,11 +92,11 @@ export function CreditsPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-6xl mx-auto">
         {/* SECTION A — EN-TÊTE */}
         <h1 className="text-center font-bold text-or text-[2rem]">Nos Offres</h1>
-        <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>
+        <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
           Recharge tes crédits et accède à tous les outils mystiques
         </p>
 
@@ -106,7 +106,7 @@ export function CreditsPage() {
               <>
                 <p className="text-or font-bold text-[3rem]">Illimité</p>
                 {credits.expiresAt && (
-                  <p className="text-sm mt-2" style={{ color: '#b0b8d4' }}>
+                  <p className="text-sm mt-2" style={{ color: '#a0aec0' }}>
                     Expire le {formatDate(credits.expiresAt)}
                   </p>
                 )}
@@ -127,8 +127,8 @@ export function CreditsPage() {
               key={pack.id}
               className="rounded-lg p-5 flex flex-col text-center"
               style={{
-                background: '#111a55',
-                border: pack.popular ? '2px solid #2563EB' : '1px solid rgba(37,99,235,0.2)',
+                background: '#0d1545',
+                border: pack.popular ? '2px solid #f5c842' : '1px solid rgba(245,200,66,0.2)',
               }}
             >
               {pack.popular && (
@@ -136,11 +136,11 @@ export function CreditsPage() {
                   POPULAIRE
                 </span>
               )}
-              <p className="text-sm" style={{ color: '#b0b8d4' }}>{pack.name}</p>
+              <p className="text-sm" style={{ color: '#a0aec0' }}>{pack.name}</p>
               <p className="text-white font-bold text-[2.5rem] mt-1">{pack.credits ?? '∞'}</p>
-              <p className="text-sm" style={{ color: '#b0b8d4' }}>crédits</p>
+              <p className="text-sm" style={{ color: '#a0aec0' }}>crédits</p>
               <p className="text-or font-bold text-[1.4rem] mt-3">{pack.price.toLocaleString('fr-FR')} FCFA</p>
-              <p className="italic text-sm mt-2 flex-1" style={{ color: '#b0b8d4' }}>{pack.description}</p>
+              <p className="italic text-sm mt-2 flex-1" style={{ color: '#a0aec0' }}>{pack.description}</p>
               <button
                 onClick={() => handleBuyPack(pack)}
                 className="rounded font-bold mt-4 py-2"
@@ -162,11 +162,11 @@ export function CreditsPage() {
               <div
                 key={row.label}
                 className="flex items-center justify-between py-3"
-                style={i > 0 ? { borderTop: '1px solid rgba(37,99,235,0.1)' } : undefined}
+                style={i > 0 ? { borderTop: '1px solid rgba(245,200,66,0.1)' } : undefined}
               >
                 <span>
                   {row.labelArabic && (
-                    <span className="arabic block font-bold text-[1.1em]" style={{ color: '#f9a825' }}>
+                    <span className="arabic block font-bold text-[1.1em]" style={{ color: '#f5c842' }}>
                       {row.labelArabic}
                     </span>
                   )}
@@ -187,7 +187,7 @@ export function CreditsPage() {
             <div key={step.number} className="carte rounded-lg text-center">
               <p className="text-or font-bold text-[1.6rem]">{step.number}</p>
               <p className="text-white font-bold mt-2">{step.title}</p>
-              <p className="text-sm mt-2" style={{ color: '#b0b8d4' }}>{step.text}</p>
+              <p className="text-sm mt-2" style={{ color: '#a0aec0' }}>{step.text}</p>
             </div>
           ))}
         </div>
@@ -201,7 +201,7 @@ export function CreditsPage() {
             <span
               key={method}
               className="px-4 py-2 text-center text-sm text-white"
-              style={{ background: '#111a55', border: '1px solid #2563EB', borderRadius: '20px' }}
+              style={{ background: '#0d1545', border: '1px solid #f5c842', borderRadius: '20px' }}
             >
               {method}
             </span>
@@ -215,11 +215,11 @@ export function CreditsPage() {
             {/* SECTION F — Historique Transactions */}
             <h2 className="text-or font-bold text-center text-xl mb-6">Mon Historique de Crédits</h2>
             {transactions.length === 0 ? (
-              <p className="text-center" style={{ color: '#b0b8d4' }}>Aucune transaction pour le moment.</p>
+              <p className="text-center" style={{ color: '#a0aec0' }}>Aucune transaction pour le moment.</p>
             ) : (
               <div className="overflow-x-auto">
                 <div className="carte rounded-lg min-w-[600px]">
-                  <div className="grid grid-cols-4 gap-3 pb-3 font-bold text-sm" style={{ color: '#b0b8d4', borderBottom: '1px solid rgba(37,99,235,0.2)' }}>
+                  <div className="grid grid-cols-4 gap-3 pb-3 font-bold text-sm" style={{ color: '#a0aec0', borderBottom: '1px solid rgba(245,200,66,0.2)' }}>
                     <span>Date</span>
                     <span>Description</span>
                     <span className="text-right">Montant</span>
@@ -228,13 +228,13 @@ export function CreditsPage() {
                   {transactions.map((tx) => {
                     const isPositive = tx.type === 'purchase' || tx.type === 'refund';
                     return (
-                      <div key={tx.id} className="grid grid-cols-4 gap-3 py-3 text-sm" style={{ borderBottom: '1px solid rgba(37,99,235,0.1)' }}>
-                        <span style={{ color: '#b0b8d4' }}>{formatDate(tx.created_at)}</span>
+                      <div key={tx.id} className="grid grid-cols-4 gap-3 py-3 text-sm" style={{ borderBottom: '1px solid rgba(245,200,66,0.1)' }}>
+                        <span style={{ color: '#a0aec0' }}>{formatDate(tx.created_at)}</span>
                         <span className="text-white">{tx.description}</span>
                         <span className={`text-right font-bold ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
                           {isPositive ? '+' : '-'}{Math.abs(tx.amount)}
                         </span>
-                        <span className="text-right" style={{ color: '#b0b8d4' }}>{tx.balance_after ?? '—'}</span>
+                        <span className="text-right" style={{ color: '#a0aec0' }}>{tx.balance_after ?? '—'}</span>
                       </div>
                     );
                   })}
@@ -259,7 +259,7 @@ export function CreditsPage() {
                 <span className="text-or">{openFaq === i ? '—' : '+'}</span>
               </button>
               {openFaq === i && (
-                <p className="mt-3 text-sm" style={{ color: '#b0b8d4' }}>{item.a}</p>
+                <p className="mt-3 text-sm" style={{ color: '#a0aec0' }}>{item.a}</p>
               )}
             </div>
           ))}

@@ -118,7 +118,7 @@ Retourne UNIQUEMENT du JSON valide :
 function niveauColor(niveau: string): { bg: string; text: string } {
   if (niveau === 'Débutant') return { bg: '#1b3a1f', text: '#4caf50' };
   if (niveau === 'Intermédiaire') return { bg: '#0d2340', text: '#1565c0' };
-  return { bg: '#1E3A8A', text: '#2563EB' };
+  return { bg: '#1E3A8A', text: '#f5c842' };
 }
 
 function Separateur() {
@@ -137,7 +137,7 @@ function FadeIn({ children }: { children: ReactNode }) {
 
 function StepList({ steps }: { steps: string[] }) {
   return (
-    <div className="flex flex-col gap-3 my-4" style={{ borderLeft: '2px solid rgba(37,99,235,0.3)', paddingLeft: '1rem' }}>
+    <div className="flex flex-col gap-3 my-4" style={{ borderLeft: '2px solid rgba(245,200,66,0.3)', paddingLeft: '1rem' }}>
       {steps.map((step, i) => (
         <div key={i} className="flex gap-3 items-start">
           <span className="w-6 h-6 shrink-0 rounded-full bg-or text-white font-bold flex items-center justify-center text-xs">
@@ -209,13 +209,13 @@ export function TutorielsPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-4xl mx-auto">
         {!selected ? (
           <>
             {/* SECTION 1 — EN-TÊTE */}
             <h1 className="text-center font-bold text-or text-[2rem]">Tutoriels</h1>
-            <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>
+            <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
               Apprends les sciences mystiques
               <br />
               islamiques pas à pas avec nos tutoriels
@@ -238,7 +238,7 @@ export function TutorielsPage() {
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Rechercher un tutoriel..."
               className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
-              style={{ background: '#111a55' }}
+              style={{ background: '#0d1545' }}
             />
 
             <Separateur />
@@ -263,7 +263,7 @@ export function TutorielsPage() {
               value={niveau}
               onChange={(e) => setNiveau(e.target.value)}
               className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or mb-8"
-              style={{ background: '#111a55' }}
+              style={{ background: '#0d1545' }}
             >
               {NIVEAUX.map((n) => (
                 <option key={n} value={n}>{n}</option>
@@ -281,7 +281,7 @@ export function TutorielsPage() {
                     style={{ borderWidth: 1 }}
                   >
                     <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <span className="px-2 py-1 rounded text-xs font-bold text-or" style={{ background: 'rgba(37,99,235,0.1)' }}>
+                      <span className="px-2 py-1 rounded text-xs font-bold text-or" style={{ background: 'rgba(245,200,66,0.1)' }}>
                         {t.categorie}
                       </span>
                       <span className="px-2 py-1 rounded-full text-xs font-bold" style={{ background: colors.bg, color: colors.text }}>
@@ -289,9 +289,9 @@ export function TutorielsPage() {
                       </span>
                     </div>
                     <h3 className="text-white font-bold text-[1.1em]">{t.titre}</h3>
-                    <p className="text-sm line-clamp-3" style={{ color: '#b0b8d4' }}>{t.description}</p>
+                    <p className="text-sm line-clamp-3" style={{ color: '#a0aec0' }}>{t.description}</p>
                     <div className="flex items-center justify-between mt-auto">
-                      <span className="text-xs" style={{ color: '#b0b8d4' }}>{t.duree}</span>
+                      <span className="text-xs" style={{ color: '#a0aec0' }}>{t.duree}</span>
                       <span className="px-2 py-0.5 rounded-full text-[0.65rem] font-bold" style={{ background: '#1b3a1f', color: '#4caf50' }}>
                         GRATUIT
                       </span>
@@ -312,7 +312,7 @@ export function TutorielsPage() {
             </button>
 
             <div className="flex items-center gap-2 flex-wrap mb-3">
-              <span className="px-2 py-1 rounded text-xs font-bold text-or" style={{ background: 'rgba(37,99,235,0.1)' }}>
+              <span className="px-2 py-1 rounded text-xs font-bold text-or" style={{ background: 'rgba(245,200,66,0.1)' }}>
                 {selected.categorie}
               </span>
               <span
@@ -324,7 +324,7 @@ export function TutorielsPage() {
             </div>
 
             <h1 className="font-bold text-or text-[2rem]">{selected.titre}</h1>
-            <p className="text-sm mt-1" style={{ color: '#b0b8d4' }}>{selected.duree} — GRATUIT</p>
+            <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>{selected.duree} — GRATUIT</p>
 
             {loading && (
               <div className="flex flex-col items-center gap-3 mt-6">
@@ -360,7 +360,7 @@ export function TutorielsPage() {
                     {section.steps && <StepList steps={section.steps} />}
 
                     {section.arabicContent && (
-                      <div className="carte rounded-lg mt-4 text-center" style={{ border: '1px solid #2563EB' }}>
+                      <div className="carte rounded-lg mt-4 text-center" style={{ border: '1px solid #f5c842' }}>
                         <p className="arabic text-or text-[1.4em]">{section.arabicContent}</p>
                       </div>
                     )}
@@ -387,7 +387,7 @@ export function TutorielsPage() {
                   <p className="italic text-white">{tutorialData.example.scenario}</p>
                 </div>
                 <StepList steps={tutorialData.example.steps} />
-                <div className="rounded-lg p-4" style={{ background: '#1b3a1f', border: '1px solid #2563EB' }}>
+                <div className="rounded-lg p-4" style={{ background: '#1b3a1f', border: '1px solid #f5c842' }}>
                   <p className="text-white">Résultat : {tutorialData.example.result}</p>
                 </div>
 
@@ -421,7 +421,7 @@ export function TutorielsPage() {
                 <p className="text-white mt-3">{tutorialData.nextSteps}</p>
                 <div className="flex flex-wrap gap-2 mt-4">
                   {tutorialData.relatedTopics.map((topic, i) => (
-                    <span key={i} className="px-3 py-1 rounded-full text-sm" style={{ background: '#1a1a2e', color: '#b0b8d4' }}>
+                    <span key={i} className="px-3 py-1 rounded-full text-sm" style={{ background: '#1a1a2e', color: '#a0aec0' }}>
                       {topic}
                     </span>
                   ))}

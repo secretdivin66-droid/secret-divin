@@ -203,7 +203,7 @@ export function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-5xl mx-auto">
         <h1 className="text-center font-bold text-or text-[2rem]">Administration</h1>
 
@@ -231,11 +231,11 @@ export function AdminPage() {
             </div>
 
             {articles.length === 0 ? (
-              <p className="text-center" style={{ color: '#b0b8d4' }}>Aucun article pour le moment.</p>
+              <p className="text-center" style={{ color: '#a0aec0' }}>Aucun article pour le moment.</p>
             ) : (
               <div className="overflow-x-auto">
                 <div className="carte rounded-lg min-w-[700px]">
-                  <div className="grid grid-cols-7 gap-3 pb-3 font-bold text-sm" style={{ color: '#b0b8d4', borderBottom: '1px solid rgba(37,99,235,0.2)' }}>
+                  <div className="grid grid-cols-7 gap-3 pb-3 font-bold text-sm" style={{ color: '#a0aec0', borderBottom: '1px solid rgba(245,200,66,0.2)' }}>
                     <span className="col-span-2">Titre</span>
                     <span>Catégorie</span>
                     <span>Statut</span>
@@ -244,9 +244,9 @@ export function AdminPage() {
                     <span>Actions</span>
                   </div>
                   {articles.map((article) => (
-                    <div key={article.id} className="grid grid-cols-7 gap-3 py-3 items-center text-sm" style={{ borderBottom: '1px solid rgba(37,99,235,0.1)' }}>
+                    <div key={article.id} className="grid grid-cols-7 gap-3 py-3 items-center text-sm" style={{ borderBottom: '1px solid rgba(245,200,66,0.1)' }}>
                       <span className="col-span-2 text-white">{article.title}</span>
-                      <span style={{ color: '#b0b8d4' }}>{article.category}</span>
+                      <span style={{ color: '#a0aec0' }}>{article.category}</span>
                       <span>
                         <span
                           className="px-2 py-1 rounded-full text-xs font-bold"
@@ -255,8 +255,8 @@ export function AdminPage() {
                           {article.is_published ? 'Publié' : 'Brouillon'}
                         </span>
                       </span>
-                      <span style={{ color: '#b0b8d4' }}>{article.views}</span>
-                      <span style={{ color: '#b0b8d4' }}>{formatDate(article.created_at)}</span>
+                      <span style={{ color: '#a0aec0' }}>{article.views}</span>
+                      <span style={{ color: '#a0aec0' }}>{formatDate(article.created_at)}</span>
                       <span className="flex flex-col gap-1">
                         <button onClick={() => handleEditArticle(article)} className="text-or text-left hover:underline">Modifier</button>
                         <button onClick={() => handleTogglePublish(article)} className="text-or text-left hover:underline">
@@ -277,18 +277,18 @@ export function AdminPage() {
             <h2 className="text-or font-bold">{editingArticle ? 'Modifier l\'article' : 'Nouvel article'}</h2>
 
             <div>
-              <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Titre</label>
+              <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Titre</label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
               />
-              {title && <p className="text-xs mt-1" style={{ color: '#b0b8d4' }}>Slug : {editingArticle?.slug ?? slugify(title)}</p>}
+              {title && <p className="text-xs mt-1" style={{ color: '#a0aec0' }}>Slug : {editingArticle?.slug ?? slugify(title)}</p>}
             </div>
 
             <div>
-              <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Catégorie</label>
+              <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Catégorie</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
@@ -301,7 +301,7 @@ export function AdminPage() {
             </div>
 
             <div>
-              <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Extrait (300 caractères max)</label>
+              <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Extrait (300 caractères max)</label>
               <textarea
                 rows={2}
                 maxLength={300}
@@ -309,12 +309,12 @@ export function AdminPage() {
                 onChange={(e) => setExcerpt(e.target.value)}
                 className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or resize-y"
               />
-              <p className="text-right text-xs mt-1" style={{ color: '#b0b8d4' }}>{excerpt.length}/300</p>
+              <p className="text-right text-xs mt-1" style={{ color: '#a0aec0' }}>{excerpt.length}/300</p>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-sm" style={{ color: '#b0b8d4' }}>Contenu</label>
+                <label className="block text-sm" style={{ color: '#a0aec0' }}>Contenu</label>
                 <button
                   type="button"
                   onClick={handleGenerateWithGemini}
@@ -333,7 +333,7 @@ export function AdminPage() {
             </div>
 
             <div>
-              <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>URL image de couverture</label>
+              <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>URL image de couverture</label>
               <input
                 type="text"
                 value={coverImage}
@@ -367,26 +367,26 @@ export function AdminPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
               <div className="carte rounded-lg text-center">
                 <p className="text-or font-bold text-2xl">{marabouts.length}</p>
-                <p className="text-sm mt-1" style={{ color: '#b0b8d4' }}>marabouts inscrits</p>
+                <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>marabouts inscrits</p>
               </div>
               <div className="carte rounded-lg text-center">
                 <p className="text-or font-bold text-2xl">{marabouts.filter((m) => m.is_verified).length}</p>
-                <p className="text-sm mt-1" style={{ color: '#b0b8d4' }}>marabouts validés</p>
+                <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>marabouts validés</p>
               </div>
               <div className="carte rounded-lg text-center">
                 <p className="text-or font-bold text-2xl">{marabouts.filter((m) => m.abonnement_actif).length}</p>
-                <p className="text-sm mt-1" style={{ color: '#b0b8d4' }}>
+                <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>
                   abonnements actifs — {marabouts.filter((m) => m.abonnement_actif).length * ABONNEMENT_PRIX_FCFA} FCFA/mois
                 </p>
               </div>
             </div>
 
             {marabouts.length === 0 ? (
-              <p className="text-center" style={{ color: '#b0b8d4' }}>Aucun marabout inscrit pour le moment.</p>
+              <p className="text-center" style={{ color: '#a0aec0' }}>Aucun marabout inscrit pour le moment.</p>
             ) : (
               <div className="overflow-x-auto">
                 <div className="carte rounded-lg min-w-[800px]">
-                  <div className="grid grid-cols-6 gap-3 pb-3 font-bold text-sm" style={{ color: '#b0b8d4', borderBottom: '1px solid rgba(37,99,235,0.2)' }}>
+                  <div className="grid grid-cols-6 gap-3 pb-3 font-bold text-sm" style={{ color: '#a0aec0', borderBottom: '1px solid rgba(245,200,66,0.2)' }}>
                     <span>Nom</span>
                     <span>Pays</span>
                     <span>Statut</span>
@@ -403,9 +403,9 @@ export function AdminPage() {
                       : { bg: '#3a1b1b', text: '#e53935' };
                     const busy = maraboutActionLoading === m.id;
                     return (
-                      <div key={m.id} className="grid grid-cols-6 gap-3 py-3 items-center text-sm" style={{ borderBottom: '1px solid rgba(37,99,235,0.1)' }}>
+                      <div key={m.id} className="grid grid-cols-6 gap-3 py-3 items-center text-sm" style={{ borderBottom: '1px solid rgba(245,200,66,0.1)' }}>
                         <span className="text-white">{m.nom_complet}</span>
-                        <span style={{ color: '#b0b8d4' }}>{m.pays}</span>
+                        <span style={{ color: '#a0aec0' }}>{m.pays}</span>
                         <span>
                           <span className="px-2 py-1 rounded-full text-xs font-bold" style={{ background: statusColor.bg, color: statusColor.text }}>
                             {statusLabel}
@@ -420,7 +420,7 @@ export function AdminPage() {
                             <span className="px-2 py-1 rounded-full text-xs font-bold" style={{ background: '#333', color: '#999' }}>Inactif</span>
                           )}
                         </span>
-                        <span style={{ color: '#b0b8d4' }}>{m.vues}</span>
+                        <span style={{ color: '#a0aec0' }}>{m.vues}</span>
                         <span className="flex flex-col gap-1">
                           {!m.is_verified && (
                             <button onClick={() => handleValidateMarabout(m)} disabled={busy} className="text-left hover:underline disabled:opacity-50" style={{ color: '#4caf50' }}>

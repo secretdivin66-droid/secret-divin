@@ -101,32 +101,32 @@ export function BlogArticlePage() {
 
   if (!article) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0e2e' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0f2e' }}>
         <p className="text-or">Chargement...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-3xl mx-auto reveal visible">
         <div
           className="h-56 rounded-lg mb-6"
           style={
             article.cover_image
               ? { backgroundImage: `url(${article.cover_image})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-              : { background: 'linear-gradient(135deg, #2563EB, #1a237e)' }
+              : { background: 'linear-gradient(135deg, #f5c842, #0d1545)' }
           }
         />
 
         <div className="flex items-center gap-3 flex-wrap">
-          <span className="px-2 py-1 rounded text-xs font-bold text-or" style={{ background: 'rgba(37,99,235,0.1)' }}>
+          <span className="px-2 py-1 rounded text-xs font-bold text-or" style={{ background: 'rgba(245,200,66,0.1)' }}>
             {article.category}
           </span>
-          <span className="text-xs" style={{ color: '#b0b8d4' }}>
+          <span className="text-xs" style={{ color: '#a0aec0' }}>
             {article.published_at ? formatDate(article.published_at) : ''}
           </span>
-          <span className="text-xs" style={{ color: '#b0b8d4' }}>{article.views} vues</span>
+          <span className="text-xs" style={{ color: '#a0aec0' }}>{article.views} vues</span>
         </div>
 
         <h1 className="text-or font-bold text-[2rem] mt-4">{article.title}</h1>

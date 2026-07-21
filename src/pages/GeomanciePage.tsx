@@ -273,7 +273,7 @@ export function GeomanciePage() {
   async function handleExportPDF() {
     const el = document.getElementById('geomancie-content');
     if (!el) return;
-    const canvas = await html2canvas(el, { backgroundColor: '#0a0e2e' });
+    const canvas = await html2canvas(el, { backgroundColor: '#0a0f2e' });
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -297,11 +297,11 @@ export function GeomanciePage() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-4xl mx-auto">
         {/* SECTION 1 — EN-TÊTE */}
         <h1 className="text-center font-bold text-or text-[2rem]">Géomancie Africaine</h1>
-        <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>
+        <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
           Pose ta question et reçois une réponse
           <br />
           précise selon les 16 figures géomantiques
@@ -321,7 +321,7 @@ export function GeomanciePage() {
         {!result && (
           <div className="carte rounded-lg max-w-[600px] mx-auto flex flex-col gap-4">
             <div>
-              <label className="block text-sm mb-2" style={{ color: '#b0b8d4' }}>
+              <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>
                 Pose ta question
               </label>
               <textarea
@@ -331,7 +331,7 @@ export function GeomanciePage() {
                 placeholder="Décris ta situation et pose ta question clairement... (Ex: Vais-je réussir dans mon projet ? Mon mariage sera-t-il heureux ?)"
                 className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or resize-y"
               />
-              <p className="text-right text-xs mt-1" style={{ color: '#b0b8d4' }}>
+              <p className="text-right text-xs mt-1" style={{ color: '#a0aec0' }}>
                 {questionText.length} caractères
               </p>
             </div>
@@ -386,13 +386,13 @@ export function GeomanciePage() {
                               className="rounded p-3 text-center"
                               style={
                                 isDominant
-                                  ? { background: '#2563EB', color: '#ffffff' }
-                                  : { background: '#0a0e2e', border: '1px solid rgba(37,99,235,0.15)' }
+                                  ? { background: '#f5c842', color: '#ffffff' }
+                                  : { background: '#0a0f2e', border: '1px solid rgba(245,200,66,0.15)' }
                               }
                             >
                               <p className={`text-xs font-bold ${isDominant ? '' : 'text-or'}`}>{house}</p>
                               <p className={`font-bold text-sm mt-1 ${isDominant ? '' : 'text-white'}`}>{figureName}</p>
-                              <p className="text-[0.7rem] mt-1" style={isDominant ? { color: '#ffffff' } : { color: '#b0b8d4' }}>
+                              <p className="text-[0.7rem] mt-1" style={isDominant ? { color: '#ffffff' } : { color: '#a0aec0' }}>
                                 {MAISONS[house]?.titre}
                               </p>
                               {!isDominant && figure && (
@@ -412,7 +412,7 @@ export function GeomanciePage() {
                 </div>
 
                 {FIGURES[result.theme.dominantFigure] && (
-                  <div className="rounded-lg p-5 mt-6" style={{ background: '#0a0e2e', border: '1px solid #2563EB' }}>
+                  <div className="rounded-lg p-5 mt-6" style={{ background: '#0a0f2e', border: '1px solid #f5c842' }}>
                     <p className="text-or font-bold text-center">
                       Figure dominante : {result.theme.dominantFigure} — Maison {result.theme.dominantHouse}
                     </p>
@@ -430,7 +430,7 @@ export function GeomanciePage() {
                   {result.targetedReading.mostRelevantHouses.map((h, i) => {
                     const colors = influenceColor(h.figureInfluence);
                     return (
-                      <div key={i} className="rounded-lg overflow-hidden" style={{ border: '1px solid rgba(37,99,235,0.2)' }}>
+                      <div key={i} className="rounded-lg overflow-hidden" style={{ border: '1px solid rgba(245,200,66,0.2)' }}>
                         <div className="px-4 py-2 flex items-center justify-between flex-wrap gap-2 bg-or">
                           <p className="text-white font-bold">
                             Maison {h.house} — {h.figure}
@@ -443,7 +443,7 @@ export function GeomanciePage() {
                           </span>
                         </div>
                         <div className="p-4">
-                          <p className="text-sm" style={{ color: '#b0b8d4' }}>{MAISONS[h.house]?.description}</p>
+                          <p className="text-sm" style={{ color: '#a0aec0' }}>{MAISONS[h.house]?.description}</p>
                           <p className="text-white mt-2">{h.relevance}</p>
                           <p className="text-white mt-2">{h.message}</p>
                         </div>
@@ -469,7 +469,7 @@ export function GeomanciePage() {
                   ))}
                 </div>
 
-                <div className="rounded-lg p-4 mt-5 text-center" style={{ border: '1px solid #2563EB' }}>
+                <div className="rounded-lg p-4 mt-5 text-center" style={{ border: '1px solid #f5c842' }}>
                   <p className="text-white font-bold">{result.interpretation.keyMessage}</p>
                 </div>
 
@@ -506,7 +506,7 @@ export function GeomanciePage() {
 
                 {result.sacrifices.complementary.length > 0 && (
                   <div className="mt-5">
-                    <p className="font-bold mb-2" style={{ color: '#b0b8d4' }}>
+                    <p className="font-bold mb-2" style={{ color: '#a0aec0' }}>
                       Sacrifices complémentaires
                     </p>
                     <div className="flex flex-col gap-2">
@@ -528,7 +528,7 @@ export function GeomanciePage() {
                   .map((figureName) => {
                     const plante = FIGURES[figureName].plante;
                     return (
-                      <div key={figureName} className="rounded-lg text-center p-6" style={{ background: '#0d2b1a', border: '1px solid #2563EB' }}>
+                      <div key={figureName} className="rounded-lg text-center p-6" style={{ background: '#0d2b1a', border: '1px solid #f5c842' }}>
                         <p className="text-or font-bold">{figureName}</p>
                         <p className="text-white font-bold mt-2">
                           {plante.nomFrancais} / {plante.nomBambara} / <span className="italic">{plante.nomScientifique}</span>
@@ -547,7 +547,7 @@ export function GeomanciePage() {
               <Separateur />
 
               {/* BLOC 5 — Conclusion */}
-              <div className="rounded-lg text-center p-8" style={{ background: '#1a237e', border: '1px solid #2563EB' }}>
+              <div className="rounded-lg text-center p-8" style={{ background: '#0d1545', border: '1px solid #f5c842' }}>
                 <p className="italic text-white">{result.conclusion}</p>
               </div>
             </div>

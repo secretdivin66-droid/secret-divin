@@ -39,7 +39,7 @@ export function ForgotPasswordPage() {
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-12">
       <div className="carte w-full max-w-md rounded-lg">
         <h1 className="text-or font-bold text-xl mb-2 text-center">Mot de passe oublié</h1>
-        <p className="text-sm text-center mb-6" style={{ color: '#b0b8d4' }}>
+        <p className="text-sm text-center mb-6" style={{ color: '#a0aec0' }}>
           Indique ton email, on t'envoie un lien pour réinitialiser ton mot de passe.
         </p>
 

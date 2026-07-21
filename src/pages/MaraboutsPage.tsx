@@ -54,10 +54,10 @@ export function MaraboutsPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-6xl mx-auto">
         <h1 className="text-center font-bold text-or text-[2rem]">Marabouts</h1>
-        <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>
+        <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
           Trouve un marabout professionnel pour t'accompagner dans ta démarche spirituelle
         </p>
 
@@ -72,28 +72,28 @@ export function MaraboutsPage() {
         {/* FILTRES */}
         <div className="carte rounded-lg grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div>
-            <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Spécialité</label>
+            <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Spécialité</label>
             <select value={specialite} onChange={(e) => setSpecialite(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or">
               <option value="Toutes">Toutes</option>
               {SPECIALITES.map((s) => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Pays</label>
+            <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Pays</label>
             <select value={pays} onChange={(e) => setPays(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or">
               <option value="Tous">Tous</option>
               {PAYS_LIST.map((p) => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Langue</label>
+            <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Langue</label>
             <select value={langue} onChange={(e) => setLangue(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or">
               <option value="Toutes">Toutes</option>
               {LANGUES.map((l) => <option key={l} value={l}>{l}</option>)}
             </select>
           </div>
           <div>
-            <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Recherche</label>
+            <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Recherche</label>
             <input
               type="text"
               value={search}
@@ -105,7 +105,7 @@ export function MaraboutsPage() {
         </div>
 
         {!loading && filtered.length === 0 && (
-          <p className="text-center" style={{ color: '#b0b8d4' }}>Aucun marabout trouvé pour ces critères.</p>
+          <p className="text-center" style={{ color: '#a0aec0' }}>Aucun marabout trouvé pour ces critères.</p>
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -114,8 +114,8 @@ export function MaraboutsPage() {
             const visibleSpecialites = m.specialite.slice(0, 3);
             const remaining = m.specialite.length - visibleSpecialites.length;
             return (
-              <div key={m.id} className="rounded-lg overflow-hidden flex flex-col" style={{ background: '#111a55', border: '1px solid rgba(37,99,235,0.15)' }}>
-                <div className="p-5 text-center" style={{ background: 'linear-gradient(160deg, #1a237e, #111a55)' }}>
+              <div key={m.id} className="rounded-lg overflow-hidden flex flex-col" style={{ background: '#0d1545', border: '1px solid rgba(245,200,66,0.15)' }}>
+                <div className="p-5 text-center" style={{ background: 'linear-gradient(160deg, #0d1545, #0d1545)' }}>
                   <div className="w-[70px] h-[70px] rounded-full bg-or text-white font-bold flex items-center justify-center mx-auto text-2xl overflow-hidden">
                     {m.photo_url ? (
                       <img src={m.photo_url} alt={m.nom_complet} className="w-full h-full object-cover" />
@@ -124,27 +124,27 @@ export function MaraboutsPage() {
                     )}
                   </div>
                   <p className="text-white font-bold mt-3">{m.nom_complet}</p>
-                  <p className="text-sm" style={{ color: '#b0b8d4' }}>{m.ville}, {m.pays}</p>
+                  <p className="text-sm" style={{ color: '#a0aec0' }}>{m.ville}, {m.pays}</p>
                   {note && <p className="text-or font-bold mt-1">★ {note} / 5</p>}
                 </div>
 
                 <div className="p-5 flex flex-col gap-2 flex-1">
                   <div className="flex flex-wrap gap-1">
                     {visibleSpecialites.map((s) => (
-                      <span key={s} className="px-2 py-1 rounded-full text-xs font-bold text-or" style={{ background: 'rgba(37,99,235,0.1)' }}>
+                      <span key={s} className="px-2 py-1 rounded-full text-xs font-bold text-or" style={{ background: 'rgba(245,200,66,0.1)' }}>
                         {s}
                       </span>
                     ))}
                     {remaining > 0 && (
-                      <span className="px-2 py-1 rounded-full text-xs font-bold" style={{ background: '#1a1a2e', color: '#b0b8d4' }}>
+                      <span className="px-2 py-1 rounded-full text-xs font-bold" style={{ background: '#1a1a2e', color: '#a0aec0' }}>
                         +{remaining} autres
                       </span>
                     )}
                   </div>
-                  <p className="text-sm" style={{ color: '#b0b8d4' }}>{m.annees_experience} ans d'expérience</p>
+                  <p className="text-sm" style={{ color: '#a0aec0' }}>{m.annees_experience} ans d'expérience</p>
                   <div className="flex flex-wrap gap-1">
                     {m.langues.map((l) => (
-                      <span key={l} className="px-2 py-0.5 rounded-full text-xs" style={{ background: '#1a1a2e', color: '#b0b8d4' }}>
+                      <span key={l} className="px-2 py-0.5 rounded-full text-xs" style={{ background: '#1a1a2e', color: '#a0aec0' }}>
                         {l}
                       </span>
                     ))}
@@ -166,9 +166,9 @@ export function MaraboutsPage() {
         </div>
       </div>
 
-      <div className="mt-10 py-10 px-4 text-center" style={{ background: '#1a237e', borderTop: '1px solid rgba(37,99,235,0.3)' }}>
+      <div className="mt-10 py-10 px-4 text-center" style={{ background: '#0d1545', borderTop: '1px solid rgba(245,200,66,0.3)' }}>
         <p className="text-or font-bold text-xl">Vous êtes marabout professionnel ?</p>
-        <p className="mt-2" style={{ color: '#b0b8d4' }}>
+        <p className="mt-2" style={{ color: '#a0aec0' }}>
           Rejoignez Secret Divin et trouvez de nouveaux clients. Abonnement à 5 000 FCFA/mois.
         </p>
         <Link to="/marabouts/inscrire" className="btn-principal rounded mt-5 inline-block">

@@ -54,7 +54,7 @@ export function PhotoUpload({ userId, currentPhotoUrl, onUploadSuccess }: Props)
           />
         ) : (
           <div className="w-full h-full rounded-full bg-bleu border-2 border-or flex items-center justify-center text-center px-2">
-            <span className="text-xs" style={{ color: '#b0b8d4' }}>
+            <span className="text-xs" style={{ color: '#a0aec0' }}>
               Aucune photo
             </span>
           </div>
@@ -85,7 +85,7 @@ export function PhotoUpload({ userId, currentPhotoUrl, onUploadSuccess }: Props)
         {uploading ? 'Envoi en cours...' : preview ? 'Changer la photo' : 'Ajouter une photo'}
       </button>
 
-      <span className="text-xs text-center" style={{ color: '#b0b8d4' }}>
+      <span className="text-xs text-center" style={{ color: '#a0aec0' }}>
         JPG, PNG ou WEBP — 5 Mo maximum
       </span>
 

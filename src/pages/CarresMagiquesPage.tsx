@@ -76,10 +76,10 @@ function SquareGrid({
 
   const cellStyle: CSSProperties =
     variant === 'base'
-      ? { background: '#f5f5f5', color: '#1a237e', border: '1px solid #e0e0e0' }
+      ? { background: '#f5f5f5', color: '#0d1545', border: '1px solid #e0e0e0' }
       : variant === 'french'
-      ? { background: '#ffffff', color: '#1a237e', border: '2px solid #2563EB' }
-      : { background: '#1a237e', color: '#2563EB', direction: 'rtl' };
+      ? { background: '#ffffff', color: '#0d1545', border: '2px solid #f5c842' }
+      : { background: '#0d1545', color: '#f5c842', direction: 'rtl' };
 
   return (
     <div
@@ -232,7 +232,7 @@ export function CarresMagiquesPage() {
   const remainder = result ? (result.PM - subtract) % divisor : 0;
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <style>{`
         .cmg-cell { width: 40px; height: 40px; }
         @media (min-width: 768px) {
@@ -243,7 +243,7 @@ export function CarresMagiquesPage() {
       <div className="max-w-4xl mx-auto">
         {/* SECTION 1 — EN-TÊTE */}
         <h1 className="text-center font-bold text-or text-[2rem]">Carrés Magiques</h1>
-        <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>
+        <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
           Génère les 7 types de carrés magiques
           <br />
           islamiques selon ton poids mystique
@@ -267,7 +267,7 @@ export function CarresMagiquesPage() {
             ) : (
               <>
                 <div>
-                  <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>
+                  <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>
                     Ton prénom (en français)
                   </label>
                   <input
@@ -279,7 +279,7 @@ export function CarresMagiquesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>
+                  <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>
                     Prénom de ta mère (en français)
                   </label>
                   <input
@@ -291,7 +291,7 @@ export function CarresMagiquesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-2" style={{ color: '#b0b8d4' }}>
+                  <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>
                     Ton sexe
                   </label>
                   <div className="flex gap-3">
@@ -323,7 +323,7 @@ export function CarresMagiquesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>
+                  <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>
                     Entre ton poids mystique directement
                   </label>
                   <input
@@ -338,7 +338,7 @@ export function CarresMagiquesPage() {
             )}
 
             <div>
-              <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>
+              <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>
                 Type de carré
               </label>
               <select
@@ -370,7 +370,7 @@ export function CarresMagiquesPage() {
         {submitting && (
           <div className="flex flex-col items-center gap-3 mt-6">
             <div className="w-10 h-10 border-4 border-or border-t-transparent rounded-full animate-spin" />
-            <p style={{ color: '#b0b8d4' }}>Génération en cours...</p>
+            <p style={{ color: '#a0aec0' }}>Génération en cours...</p>
           </div>
         )}
 
@@ -393,14 +393,14 @@ export function CarresMagiquesPage() {
 
             <div id="carres-grid" className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="text-center">
-                <p className="font-bold mb-3" style={{ color: '#b0b8d4' }}>
+                <p className="font-bold mb-3" style={{ color: '#a0aec0' }}>
                   Carré de Base
                 </p>
                 <SquareGrid values={LAYOUTS[result.squareSize]} size={result.squareSize} variant="base" />
               </div>
 
               <div className="text-center">
-                <p className="font-bold mb-3" style={{ color: '#b0b8d4' }}>
+                <p className="font-bold mb-3" style={{ color: '#a0aec0' }}>
                   Chiffres Français
                 </p>
                 <SquareGrid values={result.cells} size={result.squareSize} variant="french" />
@@ -441,13 +441,13 @@ export function CarresMagiquesPage() {
               <table className="w-full text-sm">
                 <tbody>
                   <tr className="border-b border-or/10">
-                    <td className="py-2" style={{ color: '#b0b8d4' }}>
+                    <td className="py-2" style={{ color: '#a0aec0' }}>
                       Type
                     </td>
                     <td className="py-2 text-white font-bold text-right">{result.squareType}</td>
                   </tr>
                   <tr className="border-b border-or/10">
-                    <td className="py-2" style={{ color: '#b0b8d4' }}>
+                    <td className="py-2" style={{ color: '#a0aec0' }}>
                       Taille
                     </td>
                     <td className="py-2 text-white font-bold text-right">
@@ -455,37 +455,37 @@ export function CarresMagiquesPage() {
                     </td>
                   </tr>
                   <tr className="border-b border-or/10">
-                    <td className="py-2" style={{ color: '#b0b8d4' }}>
+                    <td className="py-2" style={{ color: '#a0aec0' }}>
                       Poids (PM)
                     </td>
                     <td className="py-2 text-white font-bold text-right">{result.PM}</td>
                   </tr>
                   <tr className="border-b border-or/10">
-                    <td className="py-2" style={{ color: '#b0b8d4' }}>
+                    <td className="py-2" style={{ color: '#a0aec0' }}>
                       Planète
                     </td>
                     <td className="py-2 text-white font-bold text-right">{SQUARE_INFO[result.squareSize].planet}</td>
                   </tr>
                   <tr className="border-b border-or/10">
-                    <td className="py-2" style={{ color: '#b0b8d4' }}>
+                    <td className="py-2" style={{ color: '#a0aec0' }}>
                       Subtract
                     </td>
                     <td className="py-2 text-white font-bold text-right">{subtract}</td>
                   </tr>
                   <tr className="border-b border-or/10">
-                    <td className="py-2" style={{ color: '#b0b8d4' }}>
+                    <td className="py-2" style={{ color: '#a0aec0' }}>
                       Diviseur
                     </td>
                     <td className="py-2 text-white font-bold text-right">{divisor}</td>
                   </tr>
                   <tr className="border-b border-or/10">
-                    <td className="py-2" style={{ color: '#b0b8d4' }}>
+                    <td className="py-2" style={{ color: '#a0aec0' }}>
                       Entrée
                     </td>
                     <td className="py-2 text-white font-bold text-right">{entry}</td>
                   </tr>
                   <tr>
-                    <td className="py-2" style={{ color: '#b0b8d4' }}>
+                    <td className="py-2" style={{ color: '#a0aec0' }}>
                       Reste
                     </td>
                     <td className="py-2 text-white font-bold text-right">{remainder}</td>

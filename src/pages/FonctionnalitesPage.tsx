@@ -97,10 +97,10 @@ export function FonctionnalitesPage() {
   useRevealOnScroll();
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-4xl mx-auto">
         <h1 className="text-center font-bold text-or text-[2rem]">Fonctionnalités</h1>
-        <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>
+        <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
           Tout ce que Secret Divin peut faire pour toi
         </p>
 
@@ -111,17 +111,17 @@ export function FonctionnalitesPage() {
             <div key={feature.title} className="reveal carte rounded-lg">
               <span
                 className="inline-block px-3 py-1 rounded-full text-xs font-bold mb-4"
-                style={feature.free ? { background: '#1b3a1f', color: '#4caf50' } : { background: 'rgba(37,99,235,0.1)', color: '#2563EB' }}
+                style={feature.free ? { background: '#1b3a1f', color: '#4caf50' } : { background: 'rgba(245,200,66,0.1)', color: '#f5c842' }}
               >
                 {feature.free ? 'GRATUIT' : '2 crédits par génération'}
               </span>
               {feature.titleArabic && (
-                <p className="arabic font-bold text-[1.15em]" style={{ color: '#f9a825' }}>
+                <p className="arabic font-bold text-[1.15em]" style={{ color: '#f5c842' }}>
                   {feature.titleArabic}
                 </p>
               )}
               <h2 className="text-white font-bold text-xl">{feature.title}</h2>
-              <p className="mt-3" style={{ color: '#b0b8d4' }}>{feature.description}</p>
+              <p className="mt-3" style={{ color: '#a0aec0' }}>{feature.description}</p>
 
               <p className="text-or font-bold mt-5 mb-2">Ce que tu obtiens</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

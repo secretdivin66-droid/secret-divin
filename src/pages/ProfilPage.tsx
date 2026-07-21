@@ -103,13 +103,13 @@ function sourceColor(source: string): { bg: string; text: string } {
   switch (source) {
     case 'destin': return { bg: '#0d2340', text: '#1565c0' };
     case 'secrets': return { bg: '#2a1b3d', text: '#7b1fa2' };
-    case 'geomancie': return { bg: '#1E3A8A', text: '#2563EB' };
+    case 'geomancie': return { bg: '#1E3A8A', text: '#f5c842' };
     case 'reves': return { bg: '#12123a', text: '#5c6bc0' };
     case 'plantes': return { bg: '#1b3a1f', text: '#4caf50' };
     case 'attraper': return { bg: '#3a1b1b', text: '#e53935' };
     case 'compatibilite': return { bg: '#3a1b2e', text: '#e91e63' };
     case 'jours': return { bg: '#3a2410', text: '#ff9800' };
-    default: return { bg: '#1a1a2e', text: '#b0b8d4' };
+    default: return { bg: '#1a1a2e', text: '#a0aec0' };
   }
 }
 
@@ -146,8 +146,8 @@ function ConsultationSummary({ consultation }: { consultation: Consultation }) {
         </p>
       ))}
       <details className="mt-2">
-        <summary className="text-xs cursor-pointer" style={{ color: '#b0b8d4' }}>Voir les données complètes</summary>
-        <pre className="text-xs mt-2 p-3 rounded overflow-x-auto" style={{ background: '#0a0e2e', color: '#b0b8d4' }}>
+        <summary className="text-xs cursor-pointer" style={{ color: '#a0aec0' }}>Voir les données complètes</summary>
+        <pre className="text-xs mt-2 p-3 rounded overflow-x-auto" style={{ background: '#0a0f2e', color: '#a0aec0' }}>
           {JSON.stringify(c, null, 2)}
         </pre>
       </details>
@@ -423,7 +423,7 @@ export function ProfilPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0e2e' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0f2e' }}>
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-or border-t-transparent rounded-full animate-spin" />
           <p className="text-or">Chargement...</p>
@@ -434,7 +434,7 @@ export function ProfilPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0e2e' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0f2e' }}>
         <div className="carte rounded-lg text-center" style={{ border: '1px solid #e53935' }}>
           <p className="text-red-400 mb-4">{error}</p>
           <button onClick={loadAll} className="btn-principal rounded">Réessayer</button>
@@ -444,18 +444,18 @@ export function ProfilPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-[800px] mx-auto">
         {/* SECTION 1 — EN-TÊTE */}
         <h1 className="text-center font-bold text-or text-[2rem]">Mon Profil</h1>
-        <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>Gère tes informations et préférences</p>
+        <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>Gère tes informations et préférences</p>
 
         <Separateur />
 
         {/* SECTION 3 — CARTE RÉSUMÉ */}
         <div
           className="rounded-lg text-center p-8 max-w-[600px] mx-auto"
-          style={{ background: 'linear-gradient(160deg, #1a237e, #111a55)', border: '1px solid #2563EB' }}
+          style={{ background: 'linear-gradient(160deg, #0d1545, #0d1545)', border: '1px solid #f5c842' }}
         >
           {authUser && (
             <AvatarUploader
@@ -466,7 +466,7 @@ export function ProfilPage() {
             />
           )}
           <p className="text-or font-bold mt-4">{buildFullName(profile?.first_name, profile?.last_name) || profile?.display_name || authUser?.email}</p>
-          <p className="text-sm mt-1" style={{ color: '#b0b8d4' }}>{authUser?.email}</p>
+          <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>{authUser?.email}</p>
 
           <div className="flex justify-center gap-2 mt-4 flex-wrap">
             {subscription ? (
@@ -480,7 +480,7 @@ export function ProfilPage() {
               <span className="px-3 py-1 rounded-full text-sm font-bold border border-or text-or">{credits?.balance ?? 0} crédits</span>
             )}
           </div>
-          <p className="text-xs mt-3" style={{ color: '#b0b8d4' }}>
+          <p className="text-xs mt-3" style={{ color: '#a0aec0' }}>
             Membre depuis {formatDateShort(authUser?.created_at)}
           </p>
         </div>
@@ -511,59 +511,59 @@ export function ProfilPage() {
 
           {!editMode ? (
             <div className="flex flex-col gap-3">
-              <p className="text-white"><span className="font-bold" style={{ color: '#b0b8d4' }}>Nom affiché : </span>{profile?.display_name || '—'}</p>
-              <p className="text-white"><span className="font-bold" style={{ color: '#b0b8d4' }}>Prénom : </span>{profile?.first_name || '—'}</p>
-              <p className="text-white"><span className="font-bold" style={{ color: '#b0b8d4' }}>Nom : </span>{profile?.last_name || '—'}</p>
-              <p className="text-white"><span className="font-bold" style={{ color: '#b0b8d4' }}>Téléphone : </span>{profile?.phone || '—'}</p>
-              <p className="text-white"><span className="font-bold" style={{ color: '#b0b8d4' }}>Pays : </span>{profile?.country || '—'}</p>
-              <p className="text-white"><span className="font-bold" style={{ color: '#b0b8d4' }}>Prénom de ta mère : </span>{profile?.mother_name || '—'}</p>
-              <p className="text-white"><span className="font-bold" style={{ color: '#b0b8d4' }}>Sexe : </span>{profile?.gender === 'femme' ? 'Femme' : 'Homme'}</p>
-              <p className="text-white"><span className="font-bold" style={{ color: '#b0b8d4' }}>Religion : </span>{profile?.religion || '—'}</p>
-              <p className="text-white"><span className="font-bold" style={{ color: '#b0b8d4' }}>Email : </span>{authUser?.email}</p>
+              <p className="text-white"><span className="font-bold" style={{ color: '#a0aec0' }}>Nom affiché : </span>{profile?.display_name || '—'}</p>
+              <p className="text-white"><span className="font-bold" style={{ color: '#a0aec0' }}>Prénom : </span>{profile?.first_name || '—'}</p>
+              <p className="text-white"><span className="font-bold" style={{ color: '#a0aec0' }}>Nom : </span>{profile?.last_name || '—'}</p>
+              <p className="text-white"><span className="font-bold" style={{ color: '#a0aec0' }}>Téléphone : </span>{profile?.phone || '—'}</p>
+              <p className="text-white"><span className="font-bold" style={{ color: '#a0aec0' }}>Pays : </span>{profile?.country || '—'}</p>
+              <p className="text-white"><span className="font-bold" style={{ color: '#a0aec0' }}>Prénom de ta mère : </span>{profile?.mother_name || '—'}</p>
+              <p className="text-white"><span className="font-bold" style={{ color: '#a0aec0' }}>Sexe : </span>{profile?.gender === 'femme' ? 'Femme' : 'Homme'}</p>
+              <p className="text-white"><span className="font-bold" style={{ color: '#a0aec0' }}>Religion : </span>{profile?.religion || '—'}</p>
+              <p className="text-white"><span className="font-bold" style={{ color: '#a0aec0' }}>Email : </span>{authUser?.email}</p>
             </div>
           ) : (
             <div className="flex flex-col gap-4">
               <div>
-                <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Nom affiché</label>
+                <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Nom affiché</label>
                 <input value={displayName} onChange={(e) => setDisplayName(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or" />
               </div>
               <div>
-                <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Ton prénom</label>
+                <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Ton prénom</label>
                 <input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or" />
               </div>
               <div>
-                <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Ton nom</label>
+                <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Ton nom</label>
                 <input value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or" />
               </div>
               <div>
-                <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Téléphone</label>
+                <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Téléphone</label>
                 <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+225 00 00 00 00" className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or" />
               </div>
               <div>
-                <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Pays</label>
+                <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Pays</label>
                 <input value={country} onChange={(e) => setCountry(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or" />
               </div>
               <div>
-                <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Prénom de ta mère</label>
+                <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Prénom de ta mère</label>
                 <input value={motherName} onChange={(e) => setMotherName(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or" />
               </div>
               <div>
-                <label className="block text-sm mb-2" style={{ color: '#b0b8d4' }}>Ton sexe</label>
+                <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>Ton sexe</label>
                 <div className="flex gap-3">
                   <button type="button" onClick={() => setGender('homme')} className={`flex-1 py-2 rounded font-bold transition ${gender === 'homme' ? 'bg-or text-white' : 'border border-or text-or bg-transparent'}`}>Homme</button>
                   <button type="button" onClick={() => setGender('femme')} className={`flex-1 py-2 rounded font-bold transition ${gender === 'femme' ? 'bg-or text-white' : 'border border-or text-or bg-transparent'}`}>Femme</button>
                 </div>
               </div>
               <div>
-                <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Ta religion</label>
+                <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Ta religion</label>
                 <select value={religion} onChange={(e) => setReligion(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or">
                   {RELIGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
                 </select>
               </div>
               <div>
-                <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Email</label>
+                <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Email</label>
                 <input value={authUser?.email ?? ''} disabled className="w-full bg-bleu border border-or/10 rounded px-3 py-2 text-white opacity-60 cursor-not-allowed" />
-                <p className="text-xs mt-1" style={{ color: '#b0b8d4' }}>(non modifiable)</p>
+                <p className="text-xs mt-1" style={{ color: '#a0aec0' }}>(non modifiable)</p>
               </div>
               <div className="flex flex-col md:flex-row gap-3">
                 <button onClick={handleSaveProfile} disabled={saving} className="btn-principal rounded w-full md:flex-1 disabled:opacity-50">
@@ -593,20 +593,20 @@ export function ProfilPage() {
                   <div className="carte rounded-lg text-center">
                     <p className="text-white font-bold">{profile.first_name}</p>
                     <p className="arabic text-or mt-1">{pmData.nameArabic}</p>
-                    <p className="text-sm mt-1" style={{ color: '#b0b8d4' }}>Poids : {pmData.nameW}</p>
+                    <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>Poids : {pmData.nameW}</p>
                   </div>
                   <div className="carte rounded-lg text-center">
                     <p className="text-white font-bold">{profile.mother_name}</p>
                     <p className="arabic text-or mt-1">{pmData.motherArabic}</p>
-                    <p className="text-sm mt-1" style={{ color: '#b0b8d4' }}>Poids : {pmData.motherW}</p>
+                    <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>Poids : {pmData.motherW}</p>
                   </div>
                 </div>
 
                 <div className="carte rounded-lg text-center mt-5">
-                  <p className="text-sm" style={{ color: '#b0b8d4' }}>Ton Poids Mystique</p>
+                  <p className="text-sm" style={{ color: '#a0aec0' }}>Ton Poids Mystique</p>
                   <p className="text-or font-bold text-[4rem]">{pmData.PM}</p>
                   <p className="font-bold text-[1.5rem]" style={{ color: pmData.elementColor }}>{pmData.element}</p>
-                  <p className="text-sm mt-2" style={{ color: '#b0b8d4' }}>
+                  <p className="text-sm mt-2" style={{ color: '#a0aec0' }}>
                     {pmData.nameW} + {pmData.motherW} + {GENDER_BONUS[gender]} = {pmData.PM}
                   </p>
                   <Link to="/destin" className="btn-principal rounded mt-5 inline-block">Découvrir mon destin complet</Link>
@@ -614,7 +614,7 @@ export function ProfilPage() {
               </>
             ) : null
           ) : (
-            <div className="rounded-lg p-5 text-center" style={{ background: 'rgba(37,99,235,0.1)', border: '1px solid #2563EB' }}>
+            <div className="rounded-lg p-5 text-center" style={{ background: 'rgba(245,200,66,0.1)', border: '1px solid #f5c842' }}>
               <p className="text-white">
                 Complète ton prénom et le prénom de ta mère pour voir ton poids mystique automatiquement.
               </p>
@@ -633,7 +633,7 @@ export function ProfilPage() {
         {/* SECTION 6 — MES PRÉFÉRENCES */}
         <div className="carte rounded-lg">
           <h2 className="text-or font-bold mb-5">Mes Préférences</h2>
-          <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Langue</label>
+          <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Langue</label>
           <select value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or">
             <option value="fr">Français</option>
             <option value="en" disabled>English (bientôt disponible)</option>
@@ -655,12 +655,12 @@ export function ProfilPage() {
               {consultations.map((c) => {
                 const colors = sourceColor(c.page_source);
                 return (
-                  <div key={c.id} className="rounded-lg p-4" style={{ background: '#111a55' }}>
+                  <div key={c.id} className="rounded-lg p-4" style={{ background: '#0d1545' }}>
                     <span className="px-2 py-1 rounded-full text-xs font-bold" style={{ background: colors.bg, color: colors.text }}>
                       {c.page_source}
                     </span>
                     <p className="text-white font-bold mt-2">{c.title}</p>
-                    <p className="text-xs mt-1" style={{ color: '#b0b8d4' }}>{formatDate(c.created_at)}</p>
+                    <p className="text-xs mt-1" style={{ color: '#a0aec0' }}>{formatDate(c.created_at)}</p>
                     <button onClick={() => setSelectedConsultation(c)} className="btn-secondaire rounded text-sm px-3 py-1 mt-3">
                       Voir cette consultation
                     </button>
@@ -669,7 +669,7 @@ export function ProfilPage() {
               })}
             </div>
           ) : (
-            <div className="rounded-lg p-5 text-center" style={{ background: '#111a55' }}>
+            <div className="rounded-lg p-5 text-center" style={{ background: '#0d1545' }}>
               <p className="text-white">Tu n'as pas encore de consultations sauvegardées.</p>
               <Link to="/destin" className="btn-principal rounded mt-4 inline-block">Commencer une consultation</Link>
             </div>
@@ -683,12 +683,12 @@ export function ProfilPage() {
           <h2 className="text-or font-bold mb-5">Ma Progression dans la Formation</h2>
           <p className="text-white text-sm mb-2">{completedModules.length} / 9 modules</p>
           <div className="w-full rounded-full overflow-hidden mb-5" style={{ height: 12, background: '#1a1a2e' }}>
-            <div className="h-full transition-all" style={{ width: `${(completedModules.length / 9) * 100}%`, background: '#2563EB' }} />
+            <div className="h-full transition-all" style={{ width: `${(completedModules.length / 9) * 100}%`, background: '#f5c842' }} />
           </div>
 
           {completedModules.length > 0 ? (
             <>
-              <p className="font-bold mb-3" style={{ color: '#b0b8d4' }}>Modules complétés :</p>
+              <p className="font-bold mb-3" style={{ color: '#a0aec0' }}>Modules complétés :</p>
               <div className="flex flex-col gap-2 mb-5">
                 {completedModules.map((m) => (
                   <span key={m.module_id} className="px-3 py-2 rounded-full text-sm font-bold w-fit" style={{ background: '#1b3a1f', color: '#4caf50' }}>
@@ -733,7 +733,7 @@ export function ProfilPage() {
       {/* MODAL CONSULTATION */}
       {selectedConsultation && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-          <div style={{ background: '#111a55', border: '1px solid #2563EB', borderRadius: '8px', padding: '28px', maxWidth: '500px', width: '100%', maxHeight: '85vh', overflowY: 'auto' }}>
+          <div style={{ background: '#0d1545', border: '1px solid #f5c842', borderRadius: '8px', padding: '28px', maxWidth: '500px', width: '100%', maxHeight: '85vh', overflowY: 'auto' }}>
             <h2 className="text-or font-bold text-lg mb-4">{selectedConsultation.title}</h2>
             <ConsultationSummary consultation={selectedConsultation} />
             <button onClick={() => setSelectedConsultation(null)} className="btn-secondaire rounded w-full mt-5">Fermer</button>
@@ -744,7 +744,7 @@ export function ProfilPage() {
       {/* MODAL DÉCONNEXION */}
       {showSignOutModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-          <div style={{ background: '#111a55', border: '1px solid #2563EB', borderRadius: '8px', padding: '28px', maxWidth: '400px', width: '100%' }} className="text-center">
+          <div style={{ background: '#0d1545', border: '1px solid #f5c842', borderRadius: '8px', padding: '28px', maxWidth: '400px', width: '100%' }} className="text-center">
             <p className="text-white mb-5">Es-tu sûr de vouloir te déconnecter ?</p>
             <div className="flex flex-col gap-3">
               <button onClick={handleSignOut} className="rounded py-2 font-bold" style={{ background: '#e53935', color: 'white' }}>Confirmer</button>
@@ -757,7 +757,7 @@ export function ProfilPage() {
       {/* MODAL SUPPRESSION COMPTE */}
       {showDeleteModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-          <div style={{ background: '#111a55', border: '1px solid #e53935', borderRadius: '8px', padding: '28px', maxWidth: '450px', width: '100%' }}>
+          <div style={{ background: '#0d1545', border: '1px solid #e53935', borderRadius: '8px', padding: '28px', maxWidth: '450px', width: '100%' }}>
             <h2 className="text-red-400 font-bold text-lg mb-3">Suppression du compte</h2>
             <p className="text-white text-sm mb-4">
               Cette action est irréversible. Toutes tes données seront supprimées définitivement : profil, crédits, consultations et progression.

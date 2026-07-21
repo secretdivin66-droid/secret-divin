@@ -32,9 +32,9 @@ export function RequirePlan({ minPlan, children, fallback }: Props) {
   if (!hasAtLeast(minPlan)) {
     if (fallback) return <>{fallback}</>;
     return (
-      <div className="rounded-lg p-6 text-center flex flex-col items-center gap-3" style={{ background: '#111a55', border: '1px solid #2563EB' }}>
+      <div className="rounded-lg p-6 text-center flex flex-col items-center gap-3" style={{ background: '#0d1545', border: '1px solid #f5c842' }}>
         <p className="text-or font-bold">Fonctionnalité réservée au plan {PLAN_LABEL[minPlan]}</p>
-        <p className="text-sm" style={{ color: '#b0b8d4' }}>
+        <p className="text-sm" style={{ color: '#a0aec0' }}>
           Passe au plan {PLAN_LABEL[minPlan]} pour débloquer cette fonctionnalité.
         </p>
         <Link to="/pricing" className="btn-principal rounded inline-block">Voir les plans</Link>

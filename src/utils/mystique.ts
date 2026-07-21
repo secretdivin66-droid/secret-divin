@@ -228,7 +228,7 @@ export const JOURS_DATA: Record<string, {
 }> = {
   'Lundi':    { poids: 2860, planete: 'Lune',     planeteArabe: 'القمر',    couleurBordure: '#4caf50', description: 'Jour de la Lune — douceur, intuition et spiritualité' },
   'Mardi':    { poids: 2709, planete: 'Mars',     planeteArabe: 'المريخ',   couleurBordure: '#e53935', description: 'Jour de Mars — courage, énergie et détermination' },
-  'Mercredi': { poids: 2795, planete: 'Mercure',  planeteArabe: 'عطارد',    couleurBordure: '#2563EB', description: 'Jour de Mercure — intelligence, communication et commerce' },
+  'Mercredi': { poids: 2795, planete: 'Mercure',  planeteArabe: 'عطارد',    couleurBordure: '#f5c842', description: 'Jour de Mercure — intelligence, communication et commerce' },
   'Jeudi':    { poids: 2856, planete: 'Jupiter',  planeteArabe: 'المشتري',  couleurBordure: '#3f51b5', description: 'Jour de Jupiter — sagesse, richesse et chance' },
   'Vendredi': { poids: 2766, planete: 'Vénus',    planeteArabe: 'الزهرة',   couleurBordure: '#e91e63', description: 'Jour de Vénus — amour, beauté et harmonie' },
   'Samedi':   { poids: 2847, planete: 'Saturne',  planeteArabe: 'زحل',      couleurBordure: '#673ab7', description: 'Jour de Saturne — discipline, patience et mystère' },

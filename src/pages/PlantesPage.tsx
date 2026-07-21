@@ -275,7 +275,7 @@ function BlocTitle({ children }: { children: ReactNode }) {
 
 function StepList({ steps }: { steps: string[] }) {
   return (
-    <div className="flex flex-col gap-3 mb-3" style={{ borderLeft: '2px solid rgba(37,99,235,0.3)', paddingLeft: '1rem' }}>
+    <div className="flex flex-col gap-3 mb-3" style={{ borderLeft: '2px solid rgba(245,200,66,0.3)', paddingLeft: '1rem' }}>
       {steps.map((step, i) => (
         <div key={i} className="flex gap-3 items-start">
           <span className="w-6 h-6 shrink-0 rounded-full bg-or text-white font-bold flex items-center justify-center text-xs">
@@ -387,7 +387,7 @@ export function PlantesPage() {
   async function handleExportPDF() {
     const el = document.getElementById('plantes-content');
     if (!el) return;
-    const canvas = await html2canvas(el, { backgroundColor: '#0a0e2e' });
+    const canvas = await html2canvas(el, { backgroundColor: '#0a0f2e' });
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -411,11 +411,11 @@ export function PlantesPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-4xl mx-auto">
         {/* SECTION 1 — EN-TÊTE */}
         <h1 className="text-center font-bold text-or text-[2rem]">Plantes Mystiques</h1>
-        <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>
+        <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
           Découvre les plantes sacrées africaines
           <br />
           et leurs rituels selon ton objectif
@@ -435,7 +435,7 @@ export function PlantesPage() {
         {!result && (
           <div className="carte rounded-lg max-w-[700px] mx-auto flex flex-col gap-5">
             <div>
-              <label className="block text-sm mb-2" style={{ color: '#b0b8d4' }}>
+              <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>
                 Décris ton objectif ou ton problème
               </label>
               <textarea
@@ -445,13 +445,13 @@ export function PlantesPage() {
                 placeholder="Ex: Je veux me protéger du mauvais oeil, je cherche à attirer l'amour, je souffre d'une maladie chronique, je veux réussir dans mes affaires, je cherche la paix intérieure..."
                 className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or resize-y"
               />
-              <p className="text-right text-xs mt-1" style={{ color: '#b0b8d4' }}>
+              <p className="text-right text-xs mt-1" style={{ color: '#a0aec0' }}>
                 {objectiveText.length} caractères
               </p>
             </div>
 
             <div>
-              <label className="block text-sm mb-2" style={{ color: '#b0b8d4' }}>
+              <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>
                 Catégorie de l'objectif
               </label>
               <select
@@ -520,7 +520,7 @@ export function PlantesPage() {
                 </BlocTitle>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {result.plants.map((p) => (
-                    <div key={p.number} className="rounded-lg overflow-hidden" style={{ border: '1px solid #2563EB' }}>
+                    <div key={p.number} className="rounded-lg overflow-hidden" style={{ border: '1px solid #f5c842' }}>
                       <div className="px-4 py-2 bg-or">
                         <p className="text-white font-bold">
                           Plante {p.number} — {p.nomFrancais}
@@ -558,9 +558,9 @@ export function PlantesPage() {
                       <p className="mt-2 text-white">
                         Sourate {v.surah} — Verset {v.ayah}
                       </p>
-                      <p className="italic mt-1" style={{ color: '#b0b8d4' }}>{v.meaning}</p>
+                      <p className="italic mt-1" style={{ color: '#a0aec0' }}>{v.meaning}</p>
                       <p className="mt-2 text-white">{v.why}</p>
-                      <div className="rounded-lg p-4 mt-3" style={{ background: '#0a0e2e', border: '1px solid rgba(21,101,192,0.4)' }}>
+                      <div className="rounded-lg p-4 mt-3" style={{ background: '#0a0f2e', border: '1px solid rgba(21,101,192,0.4)' }}>
                         <p className="text-sm text-white">{v.writingInstructions}</p>
                       </div>
                       <div className="mt-3 flex justify-center">
@@ -577,8 +577,8 @@ export function PlantesPage() {
               <div className="carte rounded-lg">
                 <BlocTitle>Préparation Complète</BlocTitle>
 
-                <p className="font-bold mb-2" style={{ color: '#b0b8d4' }}>Matériel nécessaire</p>
-                <div className="rounded-lg p-4 mb-6" style={{ background: '#0a0e2e', border: '1px solid rgba(21,101,192,0.3)' }}>
+                <p className="font-bold mb-2" style={{ color: '#a0aec0' }}>Matériel nécessaire</p>
+                <div className="rounded-lg p-4 mb-6" style={{ background: '#0a0f2e', border: '1px solid rgba(21,101,192,0.3)' }}>
                   {result.preparation.materials.map((m, i) => (
                     <p key={i} className="text-white text-sm">✦ {m}</p>
                   ))}
@@ -592,7 +592,7 @@ export function PlantesPage() {
                     result.preparation.talismanPreparation.step3,
                   ]}
                 />
-                <div className="rounded-lg p-4 mb-6" style={{ background: '#0a0e2e', border: '1px solid rgba(21,101,192,0.3)' }}>
+                <div className="rounded-lg p-4 mb-6" style={{ background: '#0a0f2e', border: '1px solid rgba(21,101,192,0.3)' }}>
                   <p className="text-sm text-white">{result.preparation.talismanPreparation.talismanWaterUse}</p>
                 </div>
 
@@ -606,13 +606,13 @@ export function PlantesPage() {
                   ]}
                 />
                 {result.preparation.plantPreparation.fumigationInstructions && (
-                  <div className="rounded-lg p-4 mb-6" style={{ background: '#0a0e2e', border: '1px solid rgba(21,101,192,0.3)' }}>
+                  <div className="rounded-lg p-4 mb-6" style={{ background: '#0a0f2e', border: '1px solid rgba(21,101,192,0.3)' }}>
                     <p className="text-sm text-white">{result.preparation.plantPreparation.fumigationInstructions}</p>
                   </div>
                 )}
 
                 <p className="text-or font-bold mb-3">Étape C — Mélange Final</p>
-                <div className="rounded-lg p-5" style={{ border: '2px solid #2563EB' }}>
+                <div className="rounded-lg p-5" style={{ border: '2px solid #f5c842' }}>
                   <p className="text-white">{result.preparation.mixing}</p>
                 </div>
               </div>
@@ -632,10 +632,10 @@ export function PlantesPage() {
                   </div>
                 )}
 
-                <p className="font-bold mt-6 mb-3" style={{ color: '#b0b8d4' }}>Rituel quotidien</p>
+                <p className="font-bold mt-6 mb-3" style={{ color: '#a0aec0' }}>Rituel quotidien</p>
                 <StepList steps={result.ritual.dailyRitual} />
 
-                <div className="rounded-lg p-4 mt-3" style={{ background: '#0a0e2e', border: '1px solid rgba(37,99,235,0.2)' }}>
+                <div className="rounded-lg p-4 mt-3" style={{ background: '#0a0f2e', border: '1px solid rgba(245,200,66,0.2)' }}>
                   <p className="text-or font-bold mb-1">Lavage</p>
                   <p className="text-white text-sm">{result.ritual.washingInstructions}</p>
                 </div>
@@ -648,7 +648,7 @@ export function PlantesPage() {
                 )}
 
                 {result.ritual.fumigationInstructions && (
-                  <div className="rounded-lg p-4 mt-3" style={{ background: '#0a0e2e', border: '1px solid rgba(37,99,235,0.2)' }}>
+                  <div className="rounded-lg p-4 mt-3" style={{ background: '#0a0f2e', border: '1px solid rgba(245,200,66,0.2)' }}>
                     <p className="text-or font-bold mb-1">Fumigation</p>
                     <p className="text-white text-sm">{result.ritual.fumigationInstructions}</p>
                   </div>
@@ -664,7 +664,7 @@ export function PlantesPage() {
                   <div className="flex flex-col gap-2 mt-5">
                     {result.ritual.importantNotes.map((n, i) => (
                       <div key={i} className="rounded p-3" style={{ background: '#1a1a2e' }}>
-                        <p className="text-sm" style={{ color: '#b0b8d4' }}>✦ {n}</p>
+                        <p className="text-sm" style={{ color: '#a0aec0' }}>✦ {n}</p>
                       </div>
                     ))}
                   </div>
@@ -678,7 +678,7 @@ export function PlantesPage() {
                 <BlocTitle>Prière et Invocation</BlocTitle>
                 <p className="arabic text-or text-[1.4em]">{result.prayer.opening}</p>
                 <p className="italic text-white mt-1 text-sm">{result.prayer.openingMeaning}</p>
-                <div className="my-4 h-px" style={{ background: 'rgba(37,99,235,0.2)' }} />
+                <div className="my-4 h-px" style={{ background: 'rgba(245,200,66,0.2)' }} />
                 <p className="arabic text-or text-[1.8em]">{result.prayer.mainPrayer}</p>
                 <p className="italic text-white mt-2">{result.prayer.mainPrayerMeaning}</p>
                 <div className="flex justify-center gap-2 mt-4 flex-wrap">
@@ -695,7 +695,7 @@ export function PlantesPage() {
               <Separateur />
 
               {/* BLOC 6 — Nom Divin */}
-              <div className="rounded-lg text-center p-8" style={{ background: '#0a0e2e', border: '1px solid #2563EB' }}>
+              <div className="rounded-lg text-center p-8" style={{ background: '#0a0f2e', border: '1px solid #f5c842' }}>
                 <BlocTitle>Ton Nom Divin</BlocTitle>
                 <p className="arabic text-or text-[2.5em]">{result.divineName.withYa}</p>
                 <p className="mt-3 text-white">
@@ -706,7 +706,7 @@ export function PlantesPage() {
                     À réciter {result.divineName.repetitions} fois
                   </span>
                 </div>
-                <p className="italic mt-3" style={{ color: '#b0b8d4' }}>{result.divineName.reason}</p>
+                <p className="italic mt-3" style={{ color: '#a0aec0' }}>{result.divineName.reason}</p>
                 <div className="mt-4 flex justify-center">
                   <AudioButton text={result.divineName.withYa} label="Écouter le nom divin" />
                 </div>
@@ -725,8 +725,8 @@ export function PlantesPage() {
                     </p>
                   ))}
                 </div>
-                <p className="mt-3 text-sm" style={{ color: '#b0b8d4' }}>À donner à : {result.sacrifice.recipient}</p>
-                <p className="text-sm" style={{ color: '#b0b8d4' }}>Moment : {result.sacrifice.timing}</p>
+                <p className="mt-3 text-sm" style={{ color: '#a0aec0' }}>À donner à : {result.sacrifice.recipient}</p>
+                <p className="text-sm" style={{ color: '#a0aec0' }}>Moment : {result.sacrifice.timing}</p>
                 <p className="mt-3 text-white">{result.sacrifice.instructions}</p>
               </div>
 
@@ -747,7 +747,7 @@ export function PlantesPage() {
               <Separateur />
 
               {/* BLOC 9 — Conclusion */}
-              <div className="rounded-lg text-center p-8" style={{ background: '#1a237e', border: '1px solid #2563EB' }}>
+              <div className="rounded-lg text-center p-8" style={{ background: '#0d1545', border: '1px solid #f5c842' }}>
                 <p className="italic text-white">{result.conclusion}</p>
               </div>
             </div>

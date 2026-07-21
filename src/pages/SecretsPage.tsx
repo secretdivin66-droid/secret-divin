@@ -387,7 +387,7 @@ export function SecretsPage() {
   async function handleExportPDF() {
     const el = document.getElementById('secrets-content');
     if (!el) return;
-    const canvas = await html2canvas(el, { backgroundColor: '#0a0e2e' });
+    const canvas = await html2canvas(el, { backgroundColor: '#0a0f2e' });
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -420,11 +420,11 @@ export function SecretsPage() {
   const talismanCells = result ? generateSquare(result.PM, squareSize) : [];
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-4xl mx-auto">
         {/* SECTION 1 — EN-TÊTE */}
         <h1 className="text-center font-bold text-or text-[2rem]">Secrets Mystiques Cachés</h1>
-        <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>
+        <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
           Révèle les secrets spirituels de ton
           <br />
           prénom et reçois ton invocation
@@ -444,7 +444,7 @@ export function SecretsPage() {
         {!result && (
           <div className="carte rounded-lg max-w-[600px] mx-auto flex flex-col gap-5">
             <div>
-              <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>
+              <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>
                 Ton prénom (en français)
               </label>
               <input
@@ -457,7 +457,7 @@ export function SecretsPage() {
             </div>
 
             <div>
-              <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>
+              <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>
                 Prénom de ta mère (en français)
               </label>
               <input
@@ -470,7 +470,7 @@ export function SecretsPage() {
             </div>
 
             <div>
-              <label className="block text-sm mb-2" style={{ color: '#b0b8d4' }}>
+              <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>
                 Ton sexe
               </label>
               <div className="flex gap-3">
@@ -496,7 +496,7 @@ export function SecretsPage() {
             </div>
 
             <div>
-              <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>
+              <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>
                 Ton objectif principal
               </label>
               <select
@@ -523,7 +523,7 @@ export function SecretsPage() {
         {loading && (
           <div className="flex flex-col items-center gap-3 mt-6">
             <div className="w-10 h-10 border-4 border-or border-t-transparent rounded-full animate-spin" />
-            <p style={{ color: '#b0b8d4' }}>Révélation de tes secrets...</p>
+            <p style={{ color: '#a0aec0' }}>Révélation de tes secrets...</p>
           </div>
         )}
 
@@ -594,7 +594,7 @@ export function SecretsPage() {
                   </div>
                 </div>
                 <p className="arabic text-or text-[1.8em] mt-5">{result.data.divineNames.combined}</p>
-                <p className="italic mt-3" style={{ color: '#b0b8d4' }}>
+                <p className="italic mt-3" style={{ color: '#a0aec0' }}>
                   {result.data.divineNames.reason}
                 </p>
                 <div className="mt-4 flex justify-center">
@@ -611,14 +611,14 @@ export function SecretsPage() {
                 <p className="mt-3 text-white">
                   Sourate {result.data.verse.surah} — Verset {result.data.verse.ayah}
                 </p>
-                <p className="italic mt-2" style={{ color: '#b0b8d4' }}>
+                <p className="italic mt-2" style={{ color: '#a0aec0' }}>
                   {result.data.verse.meaning}
                 </p>
                 <p className="mt-2 text-white">{result.data.verse.reason}</p>
                 <div className="mt-4 flex justify-center">
                   <AudioButton text={result.data.verse.arabic} label="Écouter le verset" />
                 </div>
-                <div className="rounded-lg text-left p-4 mt-5" style={{ background: '#0a0e2e' }}>
+                <div className="rounded-lg text-left p-4 mt-5" style={{ background: '#0a0f2e' }}>
                   <p className="text-or font-bold mb-2">Comment écrire sur la tablette</p>
                   <p className="text-white text-sm">{result.data.verse.writingInstructions}</p>
                 </div>
@@ -629,7 +629,7 @@ export function SecretsPage() {
               {/* BLOC 5 — Invocation Personnalisée */}
               <div className="carte rounded-lg text-center">
                 <BlocTitle>Invocation Personnalisée</BlocTitle>
-                <p className="text-sm" style={{ color: '#b0b8d4' }}>
+                <p className="text-sm" style={{ color: '#a0aec0' }}>
                   Version pour écrire (sans harakat)
                 </p>
                 <p className="arabic text-or text-[1.5em] mt-2">{result.data.invocation.arabicNoHarakat}</p>
@@ -668,8 +668,8 @@ export function SecretsPage() {
                         width: 44,
                         height: 44,
                         background: '#ffffff',
-                        border: '2px solid #2563EB',
-                        color: '#1a237e',
+                        border: '2px solid #f5c842',
+                        color: '#0d1545',
                       }}
                     >
                       {v}
@@ -712,7 +712,7 @@ export function SecretsPage() {
 
                 <div className="flex flex-col gap-4 mt-5">
                   {result.data.zikr.steps.map((step) => (
-                    <div key={step.order} className="rounded-lg p-4" style={{ background: '#0a0e2e' }}>
+                    <div key={step.order} className="rounded-lg p-4" style={{ background: '#0a0f2e' }}>
                       <p className="text-or font-bold">
                         {step.order}. {step.title}
                       </p>
@@ -723,7 +723,7 @@ export function SecretsPage() {
                         </span>
                       </div>
                       {step.note && (
-                        <p className="text-sm mt-2 text-center" style={{ color: '#b0b8d4' }}>
+                        <p className="text-sm mt-2 text-center" style={{ color: '#a0aec0' }}>
                           {step.note}
                         </p>
                       )}
@@ -731,7 +731,7 @@ export function SecretsPage() {
                   ))}
                 </div>
 
-                <div className="rounded-lg p-4 mt-5 text-center" style={{ border: '1px solid #2563EB' }}>
+                <div className="rounded-lg p-4 mt-5 text-center" style={{ border: '1px solid #f5c842' }}>
                   <p className="text-or text-sm">
                     Commencer par Bismillah. Terminer par Al-Hamdulillah. Faire ce zikr sans interruption pendant{' '}
                     {result.data.talisman.ritualDuration}.
@@ -742,7 +742,7 @@ export function SecretsPage() {
               <Separateur />
 
               {/* BLOC 8 — Plante Mystique */}
-              <div className="rounded-lg text-center p-6" style={{ background: '#0d2b1a', border: '1px solid #2563EB' }}>
+              <div className="rounded-lg text-center p-6" style={{ background: '#0d2b1a', border: '1px solid #f5c842' }}>
                 <BlocTitle>Plante Mystique</BlocTitle>
                 <p className="text-white font-bold">
                   {result.data.plant.nomFrancais} / {result.data.plant.nomBambara} /{' '}
@@ -750,7 +750,7 @@ export function SecretsPage() {
                 </p>
                 <p className="mt-2 text-white">Partie utilisée : {result.data.plant.partie}</p>
                 <p className="mt-1 text-white">{result.data.plant.preparation}</p>
-                <p className="mt-2" style={{ color: '#b0b8d4' }}>
+                <p className="mt-2" style={{ color: '#a0aec0' }}>
                   {result.data.plant.reason}
                 </p>
                 <button
@@ -764,7 +764,7 @@ export function SecretsPage() {
               <Separateur />
 
               {/* BLOC 9 — Instructions Bain Rituel */}
-              <div className="rounded-lg text-center p-6" style={{ background: '#0a0e2e', border: '1px solid #2563EB' }}>
+              <div className="rounded-lg text-center p-6" style={{ background: '#0a0f2e', border: '1px solid #f5c842' }}>
                 <BlocTitle>Instructions Bain Rituel</BlocTitle>
                 <p className="text-white">{result.data.talisman.bathInstructions}</p>
               </div>
@@ -782,10 +782,10 @@ export function SecretsPage() {
                     </p>
                   ))}
                 </div>
-                <p className="mt-3 text-sm" style={{ color: '#b0b8d4' }}>
+                <p className="mt-3 text-sm" style={{ color: '#a0aec0' }}>
                   À donner à : {result.data.sacrifice.recipient}
                 </p>
-                <p className="text-sm" style={{ color: '#b0b8d4' }}>
+                <p className="text-sm" style={{ color: '#a0aec0' }}>
                   Moment : {result.data.sacrifice.timing}
                 </p>
                 <p className="mt-3 text-white">{result.data.sacrifice.instructions}</p>
@@ -805,7 +805,7 @@ export function SecretsPage() {
               <Separateur />
 
               {/* BLOC 12 — Conclusion */}
-              <div className="rounded-lg text-center p-8" style={{ background: '#1a237e', border: '1px solid #2563EB' }}>
+              <div className="rounded-lg text-center p-8" style={{ background: '#0d1545', border: '1px solid #f5c842' }}>
                 <p className="italic text-white">{result.data.conclusion}</p>
               </div>
             </div>

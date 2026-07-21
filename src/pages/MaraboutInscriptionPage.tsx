@@ -207,7 +207,7 @@ export function MaraboutInscriptionPage() {
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0e2e' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0f2e' }}>
         <p className="text-or">Chargement...</p>
       </div>
     );
@@ -215,7 +215,7 @@ export function MaraboutInscriptionPage() {
 
   if (alreadyPending && !submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#0a0e2e' }}>
+      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#0a0f2e' }}>
         <div className="carte rounded-lg text-center max-w-[500px]">
           <p className="text-white">
             Ta demande d'inscription est en attente de validation par l'admin. Tu seras notifié par WhatsApp dès qu'elle sera traitée.
@@ -230,7 +230,7 @@ export function MaraboutInscriptionPage() {
       'Bonjour, je viens de soumettre ma demande d\'inscription comme marabout sur Secret Divin. Je souhaite payer mon abonnement de 5 000 FCFA. Mon email : ' +
       (user?.email ?? '');
     return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#0a0e2e' }}>
+      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#0a0f2e' }}>
         <div className="carte rounded-lg text-center max-w-[500px]">
           <p className="text-white">
             Ta demande a bien été envoyée. L'admin va valider ton profil et t'activera après confirmation du paiement de 5 000 FCFA.
@@ -249,16 +249,16 @@ export function MaraboutInscriptionPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-3xl mx-auto">
         <h1 className="text-center font-bold text-or text-[2rem]">Devenir Marabout sur Secret Divin</h1>
-        <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>
+        <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
           Rejoins notre plateforme et trouve de nouveaux clients
         </p>
 
         <Separateur />
 
-        <div className="rounded-lg p-8 max-w-[400px] mx-auto text-center" style={{ background: '#1a237e', border: '1px solid #2563EB' }}>
+        <div className="rounded-lg p-8 max-w-[400px] mx-auto text-center" style={{ background: '#0d1545', border: '1px solid #f5c842' }}>
           <p className="text-or font-bold">Abonnement Marabout</p>
           <p className="text-or font-bold text-[2.5rem] mt-2">{ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR')} FCFA / mois</p>
           <div className="flex flex-col gap-2 mt-5 text-left">
@@ -266,7 +266,7 @@ export function MaraboutInscriptionPage() {
               <p key={a} className="text-white text-sm">✦ {a}</p>
             ))}
           </div>
-          <p className="italic text-sm mt-5" style={{ color: '#b0b8d4' }}>
+          <p className="italic text-sm mt-5" style={{ color: '#a0aec0' }}>
             Paiement mensuel via WhatsApp. Profil activé après validation de l'admin et confirmation du paiement.
           </p>
         </div>
@@ -281,12 +281,12 @@ export function MaraboutInscriptionPage() {
           )}
 
           <div>
-            <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Nom complet</label>
+            <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Nom complet</label>
             <input value={nomComplet} onChange={(e) => setNomComplet(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or" />
           </div>
 
           <div>
-            <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Numéro WhatsApp</label>
+            <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Numéro WhatsApp</label>
             <input
               value={whatsapp}
               onChange={(e) => setWhatsapp(e.target.value.replace(/[^0-9]/g, ''))}
@@ -297,19 +297,19 @@ export function MaraboutInscriptionPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Pays</label>
+              <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Pays</label>
               <select value={pays} onChange={(e) => setPays(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or">
                 {PAYS_LIST.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Ville</label>
+              <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Ville</label>
               <input value={ville} onChange={(e) => setVille(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or" />
             </div>
           </div>
 
           <div>
-            <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Années d'expérience</label>
+            <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Années d'expérience</label>
             <input
               type="number"
               min={0}
@@ -321,17 +321,17 @@ export function MaraboutInscriptionPage() {
           </div>
 
           <div>
-            <label className="block text-sm mb-2" style={{ color: '#b0b8d4' }}>Vos spécialités</label>
+            <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>Vos spécialités</label>
             <CheckboxGroup options={SPECIALITES} selected={selectedSpecialites} onToggle={toggleSpecialite} />
           </div>
 
           <div>
-            <label className="block text-sm mb-2" style={{ color: '#b0b8d4' }}>Langues parlées</label>
+            <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>Langues parlées</label>
             <CheckboxGroup options={LANGUES} selected={selectedLangues} onToggle={toggleLangue} />
           </div>
 
           <div>
-            <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Description de vos services</label>
+            <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Description de vos services</label>
             <textarea
               rows={4}
               value={description}
@@ -341,7 +341,7 @@ export function MaraboutInscriptionPage() {
           </div>
 
           <div>
-            <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Tarifs indicatifs</label>
+            <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Tarifs indicatifs</label>
             <textarea
               rows={2}
               value={tarifs}
@@ -351,7 +351,7 @@ export function MaraboutInscriptionPage() {
           </div>
 
           <div>
-            <label className="block text-sm mb-1 text-center" style={{ color: '#b0b8d4' }}>Votre photo (optionnelle)</label>
+            <label className="block text-sm mb-1 text-center" style={{ color: '#a0aec0' }}>Votre photo (optionnelle)</label>
             <PhotoUpload
               userId={user?.id ?? ''}
               currentPhotoUrl={photoUrl}

@@ -404,13 +404,13 @@ export function FormationPage() {
   const completedCount = Object.values(progression).filter((p) => p.is_completed).length;
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-5xl mx-auto">
         {view === 'modules' && (
           <>
             {/* SECTION 1 — EN-TÊTE */}
             <h1 className="text-center font-bold text-or text-[2rem]">Académie Secret Divin</h1>
-            <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>
+            <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
               Maîtrise les sciences mystiques
               <br />
               islamiques étape par étape
@@ -430,14 +430,14 @@ export function FormationPage() {
               <div className="mt-3 w-full rounded-full overflow-hidden" style={{ height: 12, background: '#1a1a2e' }}>
                 <div
                   className="h-full transition-all"
-                  style={{ width: `${(completedCount / 9) * 100}%`, background: '#2563EB' }}
+                  style={{ width: `${(completedCount / 9) * 100}%`, background: '#f5c842' }}
                 />
               </div>
             </div>
 
             {NIVEAUX_ORDER.map((niveauLabel) => {
               const modules = MODULES.filter((m) => m.niveau === niveauLabel);
-              const color = modules[0]?.niveauColor ?? '#2563EB';
+              const color = modules[0]?.niveauColor ?? '#f5c842';
               return (
                 <div key={niveauLabel} className="mb-6">
                   <Separateur />
@@ -458,8 +458,8 @@ export function FormationPage() {
                       const cardStyle = isCompleted
                         ? { background: 'rgba(76,175,80,0.1)', borderLeft: '4px solid #4caf50' }
                         : isUnlocked
-                        ? { background: '#111a55', borderLeft: '4px solid #2563EB' }
-                        : { background: '#0a0e2e', borderLeft: '4px solid #666', opacity: 0.6 };
+                        ? { background: '#0d1545', borderLeft: '4px solid #f5c842' }
+                        : { background: '#0a0f2e', borderLeft: '4px solid #666', opacity: 0.6 };
 
                       return (
                         <div key={module.id} className="rounded-lg p-5 flex flex-col gap-2" style={cardStyle}>
@@ -469,18 +469,18 @@ export function FormationPage() {
                           <p className={`font-bold ${isUnlocked ? 'text-white' : ''}`} style={!isUnlocked ? { color: '#666' } : undefined}>
                             {module.title}
                           </p>
-                          <p className="text-sm" style={{ color: '#b0b8d4' }}>{module.description}</p>
+                          <p className="text-sm" style={{ color: '#a0aec0' }}>{module.description}</p>
 
                           {isCompleted && (
                             <div className="flex items-center gap-2 flex-wrap mt-1">
                               <span className="px-2 py-0.5 rounded-full text-xs font-bold" style={{ background: '#1b3a1f', color: '#4caf50' }}>
                                 Complété
                               </span>
-                              <span className="text-xs" style={{ color: '#b0b8d4' }}>Meilleur score : {bestScore}/100</span>
+                              <span className="text-xs" style={{ color: '#a0aec0' }}>Meilleur score : {bestScore}/100</span>
                             </div>
                           )}
 
-                          <p className="text-xs mt-1" style={{ color: '#b0b8d4' }}>{module.lessons.length} leçons</p>
+                          <p className="text-xs mt-1" style={{ color: '#a0aec0' }}>{module.lessons.length} leçons</p>
 
                           {isCompleted ? (
                             <button onClick={() => openModule(module)} className="btn-secondaire rounded mt-2">
@@ -520,7 +520,7 @@ export function FormationPage() {
               {selectedModule.niveau}
             </span>
             <h1 className="font-bold text-or text-[1.6rem] mt-3">{selectedModule.title}</h1>
-            <p className="mt-2" style={{ color: '#b0b8d4' }}>{selectedModule.description}</p>
+            <p className="mt-2" style={{ color: '#a0aec0' }}>{selectedModule.description}</p>
 
             <Separateur />
 
@@ -546,7 +546,7 @@ export function FormationPage() {
                         <span className="px-2 py-0.5 rounded-full text-xs font-bold" style={{ background: '#1b3a1f', color: '#4caf50' }}>
                           ✓ Réussie
                         </span>
-                        <span className="text-xs" style={{ color: '#b0b8d4' }}>Score : {score}/100</span>
+                        <span className="text-xs" style={{ color: '#a0aec0' }}>Score : {score}/100</span>
                       </div>
                     )}
 
@@ -555,7 +555,7 @@ export function FormationPage() {
                         <span className="px-2 py-0.5 rounded-full text-xs font-bold" style={{ background: '#3a2410', color: '#ff9800' }}>
                           Score insuffisant
                         </span>
-                        <span className="text-xs" style={{ color: '#b0b8d4' }}>Score : {score}/100 — Réessayer</span>
+                        <span className="text-xs" style={{ color: '#a0aec0' }}>Score : {score}/100 — Réessayer</span>
                       </div>
                     )}
 
@@ -564,7 +564,7 @@ export function FormationPage() {
                         <span className="px-2 py-0.5 rounded-full text-xs font-bold" style={{ background: '#333', color: '#999' }}>
                           Verrouillée
                         </span>
-                        <span className="text-xs" style={{ color: '#b0b8d4' }}>Réussis la leçon précédente</span>
+                        <span className="text-xs" style={{ color: '#a0aec0' }}>Réussis la leçon précédente</span>
                       </div>
                     )}
 
@@ -621,7 +621,7 @@ export function FormationPage() {
                 {selectedModule.niveau}
               </span>
               <h1 className="font-bold text-or text-[1.8rem] mt-3">{lessonData.title}</h1>
-              <p className="text-sm mt-1" style={{ color: '#b0b8d4' }}>
+              <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>
                 Module {selectedModule.id} — Leçon {selectedLesson.id} sur {selectedModule.lessons.length}
               </p>
 
@@ -640,7 +640,7 @@ export function FormationPage() {
                   </div>
 
                   {section.arabicContent && (
-                    <div className="carte rounded-lg mt-4 text-center" style={{ border: '1px solid #2563EB' }}>
+                    <div className="carte rounded-lg mt-4 text-center" style={{ border: '1px solid #f5c842' }}>
                       <p className="arabic text-or text-[1.4em]">{section.arabicContent}</p>
                     </div>
                   )}
@@ -667,7 +667,7 @@ export function FormationPage() {
 
               <h2 className="text-or font-bold">{lessonData.practicalExercise.title}</h2>
               <p className="text-white mt-3">{lessonData.practicalExercise.instructions}</p>
-              <div className="rounded-lg p-4 mt-4" style={{ background: '#0a0e2e', border: '1px solid rgba(21,101,192,0.4)' }}>
+              <div className="rounded-lg p-4 mt-4" style={{ background: '#0a0f2e', border: '1px solid rgba(21,101,192,0.4)' }}>
                 <p className="text-or font-bold text-sm mb-1">Exemple résolu :</p>
                 <p className="text-white text-sm">{lessonData.practicalExercise.example}</p>
               </div>
@@ -688,8 +688,8 @@ export function FormationPage() {
         {view === 'quiz' && !loading && lessonData && selectedLesson && (
           <div className="max-w-[600px] mx-auto">
             <h1 className="text-or font-bold text-center text-[1.5rem]">Quiz — {selectedLesson.title}</h1>
-            <p className="text-center text-sm mt-2" style={{ color: '#b0b8d4' }}>Score minimum requis : {lessonData.quiz.passingScore}/100</p>
-            <p className="text-center text-sm mb-6" style={{ color: '#b0b8d4' }}>
+            <p className="text-center text-sm mt-2" style={{ color: '#a0aec0' }}>Score minimum requis : {lessonData.quiz.passingScore}/100</p>
+            <p className="text-center text-sm mb-6" style={{ color: '#a0aec0' }}>
               Question {currentQ + 1} / {lessonData.quiz.questions.length}
             </p>
 
@@ -702,9 +702,9 @@ export function FormationPage() {
 
                   <div className="flex flex-col gap-3">
                     {q.options.map((opt, i) => {
-                      let style: { background: string; border: string } = { background: '#111a55', border: '1px solid #444' };
+                      let style: { background: string; border: string } = { background: '#0d1545', border: '1px solid #444' };
                       if (!answered && selectedOption === i) {
-                        style = { background: '#1a237e', border: '2px solid #2563EB' };
+                        style = { background: '#0d1545', border: '2px solid #f5c842' };
                       } else if (answered) {
                         if (i === q.correctAnswer) {
                           style = { background: '#1b3a1f', border: '1px solid #4caf50' };
@@ -749,7 +749,7 @@ export function FormationPage() {
                         </div>
                       )}
 
-                      <p className="text-center text-sm mt-4" style={{ color: '#b0b8d4' }}>
+                      <p className="text-center text-sm mt-4" style={{ color: '#a0aec0' }}>
                         Score actuel : {Math.round((quizAnswers.filter((a) => a.selectedIndex === a.correctIndex).length / lessonData.quiz.questions.length) * 100)}/100
                       </p>
 
@@ -818,15 +818,15 @@ export function FormationPage() {
                       <p className="text-white text-sm font-bold">
                         Q{a.questionId} : {a.question}
                       </p>
-                      <p className="text-sm mt-1" style={{ color: '#b0b8d4' }}>
+                      <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>
                         Ta réponse : {a.options[a.selectedIndex]}
                       </p>
                       {!isCorrect && (
-                        <p className="text-sm" style={{ color: '#b0b8d4' }}>
+                        <p className="text-sm" style={{ color: '#a0aec0' }}>
                           Bonne réponse : {a.options[a.correctIndex]}
                         </p>
                       )}
-                      <p className="text-xs mt-2" style={{ color: '#b0b8d4' }}>{a.explanation}</p>
+                      <p className="text-xs mt-2" style={{ color: '#a0aec0' }}>{a.explanation}</p>
                     </div>
                   );
                 })}

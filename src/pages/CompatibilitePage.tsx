@@ -202,7 +202,7 @@ function scoreColor(score: number): string {
 
 function niveauColor(niveau: string): { bg: string; text: string } {
   if (niveau === 'Forte') return { bg: '#1b3a1f', text: '#4caf50' };
-  if (niveau === 'Très forte') return { bg: '#1E3A8A', text: '#2563EB' };
+  if (niveau === 'Très forte') return { bg: '#1E3A8A', text: '#f5c842' };
   if (niveau === 'Moyenne') return { bg: '#3a2410', text: '#ff9800' };
   return { bg: '#3a1b1b', text: '#e53935' };
 }
@@ -385,7 +385,7 @@ export function CompatibilitePage() {
   async function handleExportPDF() {
     const el = document.getElementById('compat-content');
     if (!el) return;
-    const canvas = await html2canvas(el, { backgroundColor: '#0a0e2e' });
+    const canvas = await html2canvas(el, { backgroundColor: '#0a0f2e' });
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -434,11 +434,11 @@ export function CompatibilitePage() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-4xl mx-auto">
         {/* SECTION 1 — EN-TÊTE */}
         <h1 className="text-center font-bold text-or text-[2rem]">Compatibilité Spirituelle</h1>
-        <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>
+        <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
           Découvre la compatibilité mystique entre
           <br />
           deux personnes selon la science islamique
@@ -461,7 +461,7 @@ export function CompatibilitePage() {
               <div className="carte rounded-lg flex flex-col gap-4">
                 <p className="text-or font-bold text-center">Toi</p>
                 <div>
-                  <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Ton prénom</label>
+                  <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Ton prénom</label>
                   <input
                     type="text"
                     value={name1}
@@ -470,7 +470,7 @@ export function CompatibilitePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Prénom de ta mère</label>
+                  <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Prénom de ta mère</label>
                   <input
                     type="text"
                     value={mother1}
@@ -479,7 +479,7 @@ export function CompatibilitePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm mb-2" style={{ color: '#b0b8d4' }}>Ton sexe</label>
+                  <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>Ton sexe</label>
                   <GenderToggle value={gender1} onChange={setGender1} />
                 </div>
               </div>
@@ -487,7 +487,7 @@ export function CompatibilitePage() {
               <div className="carte rounded-lg flex flex-col gap-4">
                 <p className="text-or font-bold text-center">Ta Cible</p>
                 <div>
-                  <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Prénom de la personne</label>
+                  <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Prénom de la personne</label>
                   <input
                     type="text"
                     value={name2}
@@ -496,7 +496,7 @@ export function CompatibilitePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Prénom de sa mère</label>
+                  <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Prénom de sa mère</label>
                   <input
                     type="text"
                     value={mother2}
@@ -505,7 +505,7 @@ export function CompatibilitePage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm mb-2" style={{ color: '#b0b8d4' }}>Son sexe</label>
+                  <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>Son sexe</label>
                   <GenderToggle value={gender2} onChange={setGender2} />
                 </div>
               </div>
@@ -633,7 +633,7 @@ export function CompatibilitePage() {
                   </div>
                 </div>
 
-                <div className="rounded-lg p-4 mt-5" style={{ border: '1px solid #2563EB' }}>
+                <div className="rounded-lg p-4 mt-5" style={{ border: '1px solid #f5c842' }}>
                   <p className="text-white">{result.data.elementAnalysis.advice}</p>
                 </div>
               </div>
@@ -691,7 +691,7 @@ export function CompatibilitePage() {
                 <BlocTitle>Conseils</BlocTitle>
                 <div className="flex flex-col gap-4">
                   {result.data.advices.map((a, i) => (
-                    <div key={i} className="carte rounded-lg" style={{ border: '1px solid #2563EB' }}>
+                    <div key={i} className="carte rounded-lg" style={{ border: '1px solid #f5c842' }}>
                       <p className="text-or font-bold">{a.title}</p>
                       <p className="text-white mt-1">{a.content}</p>
                     </div>
@@ -709,20 +709,20 @@ export function CompatibilitePage() {
                 <p className="mt-2 text-white">
                   {result.data.spiritualProtection.divineName.transliteration} — {result.data.spiritualProtection.divineName.meaning}
                 </p>
-                <p className="italic mt-1" style={{ color: '#b0b8d4' }}>{result.data.spiritualProtection.divineName.reason}</p>
+                <p className="italic mt-1" style={{ color: '#a0aec0' }}>{result.data.spiritualProtection.divineName.reason}</p>
 
-                <div className="my-5 h-px" style={{ background: 'rgba(37,99,235,0.2)' }} />
+                <div className="my-5 h-px" style={{ background: 'rgba(245,200,66,0.2)' }} />
 
                 <p className="arabic text-or text-[1.6em]">{result.data.spiritualProtection.verse.arabic}</p>
                 <p className="mt-2 text-white">
                   Sourate {result.data.spiritualProtection.verse.surah} — Verset {result.data.spiritualProtection.verse.ayah}
                 </p>
-                <p className="italic" style={{ color: '#b0b8d4' }}>{result.data.spiritualProtection.verse.meaning}</p>
+                <p className="italic" style={{ color: '#a0aec0' }}>{result.data.spiritualProtection.verse.meaning}</p>
                 <div className="mt-3 flex justify-center">
                   <AudioButton text={result.data.spiritualProtection.verse.arabic} label="Écouter le verset" />
                 </div>
 
-                <div className="my-5 h-px" style={{ background: 'rgba(37,99,235,0.2)' }} />
+                <div className="my-5 h-px" style={{ background: 'rgba(245,200,66,0.2)' }} />
 
                 <p className="arabic text-or text-[1.6em]">{result.data.spiritualProtection.invocation.arabic}</p>
                 <p className="italic mt-2 text-white">{result.data.spiritualProtection.invocation.meaning}</p>
@@ -738,7 +738,7 @@ export function CompatibilitePage() {
                   <AudioButton text={result.data.spiritualProtection.invocation.arabic} label="Écouter l'invocation" />
                 </div>
 
-                <div className="rounded-lg p-4 mt-5" style={{ border: '1px solid #2563EB' }}>
+                <div className="rounded-lg p-4 mt-5" style={{ border: '1px solid #f5c842' }}>
                   <p className="text-white">{result.data.spiritualProtection.ritual}</p>
                 </div>
               </div>
@@ -756,15 +756,15 @@ export function CompatibilitePage() {
                     </p>
                   ))}
                 </div>
-                <p className="mt-3 text-sm" style={{ color: '#b0b8d4' }}>À donner à : {result.data.sacrifice.recipient}</p>
-                <p className="text-sm" style={{ color: '#b0b8d4' }}>Moment : {result.data.sacrifice.timing}</p>
+                <p className="mt-3 text-sm" style={{ color: '#a0aec0' }}>À donner à : {result.data.sacrifice.recipient}</p>
+                <p className="text-sm" style={{ color: '#a0aec0' }}>Moment : {result.data.sacrifice.timing}</p>
                 <p className="mt-3 text-white">{result.data.sacrifice.instructions}</p>
               </div>
 
               <Separateur />
 
               {/* BLOC 9 — Conclusion */}
-              <div className="rounded-lg text-center p-8" style={{ background: '#1a237e', border: '1px solid #2563EB' }}>
+              <div className="rounded-lg text-center p-8" style={{ background: '#0d1545', border: '1px solid #f5c842' }}>
                 <p className="italic text-white">{result.data.conclusion}</p>
               </div>
             </div>

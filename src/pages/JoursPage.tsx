@@ -402,7 +402,7 @@ export function JoursPage() {
   async function handleExportPDF() {
     const el = document.getElementById('jours-content');
     if (!el) return;
-    const canvas = await html2canvas(el, { backgroundColor: '#0a0e2e' });
+    const canvas = await html2canvas(el, { backgroundColor: '#0a0f2e' });
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -429,11 +429,11 @@ export function JoursPage() {
   const talismanCells = result ? generateSquare(result.PMtotal, squareSize) : [];
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-4xl mx-auto">
         {/* SECTION 1 — EN-TÊTE */}
         <h1 className="text-center font-bold text-or text-[2rem]">Jours de Naissance</h1>
-        <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>
+        <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
           Découvre les secrets spirituels de ton
           <br />
           jour de naissance selon la tradition
@@ -462,14 +462,14 @@ export function JoursPage() {
                     onClick={() => setSelectedDay(day)}
                     className="rounded-lg p-4 text-center transition"
                     style={{
-                      background: '#111a55',
-                      border: isSelected ? `2px solid ${jd.couleurBordure}` : '1px solid rgba(37,99,235,0.1)',
+                      background: '#0d1545',
+                      border: isSelected ? `2px solid ${jd.couleurBordure}` : '1px solid rgba(245,200,66,0.1)',
                     }}
                   >
                     <p className={`font-bold ${isSelected ? 'text-or' : 'text-white'}`}>{day}</p>
                     <span
                       className="inline-block mt-2 px-2 py-1 rounded-full text-xs font-bold"
-                      style={{ background: isSelected ? jd.couleurBordure : 'transparent', color: isSelected ? '#fff' : '#b0b8d4' }}
+                      style={{ background: isSelected ? jd.couleurBordure : 'transparent', color: isSelected ? '#fff' : '#a0aec0' }}
                     >
                       {jd.planete}
                     </span>
@@ -490,7 +490,7 @@ export function JoursPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>
+                  <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>
                     Ton prénom (en français)
                   </label>
                   <input
@@ -503,7 +503,7 @@ export function JoursPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>
+                  <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>
                     Prénom de ta mère (en français)
                   </label>
                   <input
@@ -516,7 +516,7 @@ export function JoursPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm mb-2" style={{ color: '#b0b8d4' }}>
+                  <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>
                     Ton sexe
                   </label>
                   <div className="flex gap-3">
@@ -556,7 +556,7 @@ export function JoursPage() {
         {loading && (
           <div className="flex flex-col items-center gap-3 mt-6">
             <div className="w-10 h-10 border-4 border-or border-t-transparent rounded-full animate-spin" />
-            <p style={{ color: '#b0b8d4' }}>Révélation des secrets de ton jour...</p>
+            <p style={{ color: '#a0aec0' }}>Révélation des secrets de ton jour...</p>
           </div>
         )}
 
@@ -582,7 +582,7 @@ export function JoursPage() {
                   {JOURS_DATA[selectedDay].planete}{' '}
                   <span className="arabic">{JOURS_DATA[selectedDay].planeteArabe}</span>
                 </p>
-                <p className="mt-3 text-sm" style={{ color: '#b0b8d4' }}>
+                <p className="mt-3 text-sm" style={{ color: '#a0aec0' }}>
                   PM personnel : {result.PM} | Poids {selectedDay} : {JOURS_DATA[selectedDay].poids} | PM total :{' '}
                   {result.PMtotal}
                 </p>
@@ -602,19 +602,19 @@ export function JoursPage() {
               {/* BLOC 3 — Numérologie */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div className="carte rounded-lg text-center">
-                  <p className="font-bold" style={{ color: '#b0b8d4' }}>
+                  <p className="font-bold" style={{ color: '#a0aec0' }}>
                     PM Personnel
                   </p>
                   <p className="text-or font-bold text-[2rem] mt-2">{result.PM}</p>
                 </div>
                 <div className="carte rounded-lg text-center">
-                  <p className="font-bold" style={{ color: '#b0b8d4' }}>
+                  <p className="font-bold" style={{ color: '#a0aec0' }}>
                     Poids {selectedDay}
                   </p>
                   <p className="text-or font-bold text-[2rem] mt-2">{JOURS_DATA[selectedDay].poids}</p>
                 </div>
                 <div className="carte rounded-lg text-center">
-                  <p className="font-bold" style={{ color: '#b0b8d4' }}>
+                  <p className="font-bold" style={{ color: '#a0aec0' }}>
                     PM Total
                   </p>
                   <p className="text-or font-bold text-[2rem] mt-2">{result.PMtotal}</p>
@@ -634,7 +634,7 @@ export function JoursPage() {
                 <p className="text-white text-center mt-2">{result.data.character.deepNature}</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
                   <div>
-                    <p className="font-bold mb-2" style={{ color: '#b0b8d4' }}>
+                    <p className="font-bold mb-2" style={{ color: '#a0aec0' }}>
                       Forces
                     </p>
                     {result.data.character.strengths.map((s, i) => (
@@ -644,7 +644,7 @@ export function JoursPage() {
                     ))}
                   </div>
                   <div>
-                    <p className="font-bold mb-2" style={{ color: '#b0b8d4' }}>
+                    <p className="font-bold mb-2" style={{ color: '#a0aec0' }}>
                       Faiblesses
                     </p>
                     {result.data.character.weaknesses.map((w, i) => (
@@ -659,7 +659,7 @@ export function JoursPage() {
               <Separateur />
 
               {/* BLOC 5 — Nom Divin */}
-              <div className="rounded-lg text-center p-8" style={{ background: '#0a0e2e', border: '1px solid #2563EB' }}>
+              <div className="rounded-lg text-center p-8" style={{ background: '#0a0f2e', border: '1px solid #f5c842' }}>
                 <BlocTitle>Ton Nom Divin</BlocTitle>
                 <p className="arabic text-or text-[2.5em]">{result.data.divineName.withYa}</p>
                 <div className="flex justify-center mt-4">
@@ -668,7 +668,7 @@ export function JoursPage() {
                   </span>
                 </div>
                 <p className="mt-3 text-white">Meilleur moment : {result.data.divineName.bestTime}</p>
-                <p className="mt-2" style={{ color: '#b0b8d4' }}>
+                <p className="mt-2" style={{ color: '#a0aec0' }}>
                   {result.data.divineName.reason}
                 </p>
                 <div className="mt-4 flex justify-center">
@@ -685,7 +685,7 @@ export function JoursPage() {
                 <p className="mt-3 text-white">
                   Sourate {result.data.verse.surah} — Verset {result.data.verse.ayah}
                 </p>
-                <p className="italic mt-2" style={{ color: '#b0b8d4' }}>
+                <p className="italic mt-2" style={{ color: '#a0aec0' }}>
                   {result.data.verse.meaning}
                 </p>
                 <p className="mt-2 text-white">{result.data.verse.reason}</p>
@@ -718,7 +718,7 @@ export function JoursPage() {
                     </span>
                   ))}
                 </div>
-                <p className="mt-4" style={{ color: '#b0b8d4' }}>
+                <p className="mt-4" style={{ color: '#a0aec0' }}>
                   {result.data.favorablePeriods.explanation}
                 </p>
               </div>
@@ -732,7 +732,7 @@ export function JoursPage() {
                 <p className="text-sm mt-1 text-white">{result.data.talisman.divineName.meaning}</p>
 
                 <p className="arabic text-or text-[1.4em] mt-4">{result.data.talisman.verseForTalisman.arabic}</p>
-                <p className="text-sm mt-1" style={{ color: '#b0b8d4' }}>
+                <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>
                   Sourate {result.data.talisman.verseForTalisman.surah} — Verset{' '}
                   {result.data.talisman.verseForTalisman.ayah}
                 </p>
@@ -754,8 +754,8 @@ export function JoursPage() {
                         width: 56,
                         height: 56,
                         background: '#ffffff',
-                        border: '2px solid #2563EB',
-                        color: '#1a237e',
+                        border: '2px solid #f5c842',
+                        color: '#0d1545',
                       }}
                     >
                       {v}
@@ -801,7 +801,7 @@ export function JoursPage() {
               <Separateur />
 
               {/* BLOC 10 — Plante Mystique */}
-              <div className="rounded-lg text-center p-6" style={{ background: '#0d2b1a', border: '1px solid #2563EB' }}>
+              <div className="rounded-lg text-center p-6" style={{ background: '#0d2b1a', border: '1px solid #f5c842' }}>
                 <BlocTitle>Plante Mystique</BlocTitle>
                 <p className="text-white font-bold">
                   {result.data.plant.nomFrancais} / {result.data.plant.nomBambara} /{' '}
@@ -809,7 +809,7 @@ export function JoursPage() {
                 </p>
                 <p className="mt-2 text-white">Partie : {result.data.plant.partie}</p>
                 <p className="text-white">{result.data.plant.usage}</p>
-                <p className="mt-2" style={{ color: '#b0b8d4' }}>
+                <p className="mt-2" style={{ color: '#a0aec0' }}>
                   {result.data.plant.reason}
                 </p>
                 <button
@@ -833,10 +833,10 @@ export function JoursPage() {
                     </p>
                   ))}
                 </div>
-                <p className="mt-3 text-sm" style={{ color: '#b0b8d4' }}>
+                <p className="mt-3 text-sm" style={{ color: '#a0aec0' }}>
                   À donner à : {result.data.sacrifice.recipient}
                 </p>
-                <p className="text-sm" style={{ color: '#b0b8d4' }}>
+                <p className="text-sm" style={{ color: '#a0aec0' }}>
                   Moment : {result.data.sacrifice.timing}
                 </p>
                 <p className="mt-3 text-white">{result.data.sacrifice.instructions}</p>
@@ -845,7 +845,7 @@ export function JoursPage() {
               <Separateur />
 
               {/* BLOC 12 — Conseils du Jour */}
-              <div className="rounded-lg text-center p-6" style={{ border: '1px solid #2563EB' }}>
+              <div className="rounded-lg text-center p-6" style={{ border: '1px solid #f5c842' }}>
                 <BlocTitle>Conseils pour ton {selectedDay}</BlocTitle>
                 <p className="text-white">{result.data.dailyAdvice}</p>
               </div>
@@ -853,7 +853,7 @@ export function JoursPage() {
               <Separateur />
 
               {/* BLOC 13 — Conclusion */}
-              <div className="rounded-lg text-center p-8" style={{ background: '#1a237e', border: '1px solid #2563EB' }}>
+              <div className="rounded-lg text-center p-8" style={{ background: '#0d1545', border: '1px solid #f5c842' }}>
                 <p className="italic text-white">{result.data.conclusion}</p>
               </div>
             </div>

@@ -80,7 +80,7 @@ export function ResetPasswordPage() {
         {linkState === 'checking' && (
           <div className="flex flex-col items-center gap-3 py-6">
             <div className="w-8 h-8 border-4 border-or border-t-transparent rounded-full animate-spin" />
-            <p className="text-sm" style={{ color: '#b0b8d4' }}>Vérification du lien...</p>
+            <p className="text-sm" style={{ color: '#a0aec0' }}>Vérification du lien...</p>
           </div>
         )}
 

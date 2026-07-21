@@ -29,10 +29,10 @@ export function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-5xl mx-auto">
         <h1 className="text-center font-bold text-or text-[2rem]">Contact</h1>
-        <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>
+        <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
           Une question ? Nous sommes là pour t'aider
         </p>
 
@@ -48,7 +48,7 @@ export function ContactPage() {
             ) : (
               <form onSubmit={handleSubmit} className="carte rounded-lg flex flex-col gap-4">
                 <div>
-                  <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Nom</label>
+                  <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Nom</label>
                   <input
                     type="text"
                     required
@@ -58,7 +58,7 @@ export function ContactPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Email</label>
+                  <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Email</label>
                   <input
                     type="email"
                     required
@@ -68,7 +68,7 @@ export function ContactPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Sujet</label>
+                  <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Sujet</label>
                   <select
                     value={sujet}
                     onChange={(e) => setSujet(e.target.value)}
@@ -80,7 +80,7 @@ export function ContactPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Message</label>
+                  <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Message</label>
                   <textarea
                     required
                     rows={4}
@@ -109,12 +109,12 @@ export function ContactPage() {
             </button>
 
             <div>
-              <p className="text-sm" style={{ color: '#b0b8d4' }}>Email</p>
+              <p className="text-sm" style={{ color: '#a0aec0' }}>Email</p>
               <p className="text-white">contact@secredivin66.com</p>
             </div>
 
             <div>
-              <p className="text-sm" style={{ color: '#b0b8d4' }}>Horaires</p>
+              <p className="text-sm" style={{ color: '#a0aec0' }}>Horaires</p>
               <p className="text-white">Disponible 7j/7 — Réponse sous 24h</p>
             </div>
 
@@ -122,7 +122,7 @@ export function ContactPage() {
 
             <div className="text-center">
               <p className="arabic text-or text-[1.4em]">وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ</p>
-              <p className="italic text-sm mt-2" style={{ color: '#b0b8d4' }}>
+              <p className="italic text-sm mt-2" style={{ color: '#a0aec0' }}>
                 « Et si Mes serviteurs t'interrogent sur Moi, Je suis proche. »
               </p>
             </div>

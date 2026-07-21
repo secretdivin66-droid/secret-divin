@@ -100,11 +100,11 @@ export function PoidsMystiquePage() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-3xl mx-auto">
         {/* SECTION 1 — EN-TÊTE */}
         <h1 className="text-center font-bold text-or text-[2rem]">Calcul du Poids Mystique</h1>
-        <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>
+        <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
           Découvre le nombre sacré de ton prénom
           <br />
           selon la table Abjad islamique
@@ -131,7 +131,7 @@ export function PoidsMystiquePage() {
                 placeholder="Colle ton texte arabe ici"
                 rows={3}
                 className="arabic w-full min-h-[120px] sm:min-h-[100px] rounded px-3 py-2 text-white focus:outline-none focus:border-or"
-                style={{ background: '#0a0e2e', border: '1px solid rgba(249,168,37,0.3)' }}
+                style={{ background: '#0a0f2e', border: '1px solid rgba(249,168,37,0.3)' }}
               />
               {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
             </div>
@@ -153,7 +153,7 @@ export function PoidsMystiquePage() {
 
             {/* BLOC 1 — Texte saisi */}
             <div className="carte rounded-lg text-center max-w-[600px] mx-auto">
-              <p className="text-xs uppercase tracking-widest" style={{ color: '#b0b8d4' }}>
+              <p className="text-xs uppercase tracking-widest" style={{ color: '#a0aec0' }}>
                 Ton texte
               </p>
               <p className="arabic text-or text-[2rem] mt-2">{result.inputText}</p>
@@ -163,7 +163,7 @@ export function PoidsMystiquePage() {
 
             {/* BLOC 2 — Détail du calcul */}
             <div className="carte rounded-lg text-center max-w-[600px] mx-auto">
-              <p className="text-xs uppercase tracking-widest" style={{ color: '#b0b8d4' }}>
+              <p className="text-xs uppercase tracking-widest" style={{ color: '#a0aec0' }}>
                 Détail du calcul
               </p>
               <div className="flex flex-wrap justify-center items-center gap-x-3 gap-y-2 mt-4" style={{ fontSize: '1.1em' }}>
@@ -183,7 +183,7 @@ export function PoidsMystiquePage() {
 
             {/* BLOC 3 — Poids Mystique */}
             <div className="carte rounded-lg text-center">
-              <p className="text-sm tracking-widest" style={{ color: '#b0b8d4' }}>
+              <p className="text-sm tracking-widest" style={{ color: '#a0aec0' }}>
                 POIDS MYSTIQUE DE TON TEXTE
               </p>
               <p className="text-or font-bold text-center text-[3rem] md:text-[4rem]">{result.totalWeight}</p>
@@ -233,12 +233,12 @@ export function PoidsMystiquePage() {
                       <div
                         key={letter}
                         className="flex items-center justify-between px-2 py-1 rounded"
-                        style={{ border: '1px solid rgba(37,99,235,0.2)' }}
+                        style={{ border: '1px solid rgba(245,200,66,0.2)' }}
                       >
                         <span className="arabic text-or" style={{ fontSize: '1em' }}>
                           {letter}
                         </span>
-                        <span style={{ color: '#b0b8d4' }}>{value}</span>
+                        <span style={{ color: '#a0aec0' }}>{value}</span>
                       </div>
                     ))}
                   </div>

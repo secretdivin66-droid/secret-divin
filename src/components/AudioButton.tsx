@@ -21,8 +21,8 @@ export function AudioButton({ text, label = 'Écouter' }: Props) {
   return (
     <button onClick={handleClick} disabled={loading}
       style={{
-        border: `1px solid ${playing ? '#e53935' : '#2563EB'}`,
-        color: playing ? '#e53935' : '#2563EB',
+        border: `1px solid ${playing ? '#e53935' : '#f5c842'}`,
+        color: playing ? '#e53935' : '#f5c842',
         background: 'transparent',
         padding: '8px 20px',
         borderRadius: '4px',

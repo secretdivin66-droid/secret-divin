@@ -13,7 +13,7 @@ export function CreditBadge({ userId }: Props) {
     return (
       <span
         onClick={() => navigate('/credits')}
-        style={{ background: '#f9a825', color: '#1a237e', padding: '4px 12px', fontWeight: 'bold', fontSize: '0.8rem', cursor: 'pointer', borderRadius: '9999px' }}
+        style={{ background: '#f5c842', color: '#0d1545', padding: '4px 12px', fontWeight: 'bold', fontSize: '0.8rem', cursor: 'pointer', borderRadius: '9999px' }}
       >
         Admin — Accès illimité
       </span>
@@ -24,7 +24,7 @@ export function CreditBadge({ userId }: Props) {
     return (
       <span
         onClick={() => navigate('/credits')}
-        style={{ background: '#2563EB', color: '#ffffff', padding: '4px 12px', fontWeight: 'bold', fontSize: '0.8rem', cursor: 'pointer', borderRadius: '9999px' }}
+        style={{ background: '#f5c842', color: '#ffffff', padding: '4px 12px', fontWeight: 'bold', fontSize: '0.8rem', cursor: 'pointer', borderRadius: '9999px' }}
       >
         Illimité
       </span>
@@ -39,8 +39,8 @@ export function CreditBadge({ userId }: Props) {
       onClick={() => navigate('/credits')}
       style={{
         background: isEmpty ? '#e53935' : isLow ? '#e53935' : 'transparent',
-        border: isEmpty || isLow ? 'none' : '1px solid #2563EB',
-        color: isEmpty || isLow ? 'white' : '#2563EB',
+        border: isEmpty || isLow ? 'none' : '1px solid #f5c842',
+        color: isEmpty || isLow ? 'white' : '#f5c842',
         padding: '4px 12px',
         fontSize: '0.8rem',
         cursor: 'pointer',

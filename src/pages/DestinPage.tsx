@@ -259,7 +259,7 @@ Retourne UNIQUEMENT du JSON valide :
   },
   "favorableColors": {
     "colors": [
-      { "name": "Or", "hex": "#2563EB", "meaning": "Richesse spirituelle" },
+      { "name": "Or", "hex": "#f5c842", "meaning": "Richesse spirituelle" },
       { "name": "Blanc", "hex": "#ffffff", "meaning": "Pureté et paix" }
     ],
     "advice": "1 phrase sur comment utiliser ces couleurs."
@@ -479,7 +479,7 @@ export function DestinPage() {
   async function handleExportPDF() {
     const el = document.getElementById('destin-content');
     if (!el) return;
-    const canvas = await html2canvas(el, { backgroundColor: '#0a0e2e' });
+    const canvas = await html2canvas(el, { backgroundColor: '#0a0f2e' });
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -512,11 +512,11 @@ export function DestinPage() {
   const talismanCells = result ? generateSquare(result.PM, squareSize) : [];
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-4xl mx-auto">
         {/* SECTION 1 — EN-TÊTE */}
         <h1 className="text-center font-bold text-or text-[2rem]">Ton Destin Complet</h1>
-        <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>
+        <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
           Découvre les 17 points mystiques
           <br />
           de ton profil spirituel complet
@@ -534,7 +534,7 @@ export function DestinPage() {
         {!result && (
           <div className="carte rounded-lg max-w-[600px] mx-auto flex flex-col gap-5">
             <div>
-              <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>
+              <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>
                 Ton prénom (en français)
               </label>
               <input
@@ -547,7 +547,7 @@ export function DestinPage() {
             </div>
 
             <div>
-              <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>
+              <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>
                 Prénom de ta mère (en français)
               </label>
               <input
@@ -560,7 +560,7 @@ export function DestinPage() {
             </div>
 
             <div>
-              <label className="block text-sm mb-2" style={{ color: '#b0b8d4' }}>
+              <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>
                 Ton sexe
               </label>
               <div className="flex gap-3">
@@ -586,7 +586,7 @@ export function DestinPage() {
             </div>
 
             <div>
-              <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>
+              <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>
                 Ta religion
               </label>
               <select
@@ -614,7 +614,7 @@ export function DestinPage() {
         {loading && (
           <div className="flex flex-col items-center gap-3 mt-6">
             <div className="w-10 h-10 border-4 border-or border-t-transparent rounded-full animate-spin" />
-            <p style={{ color: '#b0b8d4' }}>Révélation de ton destin en cours...</p>
+            <p style={{ color: '#a0aec0' }}>Révélation de ton destin en cours...</p>
           </div>
         )}
 
@@ -635,7 +635,7 @@ export function DestinPage() {
               {/* BLOC 1 — Résumé identité */}
               <div
                 className="rounded-lg text-center p-8"
-                style={{ background: 'linear-gradient(135deg, #1a237e, #0a0e2e)', border: '1px solid rgba(37,99,235,0.2)' }}
+                style={{ background: 'linear-gradient(135deg, #0d1545, #0a0f2e)', border: '1px solid rgba(245,200,66,0.2)' }}
               >
                 <p className="text-or font-bold text-[2rem]">{firstName}</p>
                 <p className="arabic text-or text-[1.8em] mt-2">
@@ -681,7 +681,7 @@ export function DestinPage() {
               <Separateur />
 
               {/* BLOC 4 — Nom Divin */}
-              <div className="rounded-lg text-center p-8" style={{ background: '#0a0e2e', border: '1px solid #2563EB' }}>
+              <div className="rounded-lg text-center p-8" style={{ background: '#0a0f2e', border: '1px solid #f5c842' }}>
                 <BlocTitle>Ton Nom Divin</BlocTitle>
                 <p className="arabic text-or text-[2.5em]">{result.data.divineName.withYa}</p>
                 <p className="text-white mt-3">
@@ -692,7 +692,7 @@ export function DestinPage() {
                     À réciter {result.data.divineName.repetitions} fois
                   </span>
                 </div>
-                <p className="italic mt-4" style={{ color: '#b0b8d4' }}>
+                <p className="italic mt-4" style={{ color: '#a0aec0' }}>
                   {result.data.divineName.reason}
                 </p>
                 <div className="mt-4 flex justify-center">
@@ -709,7 +709,7 @@ export function DestinPage() {
                 <p className="mt-3 text-white">
                   Sourate {result.data.verse.surah} — Verset {result.data.verse.ayah}
                 </p>
-                <p className="italic mt-2" style={{ color: '#b0b8d4' }}>
+                <p className="italic mt-2" style={{ color: '#a0aec0' }}>
                   {result.data.verse.meaning}
                 </p>
                 <p className="mt-2 text-white">{result.data.verse.reason}</p>
@@ -745,7 +745,7 @@ export function DestinPage() {
                 <p className="mt-3 text-white text-center">{result.data.character.description}</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5">
                   <div>
-                    <p className="font-bold mb-2" style={{ color: '#b0b8d4' }}>
+                    <p className="font-bold mb-2" style={{ color: '#a0aec0' }}>
                       Forces
                     </p>
                     {result.data.character.strengths.map((s, i) => (
@@ -755,7 +755,7 @@ export function DestinPage() {
                     ))}
                   </div>
                   <div>
-                    <p className="font-bold mb-2" style={{ color: '#b0b8d4' }}>
+                    <p className="font-bold mb-2" style={{ color: '#a0aec0' }}>
                       Faiblesses
                     </p>
                     {result.data.character.weaknesses.map((w, i) => (
@@ -798,7 +798,7 @@ export function DestinPage() {
                   ))}
                 </div>
                 <p className="mt-3 text-white">Heures : {result.data.favorableDays.hours}</p>
-                <p className="mt-2" style={{ color: '#b0b8d4' }}>
+                <p className="mt-2" style={{ color: '#a0aec0' }}>
                   {result.data.favorableDays.explanation}
                 </p>
               </div>
@@ -816,13 +816,13 @@ export function DestinPage() {
                         style={{ background: c.hex, border: '1px solid rgba(255,255,255,0.3)' }}
                       />
                       <p className="text-white text-sm font-bold">{c.name}</p>
-                      <p className="text-xs" style={{ color: '#b0b8d4' }}>
+                      <p className="text-xs" style={{ color: '#a0aec0' }}>
                         {c.meaning}
                       </p>
                     </div>
                   ))}
                 </div>
-                <p className="mt-4" style={{ color: '#b0b8d4' }}>
+                <p className="mt-4" style={{ color: '#a0aec0' }}>
                   {result.data.favorableColors.advice}
                 </p>
               </div>
@@ -843,7 +843,7 @@ export function DestinPage() {
                 <BlocTitle>Parfum</BlocTitle>
                 <p className="text-or font-bold">{result.data.perfume.name}</p>
                 <p className="mt-2 text-white">{result.data.perfume.description}</p>
-                <p className="mt-1" style={{ color: '#b0b8d4' }}>
+                <p className="mt-1" style={{ color: '#a0aec0' }}>
                   {result.data.perfume.availability}
                 </p>
               </div>
@@ -851,7 +851,7 @@ export function DestinPage() {
               <Separateur />
 
               {/* BLOC 13 — Plante Mystique */}
-              <div className="rounded-lg text-center p-6" style={{ background: '#0d2b1a', border: '1px solid #2563EB' }}>
+              <div className="rounded-lg text-center p-6" style={{ background: '#0d2b1a', border: '1px solid #f5c842' }}>
                 <BlocTitle>Plante Mystique</BlocTitle>
                 <p className="text-white font-bold">
                   {result.data.plant.nomFrancais} / {result.data.plant.nomBambara} /{' '}
@@ -859,7 +859,7 @@ export function DestinPage() {
                 </p>
                 <p className="mt-2 text-white">Partie : {result.data.plant.partie}</p>
                 <p className="text-white">Usage : {result.data.plant.usage}</p>
-                <p className="mt-2" style={{ color: '#b0b8d4' }}>
+                <p className="mt-2" style={{ color: '#a0aec0' }}>
                   {result.data.plant.reason}
                 </p>
                 <button
@@ -886,7 +886,7 @@ export function DestinPage() {
                   </div>
                 </div>
                 <p className="arabic text-or text-[1.4em]">{result.data.talisman.verseForTalisman.arabic}</p>
-                <p className="text-sm mt-1" style={{ color: '#b0b8d4' }}>
+                <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>
                   Sourate {result.data.talisman.verseForTalisman.surah} — Verset{' '}
                   {result.data.talisman.verseForTalisman.ayah}
                 </p>
@@ -908,8 +908,8 @@ export function DestinPage() {
                         width: 44,
                         height: 44,
                         background: '#ffffff',
-                        border: '2px solid #2563EB',
-                        color: '#1a237e',
+                        border: '2px solid #f5c842',
+                        color: '#0d1545',
                       }}
                     >
                       {v}
@@ -938,10 +938,10 @@ export function DestinPage() {
                     </p>
                   ))}
                 </div>
-                <p className="mt-3 text-sm" style={{ color: '#b0b8d4' }}>
+                <p className="mt-3 text-sm" style={{ color: '#a0aec0' }}>
                   À donner à : {result.data.sacrifice.recipient}
                 </p>
-                <p className="text-sm" style={{ color: '#b0b8d4' }}>
+                <p className="text-sm" style={{ color: '#a0aec0' }}>
                   Moment : {result.data.sacrifice.timing}
                 </p>
                 <p className="mt-3 text-white">{result.data.sacrifice.instructions}</p>
@@ -954,7 +954,7 @@ export function DestinPage() {
                 <BlocTitle>Protection Spirituelle</BlocTitle>
                 <p className="text-white">{result.data.protection.mainDanger}</p>
                 <p className="arabic text-or text-[1.4em] mt-3">{result.data.protection.protectionVerse.arabic}</p>
-                <p className="italic mt-1" style={{ color: '#b0b8d4' }}>
+                <p className="italic mt-1" style={{ color: '#a0aec0' }}>
                   {result.data.protection.protectionVerse.meaning}
                 </p>
                 <p className="mt-3 text-white">{result.data.protection.advice}</p>
@@ -968,7 +968,7 @@ export function DestinPage() {
                   <p className="text-or font-bold mb-2">Amour</p>
                   <p className="text-sm text-white">{result.data.loveLife.profile}</p>
                   <p className="text-sm mt-2 text-white">{result.data.loveLife.idealPartner}</p>
-                  <p className="text-sm mt-2" style={{ color: '#b0b8d4' }}>
+                  <p className="text-sm mt-2" style={{ color: '#a0aec0' }}>
                     {result.data.loveLife.challenge}
                   </p>
                 </div>
@@ -982,7 +982,7 @@ export function DestinPage() {
                     ))}
                   </div>
                   <p className="text-sm text-white">{result.data.career.advice}</p>
-                  <p className="text-sm mt-2" style={{ color: '#b0b8d4' }}>
+                  <p className="text-sm mt-2" style={{ color: '#a0aec0' }}>
                     {result.data.career.talent}
                   </p>
                 </div>
@@ -992,7 +992,7 @@ export function DestinPage() {
                     {result.data.spiritualLevel.level}
                   </span>
                   <p className="text-sm mt-3 text-white">{result.data.spiritualLevel.description}</p>
-                  <p className="text-sm mt-2" style={{ color: '#b0b8d4' }}>
+                  <p className="text-sm mt-2" style={{ color: '#a0aec0' }}>
                     {result.data.spiritualLevel.nextStep}
                   </p>
                 </div>
@@ -1001,7 +1001,7 @@ export function DestinPage() {
               <Separateur />
 
               {/* BLOC 18 — Conclusion */}
-              <div className="rounded-lg text-center p-8" style={{ background: '#1a237e', border: '1px solid #2563EB' }}>
+              <div className="rounded-lg text-center p-8" style={{ background: '#0d1545', border: '1px solid #f5c842' }}>
                 <p className="italic text-white">{result.data.conclusion}</p>
               </div>
             </div>

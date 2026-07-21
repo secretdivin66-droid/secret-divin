@@ -3,13 +3,15 @@
 @tailwind utilities;
 
 :root {
-  --bleu: #0a0e2e;
-  --bleu-clair: #1a237e;
-  --or: #2563EB;
-  --or-pale: #60A5FA;
+  --bleu: #0a0f2e;
+  --bleu-clair: #0d1545;
+  --or: #f5c842;
+  --or-fonce: #e8a020;
+  --or-pale: #3b9ff5;
   --blanc: #ffffff;
-  --gris: #b0b8d4;
-  --fond-carte: #111a55;
+  --gris: #a0aec0;
+  --fond-carte: #0d1545;
+  --bordure-or: rgba(245, 200, 66, 0.2);
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -44,12 +46,16 @@ body {
 
 .btn-principal {
   background: var(--or);
-  color: var(--blanc);
+  color: var(--bleu);
   font-weight: 700;
   padding: 12px 28px;
   border: none;
   cursor: pointer;
   transition: all 0.3s;
+}
+
+.btn-principal:hover {
+  background: var(--or-fonce);
 }
 
 .btn-secondaire {
@@ -63,7 +69,7 @@ body {
 
 .carte {
   background: var(--fond-carte);
-  border: 1px solid rgba(37,99,235,0.1);
+  border: 1px solid var(--bordure-or);
   padding: 20px;
   transition: all 0.3s;
 }

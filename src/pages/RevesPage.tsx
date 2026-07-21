@@ -193,8 +193,8 @@ function natureColor(type: string): string {
   if (type.includes('Avertissement')) return '#ff9800';
   if (type.includes('Message spirituel')) return '#1565c0';
   if (type.includes('âme')) return '#7b1fa2';
-  if (type.includes('prophétique')) return '#2563EB';
-  return '#2563EB';
+  if (type.includes('prophétique')) return '#f5c842';
+  return '#f5c842';
 }
 
 function sacrificeTypeColor(type: string): { bg: string; text: string } {
@@ -321,7 +321,7 @@ export function RevesPage() {
   async function handleExportPDF() {
     const el = document.getElementById('reves-content');
     if (!el) return;
-    const canvas = await html2canvas(el, { backgroundColor: '#0a0e2e' });
+    const canvas = await html2canvas(el, { backgroundColor: '#0a0f2e' });
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -345,11 +345,11 @@ export function RevesPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-4xl mx-auto">
         {/* SECTION 1 — EN-TÊTE */}
         <h1 className="text-center font-bold text-or text-[2rem]">Interprétation des Rêves</h1>
-        <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>
+        <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
           Décris ton rêve et reçois une interprétation
           <br />
           complète selon la tradition islamique et
@@ -369,7 +369,7 @@ export function RevesPage() {
         {!result && (
           <div className="carte rounded-lg max-w-[600px] mx-auto flex flex-col gap-5">
             <div>
-              <label className="block text-sm mb-2" style={{ color: '#b0b8d4' }}>
+              <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>
                 Décris ton rêve
               </label>
               <textarea
@@ -379,13 +379,13 @@ export function RevesPage() {
                 placeholder="Décris ton rêve en détail... Les personnes présentes, les lieux, les couleurs, les émotions ressenties, les événements qui se sont passés..."
                 className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or resize-y"
               />
-              <p className="text-right text-xs mt-1" style={{ color: '#b0b8d4' }}>
+              <p className="text-right text-xs mt-1" style={{ color: '#a0aec0' }}>
                 {dreamText.length} caractères
               </p>
             </div>
 
             <div>
-              <label className="block text-sm mb-2" style={{ color: '#b0b8d4' }}>
+              <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>
                 Contexte du rêve
               </label>
               <select
@@ -400,7 +400,7 @@ export function RevesPage() {
             </div>
 
             <div>
-              <label className="block text-sm mb-2" style={{ color: '#b0b8d4' }}>
+              <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>
                 Ton état actuel
               </label>
               <select
@@ -486,7 +486,7 @@ export function RevesPage() {
                   ))}
                 </div>
 
-                <div className="rounded-lg p-4 mt-5 text-center" style={{ border: '1px solid #2563EB' }}>
+                <div className="rounded-lg p-4 mt-5 text-center" style={{ border: '1px solid #f5c842' }}>
                   <p className="text-white font-bold italic">{result.interpretation.message}</p>
                 </div>
 
@@ -505,11 +505,11 @@ export function RevesPage() {
 
               {/* BLOC 4 — Vision Spirituelle */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="rounded-lg p-5" style={{ background: '#111a55', border: '1px solid #1565c0' }}>
+                <div className="rounded-lg p-5" style={{ background: '#0d1545', border: '1px solid #1565c0' }}>
                   <p className="font-bold text-center mb-3" style={{ color: '#1565c0' }}>Vision Islamique</p>
                   <p className="text-white text-center">{result.spiritual.islamicView}</p>
                 </div>
-                <div className="rounded-lg p-5" style={{ background: '#111a55', border: '1px solid #2563EB' }}>
+                <div className="rounded-lg p-5" style={{ background: '#0d1545', border: '1px solid #f5c842' }}>
                   <p className="text-or font-bold text-center mb-3">Sagesse Africaine</p>
                   <p className="text-white text-center">{result.spiritual.africanView}</p>
                 </div>
@@ -527,7 +527,7 @@ export function RevesPage() {
                     À réciter {result.spiritual.prayerRepetitions} fois
                   </span>
                 </div>
-                <p className="mt-2 text-sm" style={{ color: '#b0b8d4' }}>{result.spiritual.bestTimeForPrayer}</p>
+                <p className="mt-2 text-sm" style={{ color: '#a0aec0' }}>{result.spiritual.bestTimeForPrayer}</p>
                 <div className="mt-4 flex justify-center">
                   <AudioButton text={result.spiritual.prayer} label="Écouter l'invocation" />
                 </div>
@@ -536,7 +536,7 @@ export function RevesPage() {
               <Separateur />
 
               {/* BLOC 6 — Nom Divin Recommandé */}
-              <div className="rounded-lg text-center p-8" style={{ background: '#0a0e2e', border: '1px solid #2563EB' }}>
+              <div className="rounded-lg text-center p-8" style={{ background: '#0a0f2e', border: '1px solid #f5c842' }}>
                 <BlocTitle>Ton Nom Divin</BlocTitle>
                 <p className="arabic text-or text-[2.5em]">{result.divineName.withYa}</p>
                 <p className="mt-3 text-white">
@@ -547,7 +547,7 @@ export function RevesPage() {
                     À réciter {result.divineName.repetitions} fois
                   </span>
                 </div>
-                <p className="italic mt-3" style={{ color: '#b0b8d4' }}>{result.divineName.reason}</p>
+                <p className="italic mt-3" style={{ color: '#a0aec0' }}>{result.divineName.reason}</p>
                 <div className="mt-4 flex justify-center">
                   <AudioButton text={result.divineName.withYa} label="Écouter le nom divin" />
                 </div>
@@ -556,7 +556,7 @@ export function RevesPage() {
               <Separateur />
 
               {/* BLOC 7 — Plante Spirituelle */}
-              <div className="rounded-lg text-center p-6" style={{ background: '#0d2b1a', border: '1px solid #2563EB' }}>
+              <div className="rounded-lg text-center p-6" style={{ background: '#0d2b1a', border: '1px solid #f5c842' }}>
                 <BlocTitle>Plante Spirituelle</BlocTitle>
                 <p className="text-white font-bold">
                   {result.plant.nomFrancais} / {result.plant.nomBambara} /{' '}
@@ -593,13 +593,13 @@ export function RevesPage() {
                     </p>
                   ))}
                 </div>
-                <p className="mt-3 text-sm" style={{ color: '#b0b8d4' }}>
+                <p className="mt-3 text-sm" style={{ color: '#a0aec0' }}>
                   À donner à : {result.sacrifice.recipient}
                 </p>
-                <p className="text-sm" style={{ color: '#b0b8d4' }}>
+                <p className="text-sm" style={{ color: '#a0aec0' }}>
                   Moment : {result.sacrifice.timing}
                 </p>
-                <div className="rounded-lg p-4 mt-4" style={{ background: '#0a0e2e', border: '1px solid rgba(37,99,235,0.2)' }}>
+                <div className="rounded-lg p-4 mt-4" style={{ background: '#0a0f2e', border: '1px solid rgba(245,200,66,0.2)' }}>
                   <p className="text-white">{result.sacrifice.instructions}</p>
                 </div>
               </div>
@@ -610,15 +610,15 @@ export function RevesPage() {
               <div>
                 <BlocTitle>Plan d'Action</BlocTitle>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                  <div className="rounded-lg p-5 text-center" style={{ background: '#111a55', border: '1px solid #2563EB' }}>
+                  <div className="rounded-lg p-5 text-center" style={{ background: '#0d1545', border: '1px solid #f5c842' }}>
                     <p className="text-or font-bold mb-2">Dans les 24h</p>
                     <p className="text-white text-sm">{result.actionPlan.immediate}</p>
                   </div>
-                  <div className="rounded-lg p-5 text-center" style={{ background: '#111a55', border: '1px solid #1565c0' }}>
+                  <div className="rounded-lg p-5 text-center" style={{ background: '#0d1545', border: '1px solid #1565c0' }}>
                     <p className="font-bold mb-2" style={{ color: '#1565c0' }}>Cette Semaine</p>
                     <p className="text-white text-sm">{result.actionPlan.thisWeek}</p>
                   </div>
-                  <div className="rounded-lg p-5 text-center" style={{ background: '#111a55', border: '1px solid #e53935' }}>
+                  <div className="rounded-lg p-5 text-center" style={{ background: '#0d1545', border: '1px solid #e53935' }}>
                     <p className="font-bold mb-2" style={{ color: '#e53935' }}>À Éviter</p>
                     <p className="text-white text-sm">{result.actionPlan.avoid}</p>
                   </div>
@@ -628,7 +628,7 @@ export function RevesPage() {
               <Separateur />
 
               {/* BLOC 10 — Conclusion */}
-              <div className="rounded-lg text-center p-8" style={{ background: '#1a237e', border: '1px solid #2563EB' }}>
+              <div className="rounded-lg text-center p-8" style={{ background: '#0d1545', border: '1px solid #f5c842' }}>
                 <p className="italic text-white">{result.conclusion}</p>
               </div>
             </div>

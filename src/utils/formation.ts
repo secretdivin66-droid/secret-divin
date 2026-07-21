@@ -60,7 +60,7 @@ export const MODULES: Module[] = [
       { id: 3, title: 'Rituels complets avec les plantes' }
     ], isUnlockedByDefault: false },
 
-  { id: 7, niveau: 'Expert', niveauColor: '#2563EB',
+  { id: 7, niveau: 'Expert', niveauColor: '#f5c842',
     title: 'Les carrés magiques avancés (5x5 à 9x9)',
     description: "Maîtrise les carrés Moukhams, Moussadis, Moussabbi'a, Mouthammin et Moutassi'ou.",
     lessons: [
@@ -69,7 +69,7 @@ export const MODULES: Module[] = [
       { id: 3, title: "Le carré 9x9 Moutassi'ou — le maître des carrés" }
     ], isUnlockedByDefault: false },
 
-  { id: 8, niveau: 'Expert', niveauColor: '#2563EB',
+  { id: 8, niveau: 'Expert', niveauColor: '#f5c842',
     title: 'Les secrets du destin — Les 17 points mystiques',
     description: "Apprends à calculer et interpréter les 17 points du profil spirituel complet.",
     lessons: [
@@ -78,7 +78,7 @@ export const MODULES: Module[] = [
       { id: 3, title: 'Le sacrifice et la protection spirituelle complète' }
     ], isUnlockedByDefault: false },
 
-  { id: 9, niveau: 'Expert', niveauColor: '#2563EB',
+  { id: 9, niveau: 'Expert', niveauColor: '#f5c842',
     title: 'Talismans et rituels complets',
     description: "Maîtrise la création de talismans complets et l'exécution de rituels spirituels.",
     lessons: [

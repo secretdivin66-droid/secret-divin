@@ -268,10 +268,10 @@ function TalismanGrid({ values, size, variant }: { values: (number | string)[]; 
   const cellClass = variant === 'arabic' ? 'font-bold arabic' : 'font-bold';
   const cellStyle: CSSProperties =
     variant === 'base'
-      ? { background: '#f5f5f5', color: '#1a237e', border: '1px solid #e0e0e0' }
+      ? { background: '#f5f5f5', color: '#0d1545', border: '1px solid #e0e0e0' }
       : variant === 'french'
-      ? { background: '#ffffff', color: '#1a237e', border: '2px solid #2563EB' }
-      : { background: '#1a237e', color: '#2563EB', direction: 'rtl' };
+      ? { background: '#ffffff', color: '#0d1545', border: '2px solid #f5c842' }
+      : { background: '#0d1545', color: '#f5c842', direction: 'rtl' };
 
   return (
     <div className="att-grid mx-auto" style={{ display: 'grid', gridTemplateColumns: `repeat(${size}, auto)`, gap: '2px', justifyContent: 'center' }}>
@@ -440,7 +440,7 @@ export function AttraperPage() {
   async function handleExportPDF() {
     const el = document.getElementById('attraper-content');
     if (!el) return;
-    const canvas = await html2canvas(el, { backgroundColor: '#0a0e2e' });
+    const canvas = await html2canvas(el, { backgroundColor: '#0a0f2e' });
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pageWidth = pdf.internal.pageSize.getWidth();
@@ -491,7 +491,7 @@ export function AttraperPage() {
   const desktopCellSize = CELL_SIZES[result?.squareSize ?? 3];
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <style>{`
         .att-cell { width: 40px; height: 40px; }
         @media (min-width: 768px) {
@@ -502,7 +502,7 @@ export function AttraperPage() {
       <div className="max-w-4xl mx-auto">
         {/* SECTION 1 — EN-TÊTE */}
         <h1 className="text-center font-bold text-or text-[2rem]">Pour Attraper</h1>
-        <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>
+        <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
           Génère ton talisman personnalisé basé sur
           <br />
           les noms arabes des deux personnes pour
@@ -525,7 +525,7 @@ export function AttraperPage() {
               <div className="carte rounded-lg flex flex-col gap-4">
                 <p className="text-or font-bold text-center">Toi</p>
                 <div>
-                  <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Ton prénom</label>
+                  <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Ton prénom</label>
                   <input
                     type="text"
                     value={userName}
@@ -534,7 +534,7 @@ export function AttraperPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Prénom de ta mère</label>
+                  <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Prénom de ta mère</label>
                   <input
                     type="text"
                     value={userMother}
@@ -543,7 +543,7 @@ export function AttraperPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm mb-2" style={{ color: '#b0b8d4' }}>Ton sexe</label>
+                  <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>Ton sexe</label>
                   <GenderToggle value={userGender} onChange={setUserGender} />
                 </div>
               </div>
@@ -551,7 +551,7 @@ export function AttraperPage() {
               <div className="carte rounded-lg flex flex-col gap-4">
                 <p className="text-or font-bold text-center">Ta Cible</p>
                 <div>
-                  <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Prénom de ta cible</label>
+                  <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Prénom de ta cible</label>
                   <input
                     type="text"
                     value={targetName}
@@ -560,7 +560,7 @@ export function AttraperPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm mb-1" style={{ color: '#b0b8d4' }}>Prénom de sa mère</label>
+                  <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Prénom de sa mère</label>
                   <input
                     type="text"
                     value={targetMother}
@@ -569,14 +569,14 @@ export function AttraperPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm mb-2" style={{ color: '#b0b8d4' }}>Son sexe</label>
+                  <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>Son sexe</label>
                   <GenderToggle value={targetGender} onChange={setTargetGender} />
                 </div>
               </div>
             </div>
 
             <div className="mt-5">
-              <label className="block text-sm mb-2" style={{ color: '#b0b8d4' }}>Ton objectif</label>
+              <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>Ton objectif</label>
               <select
                 value={objective}
                 onChange={(e) => setObjective(e.target.value)}
@@ -635,13 +635,13 @@ export function AttraperPage() {
                   <div className="carte rounded-lg text-center">
                     <p className="text-white font-bold">{userName}</p>
                     <p className="arabic text-or mt-1">{result.userNameArabic}</p>
-                    <p className="text-sm mt-1" style={{ color: '#b0b8d4' }}>Mère : {userMother}</p>
+                    <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>Mère : {userMother}</p>
                     <p className="text-or font-bold mt-2">PM : {result.PMuser}</p>
                   </div>
                   <div className="carte rounded-lg text-center">
                     <p className="text-white font-bold">{targetName}</p>
                     <p className="arabic text-or mt-1">{result.targetNameArabic}</p>
-                    <p className="text-sm mt-1" style={{ color: '#b0b8d4' }}>Mère : {targetMother}</p>
+                    <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>Mère : {targetMother}</p>
                     <p className="text-or font-bold mt-2">PM : {result.PMtarget}</p>
                   </div>
                 </div>
@@ -687,7 +687,7 @@ export function AttraperPage() {
                 <p className="mt-3 text-white">
                   Sourate {result.data.verse.surah} — Verset {result.data.verse.ayah}
                 </p>
-                <p className="italic mt-2" style={{ color: '#b0b8d4' }}>{result.data.verse.meaning}</p>
+                <p className="italic mt-2" style={{ color: '#a0aec0' }}>{result.data.verse.meaning}</p>
                 <p className="mt-2 text-white">{result.data.verse.reason}</p>
                 <div className="mt-4 flex justify-center">
                   <AudioButton text={result.data.verse.arabic} label="Écouter le verset" />
@@ -699,7 +699,7 @@ export function AttraperPage() {
               {/* BLOC 4 — Invocation Personnalisée */}
               <div className="carte rounded-lg text-center">
                 <BlocTitle>Invocation Personnalisée</BlocTitle>
-                <p className="text-sm" style={{ color: '#b0b8d4' }}>Version pour écrire (sans harakat)</p>
+                <p className="text-sm" style={{ color: '#a0aec0' }}>Version pour écrire (sans harakat)</p>
                 <p className="arabic text-or text-[1.5em] mt-2">{result.data.invocation.arabicNoHarakat}</p>
                 <p className="italic mt-3 text-white">{result.data.invocation.meaning}</p>
                 <div className="flex justify-center gap-2 mt-4 flex-wrap">
@@ -724,15 +724,15 @@ export function AttraperPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-6">
                   <div>
-                    <p className="text-sm mb-2" style={{ color: '#b0b8d4' }}>Base</p>
+                    <p className="text-sm mb-2" style={{ color: '#a0aec0' }}>Base</p>
                     <TalismanGrid values={LAYOUTS[result.squareSize]} size={result.squareSize} variant="base" />
                   </div>
                   <div>
-                    <p className="text-sm mb-2" style={{ color: '#b0b8d4' }}>Français</p>
+                    <p className="text-sm mb-2" style={{ color: '#a0aec0' }}>Français</p>
                     <TalismanGrid values={result.cells} size={result.squareSize} variant="french" />
                   </div>
                   <div>
-                    <p className="text-sm mb-2" style={{ color: '#b0b8d4' }}>Arabe</p>
+                    <p className="text-sm mb-2" style={{ color: '#a0aec0' }}>Arabe</p>
                     <TalismanGrid values={result.cells.map((v) => toArabicIndic(v))} size={result.squareSize} variant="arabic" />
                   </div>
                 </div>
@@ -749,7 +749,7 @@ export function AttraperPage() {
               {/* BLOC 6 — Comment Écrire le Talisman */}
               <div className="carte rounded-lg">
                 <BlocTitle>Comment Écrire le Talisman</BlocTitle>
-                <div className="flex flex-col gap-3" style={{ borderLeft: '2px solid rgba(37,99,235,0.3)', paddingLeft: '1rem' }}>
+                <div className="flex flex-col gap-3" style={{ borderLeft: '2px solid rgba(245,200,66,0.3)', paddingLeft: '1rem' }}>
                   {result.data.talisman.writingOrder.map((step, i) => (
                     <div key={i} className="flex gap-3 items-start">
                       <span className="w-6 h-6 shrink-0 rounded-full bg-or text-white font-bold flex items-center justify-center text-xs">
@@ -760,7 +760,7 @@ export function AttraperPage() {
                   ))}
                 </div>
 
-                <div className="rounded-lg p-4 mt-5" style={{ background: '#0a0e2e', border: '1px solid rgba(21,101,192,0.3)' }}>
+                <div className="rounded-lg p-4 mt-5" style={{ background: '#0a0f2e', border: '1px solid rgba(21,101,192,0.3)' }}>
                   <p className="text-sm text-white">{result.data.talisman.bathInstructions}</p>
                 </div>
 
@@ -781,7 +781,7 @@ export function AttraperPage() {
                 <BlocTitle>Plantes et Parfum</BlocTitle>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {result.data.plants.map((p, i) => (
-                    <div key={i} className="rounded-lg text-center p-6" style={{ background: '#0d2b1a', border: '1px solid #2563EB' }}>
+                    <div key={i} className="rounded-lg text-center p-6" style={{ background: '#0d2b1a', border: '1px solid #f5c842' }}>
                       <p className="text-white font-bold">
                         {p.nomFrancais} / {p.nomBambara} / <span className="italic">{p.nomScientifique}</span>
                       </p>
@@ -797,11 +797,11 @@ export function AttraperPage() {
                   ))}
                 </div>
 
-                <div className="carte rounded-lg text-center mt-5" style={{ border: '1px solid #2563EB' }}>
+                <div className="carte rounded-lg text-center mt-5" style={{ border: '1px solid #f5c842' }}>
                   <p className="text-or font-bold">{result.data.perfume.name}</p>
                   <p className="text-white mt-2">{result.data.perfume.description}</p>
                   <p className="text-white mt-2 text-sm">Utilisation : {result.data.perfume.usage}</p>
-                  <p className="text-sm mt-1" style={{ color: '#b0b8d4' }}>Disponibilité : {result.data.perfume.availability}</p>
+                  <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>Disponibilité : {result.data.perfume.availability}</p>
                 </div>
               </div>
 
@@ -816,7 +816,7 @@ export function AttraperPage() {
 
                 <div className="flex flex-col gap-4 mt-5">
                   {result.data.zikr.steps.map((step) => (
-                    <div key={step.order} className="rounded-lg p-4" style={{ background: '#0a0e2e', border: '1px solid rgba(37,99,235,0.2)' }}>
+                    <div key={step.order} className="rounded-lg p-4" style={{ background: '#0a0f2e', border: '1px solid rgba(245,200,66,0.2)' }}>
                       <div className="flex items-center gap-3 mb-2">
                         <span className="w-7 h-7 shrink-0 rounded-full bg-or text-white font-bold flex items-center justify-center text-sm">
                           {step.order}
@@ -830,7 +830,7 @@ export function AttraperPage() {
                         </span>
                       </div>
                       {step.note && (
-                        <p className="text-sm italic mt-2 text-center" style={{ color: '#b0b8d4' }}>{step.note}</p>
+                        <p className="text-sm italic mt-2 text-center" style={{ color: '#a0aec0' }}>{step.note}</p>
                       )}
                       <div className="mt-3 flex justify-center">
                         <AudioButton text={step.arabicWithHarakat} label="Écouter" />
@@ -839,7 +839,7 @@ export function AttraperPage() {
                   ))}
                 </div>
 
-                <div className="rounded-lg p-4 mt-5" style={{ border: '1px solid #2563EB' }}>
+                <div className="rounded-lg p-4 mt-5" style={{ border: '1px solid #f5c842' }}>
                   <p className="text-white text-sm">{result.data.zikr.important}</p>
                 </div>
               </div>
@@ -857,8 +857,8 @@ export function AttraperPage() {
                     </p>
                   ))}
                 </div>
-                <p className="mt-3 text-sm" style={{ color: '#b0b8d4' }}>À donner à : {result.data.sacrifice.recipient}</p>
-                <p className="text-sm" style={{ color: '#b0b8d4' }}>Moment : {result.data.sacrifice.timing}</p>
+                <p className="mt-3 text-sm" style={{ color: '#a0aec0' }}>À donner à : {result.data.sacrifice.recipient}</p>
+                <p className="text-sm" style={{ color: '#a0aec0' }}>Moment : {result.data.sacrifice.timing}</p>
                 <p className="mt-3 text-white">{result.data.sacrifice.instructions}</p>
               </div>
 
@@ -879,7 +879,7 @@ export function AttraperPage() {
               <Separateur />
 
               {/* BLOC 11 — Conclusion */}
-              <div className="rounded-lg text-center p-8" style={{ background: '#1a237e', border: '1px solid #2563EB' }}>
+              <div className="rounded-lg text-center p-8" style={{ background: '#0d1545', border: '1px solid #f5c842' }}>
                 <p className="italic text-white">{result.data.conclusion}</p>
               </div>
             </div>

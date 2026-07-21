@@ -6,8 +6,8 @@ export function AdminRoute({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#0a0e2e' }}>
-        <div style={{ color:'#2563EB', fontSize:'1.2rem' }}>Chargement...</div>
+      <div style={{ minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', background:'#0a0f2e' }}>
+        <div style={{ color:'#f5c842', fontSize:'1.2rem' }}>Chargement...</div>
       </div>
     );
   }

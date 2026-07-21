@@ -72,7 +72,7 @@ export function BillingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0e2e' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0f2e' }}>
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-or border-t-transparent rounded-full animate-spin" />
           <p className="text-or">Chargement...</p>
@@ -82,10 +82,10 @@ export function BillingPage() {
   }
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-[800px] mx-auto">
         <h1 className="text-center font-bold text-or text-[2rem]">Facturation</h1>
-        <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>
+        <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
           Gère ton abonnement et consulte ton historique
         </p>
 
@@ -99,10 +99,10 @@ export function BillingPage() {
 
         {/* Plan actuel */}
         <div className="carte rounded-lg text-center">
-          <p className="text-sm" style={{ color: '#b0b8d4' }}>Plan actuel</p>
+          <p className="text-sm" style={{ color: '#a0aec0' }}>Plan actuel</p>
           <p className="text-or font-bold text-[2rem] mt-1">{plan?.name ?? 'Free'}</p>
           {expiresAt && (
-            <p className="text-sm mt-1" style={{ color: '#b0b8d4' }}>Renouvellement le {formatDate(expiresAt)}</p>
+            <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>Renouvellement le {formatDate(expiresAt)}</p>
           )}
           <p className="text-white mt-3">
             {credits.isUnlimited ? 'Accès illimité à tous les outils' : `${credits.balance} crédits disponibles`}
@@ -129,7 +129,7 @@ export function BillingPage() {
         <RequirePlan
           minPlan="pro"
           fallback={
-            <div className="rounded-lg p-5 text-center" style={{ background: '#111a55', border: '1px solid rgba(37,99,235,0.2)' }}>
+            <div className="rounded-lg p-5 text-center" style={{ background: '#0d1545', border: '1px solid rgba(245,200,66,0.2)' }}>
               <p className="text-white">
                 Le plan Pro débloque un support prioritaire dédié et un accès illimité à tous les outils.
               </p>
@@ -137,7 +137,7 @@ export function BillingPage() {
             </div>
           }
         >
-          <div className="rounded-lg p-5 text-center" style={{ background: '#111a55', border: '1px solid #2563EB' }}>
+          <div className="rounded-lg p-5 text-center" style={{ background: '#0d1545', border: '1px solid #f5c842' }}>
             <p className="text-or font-bold">Avantage Pro actif</p>
             <p className="text-white mt-2">Support prioritaire par WhatsApp et accès illimité débloqués.</p>
           </div>
@@ -148,24 +148,24 @@ export function BillingPage() {
         {/* Historique de facturation */}
         <h2 className="text-or font-bold text-center text-xl mb-6">Historique de Facturation</h2>
         {events.length === 0 ? (
-          <p className="text-center" style={{ color: '#b0b8d4' }}>Aucun événement de facturation pour le moment.</p>
+          <p className="text-center" style={{ color: '#a0aec0' }}>Aucun événement de facturation pour le moment.</p>
         ) : (
           <div className="overflow-x-auto">
             <div className="carte rounded-lg min-w-[500px]">
-              <div className="grid grid-cols-4 gap-3 pb-3 font-bold text-sm" style={{ color: '#b0b8d4', borderBottom: '1px solid rgba(37,99,235,0.2)' }}>
+              <div className="grid grid-cols-4 gap-3 pb-3 font-bold text-sm" style={{ color: '#a0aec0', borderBottom: '1px solid rgba(245,200,66,0.2)' }}>
                 <span>Date</span>
                 <span>Description</span>
                 <span className="text-right">Montant</span>
                 <span className="text-right">Statut</span>
               </div>
               {events.map((event) => (
-                <div key={event.id} className="grid grid-cols-4 gap-3 py-3 text-sm" style={{ borderBottom: '1px solid rgba(37,99,235,0.1)' }}>
-                  <span style={{ color: '#b0b8d4' }}>{formatDate(event.created_at)}</span>
+                <div key={event.id} className="grid grid-cols-4 gap-3 py-3 text-sm" style={{ borderBottom: '1px solid rgba(245,200,66,0.1)' }}>
+                  <span style={{ color: '#a0aec0' }}>{formatDate(event.created_at)}</span>
                   <span className="text-white">{event.description ?? '—'}</span>
                   <span className="text-right text-white">
                     {event.amount != null ? `${event.amount.toLocaleString('fr-FR')} FCFA` : '—'}
                   </span>
-                  <span className="text-right" style={{ color: event.status === 'succeeded' ? '#4caf50' : '#b0b8d4' }}>
+                  <span className="text-right" style={{ color: event.status === 'succeeded' ? '#4caf50' : '#a0aec0' }}>
                     {event.status ? STATUS_LABEL[event.status] ?? event.status : '—'}
                   </span>
                 </div>
@@ -177,7 +177,7 @@ export function BillingPage() {
 
       {showCancelModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-          <div style={{ background: '#111a55', border: '1px solid #2563EB', borderRadius: '8px', padding: '28px', maxWidth: '400px', width: '100%' }} className="text-center">
+          <div style={{ background: '#0d1545', border: '1px solid #f5c842', borderRadius: '8px', padding: '28px', maxWidth: '400px', width: '100%' }} className="text-center">
             <p className="text-white mb-5">
               Es-tu sûr de vouloir annuler ton abonnement {plan?.name} ? Tu repasseras immédiatement au plan Free.
             </p>

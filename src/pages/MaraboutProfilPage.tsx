@@ -116,7 +116,7 @@ export function MaraboutProfilPage() {
 
   if (!marabout) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0e2e' }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0f2e' }}>
         <p className="text-or">Chargement...</p>
       </div>
     );
@@ -127,11 +127,11 @@ export function MaraboutProfilPage() {
   const contactMessage = 'Bonjour, je vous contacte depuis Secret Divin. J\'aurais besoin de vos services.';
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-3xl mx-auto">
         <Link to="/marabouts" className="btn-secondaire rounded inline-block mb-6">← Retour aux marabouts</Link>
 
-        <div className="rounded-lg p-8 text-center" style={{ background: 'linear-gradient(160deg, #1a237e, #0a0e2e)', border: '1px solid rgba(37,99,235,0.3)' }}>
+        <div className="rounded-lg p-8 text-center" style={{ background: 'linear-gradient(160deg, #0d1545, #0a0f2e)', border: '1px solid rgba(245,200,66,0.3)' }}>
           <div className="w-[100px] h-[100px] rounded-full bg-or text-white font-bold flex items-center justify-center mx-auto text-4xl overflow-hidden">
             {marabout.photo_url ? (
               <img src={marabout.photo_url} alt={marabout.nom_complet} className="w-full h-full object-cover" />
@@ -142,10 +142,10 @@ export function MaraboutProfilPage() {
           <p className="text-or font-bold text-[2rem] mt-4">{marabout.nom_complet}</p>
           <p className="text-white mt-1">{marabout.ville}, {marabout.pays}</p>
           {note && <p className="text-or font-bold mt-2">★ {note} / 5 ({avisList.length} avis)</p>}
-          <p className="text-sm mt-2" style={{ color: '#b0b8d4' }}>{marabout.vues} profil(s) consulté(s)</p>
+          <p className="text-sm mt-2" style={{ color: '#a0aec0' }}>{marabout.vues} profil(s) consulté(s)</p>
           <div className="flex flex-wrap justify-center gap-2 mt-4">
             {marabout.langues.map((l) => (
-              <span key={l} className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: '#1a1a2e', color: '#b0b8d4' }}>{l}</span>
+              <span key={l} className="px-3 py-1 rounded-full text-xs font-bold" style={{ background: '#1a1a2e', color: '#a0aec0' }}>{l}</span>
             ))}
           </div>
           <button
@@ -167,7 +167,7 @@ export function MaraboutProfilPage() {
         <h2 className="text-or font-bold mb-3">Spécialités</h2>
         <div className="flex flex-wrap gap-2">
           {marabout.specialite.map((s) => (
-            <span key={s} className="px-3 py-2 rounded text-sm text-white" style={{ background: '#111a55', border: '1px solid rgba(37,99,235,0.2)' }}>
+            <span key={s} className="px-3 py-2 rounded text-sm text-white" style={{ background: '#0d1545', border: '1px solid rgba(245,200,66,0.2)' }}>
               ✦ {s}
             </span>
           ))}
@@ -193,12 +193,12 @@ export function MaraboutProfilPage() {
               <div key={i} className="carte rounded-lg">
                 <Stars note={a.note} />
                 {a.commentaire && <p className="text-white mt-2 text-sm">{a.commentaire}</p>}
-                <p className="text-xs mt-2" style={{ color: '#b0b8d4' }}>{formatDate(a.created_at)}</p>
+                <p className="text-xs mt-2" style={{ color: '#a0aec0' }}>{formatDate(a.created_at)}</p>
               </div>
             ))}
           </div>
         ) : (
-          <p style={{ color: '#b0b8d4' }}>Aucun avis pour le moment.</p>
+          <p style={{ color: '#a0aec0' }}>Aucun avis pour le moment.</p>
         )}
 
         <Separateur />
@@ -212,7 +212,7 @@ export function MaraboutProfilPage() {
                   key={n}
                   onClick={() => setSelectedNote(n)}
                   className="text-3xl"
-                  style={{ color: n <= selectedNote ? '#2563EB' : '#444' }}
+                  style={{ color: n <= selectedNote ? '#f5c842' : '#444' }}
                 >
                   ★
                 </button>
@@ -243,7 +243,7 @@ export function MaraboutProfilPage() {
 
         <Separateur />
 
-        <div className="rounded-lg p-8 text-center" style={{ background: '#1a237e', border: '1px solid #2563EB' }}>
+        <div className="rounded-lg p-8 text-center" style={{ background: '#0d1545', border: '1px solid #f5c842' }}>
           <p className="text-white font-bold mb-4">Besoin des services de {marabout.nom_complet} ?</p>
           <button
             onClick={() => window.open(whatsappContactUrl(marabout.numero_whatsapp, contactMessage), '_blank', 'noopener,noreferrer')}

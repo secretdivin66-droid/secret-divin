@@ -21,7 +21,7 @@ export function MobileBar() {
   return (
     <nav
       className="fixed bottom-0 left-0 right-0 z-50 md:hidden flex justify-around items-center py-2"
-      style={{ background: '#1a237e', borderTop: '1px solid #2563EB' }}
+      style={{ background: '#0d1545', borderTop: '1px solid #f5c842' }}
     >
       {ITEMS.map((item) => (
         <Link

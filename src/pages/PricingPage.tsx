@@ -22,10 +22,10 @@ export function PricingPage() {
   const { loading, planId, plans, expiresAt } = useSubscription(user?.id ?? null);
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0e2e' }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-6xl mx-auto">
         <h1 className="text-center font-bold text-or text-[2rem]">Nos Plans d'Abonnement</h1>
-        <p className="text-center italic mt-3" style={{ color: '#b0b8d4' }}>
+        <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
           Choisis le plan qui correspond à ton usage. Les crédits n'expirent jamais, quel que soit le plan.
         </p>
 
@@ -36,7 +36,7 @@ export function PricingPage() {
             <div className="w-8 h-8 border-4 border-or border-t-transparent rounded-full animate-spin" />
           </div>
         ) : plans.length === 0 ? (
-          <p className="text-center" style={{ color: '#b0b8d4' }}>Les plans ne sont pas encore configurés.</p>
+          <p className="text-center" style={{ color: '#a0aec0' }}>Les plans ne sont pas encore configurés.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {plans.map((plan) => {
@@ -48,8 +48,8 @@ export function PricingPage() {
                   key={plan.id}
                   className="rounded-lg p-6 flex flex-col text-center"
                   style={{
-                    background: '#111a55',
-                    border: isPopular ? '2px solid #2563EB' : '1px solid rgba(37,99,235,0.2)',
+                    background: '#0d1545',
+                    border: isPopular ? '2px solid #f5c842' : '1px solid rgba(245,200,66,0.2)',
                   }}
                 >
                   {isPopular && (
@@ -61,7 +61,7 @@ export function PricingPage() {
                   <p className="text-or font-bold text-[2.2rem] mt-2">
                     {plan.price === 0 ? 'Gratuit' : `${plan.price.toLocaleString('fr-FR')} FCFA`}
                   </p>
-                  {plan.price > 0 && <p className="text-sm" style={{ color: '#b0b8d4' }}>par mois</p>}
+                  {plan.price > 0 && <p className="text-sm" style={{ color: '#a0aec0' }}>par mois</p>}
 
                   <ul className="text-left mt-5 flex flex-col gap-2 flex-1">
                     {plan.features.map((feature, i) => (
@@ -104,7 +104,7 @@ export function PricingPage() {
         )}
 
         {user && expiresAt && (
-          <p className="text-center text-sm mt-6" style={{ color: '#b0b8d4' }}>
+          <p className="text-center text-sm mt-6" style={{ color: '#a0aec0' }}>
             Ton abonnement actuel se renouvelle le {formatDate(expiresAt)}.
           </p>
         )}
