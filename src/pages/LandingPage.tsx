@@ -49,29 +49,49 @@ export function LandingPage() {
     <div>
       {/* SECTION 1.1 — HERO */}
       <section
-        className="px-4 pt-14 pb-16 text-center flex flex-col items-center gap-4"
-        style={{ background: 'radial-gradient(circle at center, #0d1545 0%, #0a0f2e 70%)' }}
+        className="px-4 pt-16 pb-16 text-center flex flex-col items-center gap-5"
+        style={{ background: '#0a0f2e' }}
       >
-        <span className="reveal px-3 sm:px-4 py-2 rounded-full text-[0.65rem] sm:text-xs font-bold border border-or text-or text-center tracking-wide sm:tracking-[0.15em]">
-          ✦ PLATEFORME MYSTIQUE ISLAMIQUE ✦
-        </span>
-        <p className="reveal arabic text-or" style={{ opacity: 0.5 }}>بِسْمِ اللهِ الرَّحْمَنِ الرَّحِيمِ</p>
-        <h1 className="reveal font-bold leading-tight" style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)' }}>
-          <span className="text-white">Découvre les Secrets</span>
-          <br />
-          <span className="text-or">de ton Destin</span>
-        </h1>
-        <p className="reveal max-w-2xl text-lg" style={{ color: '#a0aec0' }}>
-          Poids mystique, géomancie, carrés magiques, talismans, interprétation des rêves et sciences spirituelles
-          islamiques en un seul endroit.
-        </p>
-        <div className="reveal flex flex-col sm:flex-row gap-4 mt-4">
-          <Link to="/auth?mode=register" className="btn-principal rounded">Commencer maintenant</Link>
-          <Link to="/auth?mode=register" className="btn-secondaire rounded">Calculer mon poids mystique</Link>
+        <div
+          className="reveal w-20 h-20 rounded-full flex items-center justify-center text-or font-bold text-3xl shrink-0"
+          style={{ background: 'rgba(245,200,66,0.1)', border: '2px solid #f5c842' }}
+        >
+          ✦
         </div>
-        <p className="reveal text-sm" style={{ color: '#a0aec0' }}>
-          Calcul du poids mystique et tutoriels — toujours gratuits
+
+        <p className="reveal arabic text-or font-bold" style={{ fontSize: 'clamp(1.5rem, 4vw, 2.25rem)' }}>
+          بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
         </p>
+
+        <Separateur />
+
+        <h1 className="reveal font-bold text-or leading-tight" style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)' }}>
+          Secret Divin
+        </h1>
+
+        <p className="reveal max-w-2xl text-lg text-white">
+          La plateforme de sagesse spirituelle islamique — sciences ésotériques, calculs mystiques et guidance
+          spirituelle personnalisée.
+        </p>
+
+        <p className="reveal arabic text-or text-lg">الحكمة الروحية والعلوم الباطنية الإسلامية</p>
+
+        <div className="reveal w-full max-w-md flex flex-col gap-4 mt-4">
+          <Link
+            to="/auth?mode=register"
+            className="w-full rounded font-bold py-3 text-center"
+            style={{ background: '#f5c842', color: '#0a0f2e' }}
+          >
+            Commencer gratuitement
+          </Link>
+          <Link
+            to="/fonctionnalites"
+            className="w-full rounded font-bold py-3 text-center text-white"
+            style={{ background: 'transparent', border: '1px solid #ffffff' }}
+          >
+            Voir les outils
+          </Link>
+        </div>
       </section>
 
       {/* SECTION 1.2 — STATS */}

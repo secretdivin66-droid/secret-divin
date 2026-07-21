@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
 import { CreditBadge } from './CreditBadge';
@@ -19,9 +20,29 @@ interface Props {
 export function Header({ user, profile, onSignOut }: Props) {
   const isAdmin = profile?.isAdmin ?? false;
   const displayName = profile?.fullName || profile?.prenom || user?.email;
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const navLinks = user
+    ? [
+        { to: '/dashboard', label: 'Dashboard' },
+        { to: '/credits', label: 'Tarifs' },
+        { to: '/pricing', label: 'Abonnements' },
+        { to: '/marabouts', label: 'Marabouts' },
+        { to: '/blog', label: 'Blog' },
+        { to: '/contact', label: 'Contact' },
+        ...(isAdmin ? [{ to: '/admin', label: 'Administration' }] : []),
+      ]
+    : [
+        { to: '/fonctionnalites', label: 'Fonctionnalités' },
+        { to: '/credits', label: 'Tarifs' },
+        { to: '/pricing', label: 'Abonnements' },
+        { to: '/marabouts', label: 'Marabouts' },
+        { to: '/blog', label: 'Blog' },
+        { to: '/contact', label: 'Contact' },
+      ];
 
   return (
-    <header className="bg-bleu border-b border-or/20 overflow-x-hidden">
+    <header className="bg-bleu border-b border-or/20 overflow-x-hidden relative">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between gap-2 sm:gap-4">
         <Link to="/" className="flex items-center gap-2 sm:gap-3 min-w-0">
           <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-or/10 border border-or flex items-center justify-center text-or font-bold shrink-0">
@@ -34,30 +55,19 @@ export function Header({ user, profile, onSignOut }: Props) {
           <span className="arabic text-or text-sm hidden sm:inline">الحكمة الروحية</span>
         </Link>
 
-        {user ? (
-          <nav className="hidden md:flex items-center gap-4 text-sm">
-            <Link to="/dashboard" className="text-white hover:text-or transition">Dashboard</Link>
-            <Link to="/credits" className="text-white hover:text-or transition">Tarifs</Link>
-            <Link to="/pricing" className="text-white hover:text-or transition">Abonnements</Link>
-            <Link to="/marabouts" className="text-white hover:text-or transition">Marabouts</Link>
-            <Link to="/blog" className="text-white hover:text-or transition">Blog</Link>
-            <Link to="/contact" className="text-white hover:text-or transition">Contact</Link>
-            {isAdmin && (
-              <Link to="/admin" className="text-red-400 hover:text-red-300 transition">Administration</Link>
-            )}
-          </nav>
-        ) : (
-          <nav className="hidden md:flex items-center gap-4 text-sm">
-            <Link to="/fonctionnalites" className="text-white hover:text-or transition">Fonctionnalités</Link>
-            <Link to="/credits" className="text-white hover:text-or transition">Tarifs</Link>
-            <Link to="/pricing" className="text-white hover:text-or transition">Abonnements</Link>
-            <Link to="/marabouts" className="text-white hover:text-or transition">Marabouts</Link>
-            <Link to="/blog" className="text-white hover:text-or transition">Blog</Link>
-            <Link to="/contact" className="text-white hover:text-or transition">Contact</Link>
-          </nav>
-        )}
+        <nav className="hidden md:flex items-center gap-4 text-sm">
+          {navLinks.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className={link.to === '/admin' ? 'text-red-400 hover:text-red-300 transition' : 'text-white hover:text-or transition'}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
 
-        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+        <div className="hidden md:flex items-center gap-1.5 sm:gap-3 shrink-0">
           {user ? (
             <>
               <CreditBadge userId={user.id} />
@@ -103,7 +113,75 @@ export function Header({ user, profile, onSignOut }: Props) {
             </>
           )}
         </div>
+
+        {/* Menu hamburger — visible uniquement sur mobile, le nav desktop
+            (md:flex) est masqué au même point de rupture donc les liens
+            n'existent qu'à un seul endroit à la fois dans le DOM visible. */}
+        <button
+          onClick={() => setMenuOpen((open) => !open)}
+          className="md:hidden w-9 h-9 rounded flex flex-col items-center justify-center gap-1.5 shrink-0 border border-or/40"
+          aria-label="Menu"
+          aria-expanded={menuOpen}
+        >
+          <span className="w-4 h-0.5 bg-or rounded-full" />
+          <span className="w-4 h-0.5 bg-or rounded-full" />
+          <span className="w-4 h-0.5 bg-or rounded-full" />
+        </button>
       </div>
+
+      {menuOpen && (
+        <div className="md:hidden bg-bleu border-t border-or/20 px-4 py-4 flex flex-col gap-3 text-sm">
+          {navLinks.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              onClick={() => setMenuOpen(false)}
+              className={link.to === '/admin' ? 'text-red-400' : 'text-white hover:text-or transition'}
+            >
+              {link.label}
+            </Link>
+          ))}
+
+          <div className="border-t border-or/10 pt-3 flex flex-col gap-3">
+            {user ? (
+              <>
+                <Link to="/billing" onClick={() => setMenuOpen(false)} className="text-white hover:text-or transition">
+                  Facturation
+                </Link>
+                <Link to="/profil" onClick={() => setMenuOpen(false)} className="text-white hover:text-or transition">
+                  {displayName}
+                </Link>
+                <button
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onSignOut();
+                  }}
+                  className="border border-or/40 text-or rounded font-bold transition text-sm px-2.5 py-1.5 text-center hover:bg-or/10"
+                >
+                  Déconnexion
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/auth"
+                  onClick={() => setMenuOpen(false)}
+                  className="border border-or text-or rounded font-bold transition text-sm px-2.5 py-2 text-center"
+                >
+                  Se connecter
+                </Link>
+                <Link
+                  to="/auth"
+                  onClick={() => setMenuOpen(false)}
+                  className="bg-or text-white rounded font-bold transition text-sm px-2.5 py-2 text-center"
+                >
+                  S'inscrire
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }
