@@ -729,7 +729,7 @@ export function DestinPage() {
                 <div className="flex flex-wrap justify-center gap-2 mt-3">
                   {result.data.totem.qualities.map((q, i) => (
                     <span key={i} className="text-or text-sm">
-                      ✦ {q}
+                      ✅ {q}
                     </span>
                   ))}
                 </div>

@@ -168,7 +168,7 @@ export function MaraboutProfilPage() {
         <div className="flex flex-wrap gap-2">
           {marabout.specialite.map((s) => (
             <span key={s} className="px-3 py-2 rounded text-sm text-white" style={{ background: '#0d1545', border: '1px solid rgba(245,200,66,0.2)' }}>
-              ✦ {s}
+              ✅ {s}
             </span>
           ))}
         </div>

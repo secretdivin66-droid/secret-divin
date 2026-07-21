@@ -263,7 +263,7 @@ export function MaraboutInscriptionPage() {
           <p className="text-or font-bold text-[2.5rem] mt-2">{ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR')} FCFA / mois</p>
           <div className="flex flex-col gap-2 mt-5 text-left">
             {AVANTAGES.map((a) => (
-              <p key={a} className="text-white text-sm">✦ {a}</p>
+              <p key={a} className="text-white text-sm">✅ {a}</p>
             ))}
           </div>
           <p className="italic text-sm mt-5" style={{ color: '#a0aec0' }}>

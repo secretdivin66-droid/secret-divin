@@ -580,7 +580,7 @@ export function PlantesPage() {
                 <p className="font-bold mb-2" style={{ color: '#a0aec0' }}>Matériel nécessaire</p>
                 <div className="rounded-lg p-4 mb-6" style={{ background: '#0a0f2e', border: '1px solid rgba(21,101,192,0.3)' }}>
                   {result.preparation.materials.map((m, i) => (
-                    <p key={i} className="text-white text-sm">✦ {m}</p>
+                    <p key={i} className="text-white text-sm">✅ {m}</p>
                   ))}
                 </div>
 
@@ -664,7 +664,7 @@ export function PlantesPage() {
                   <div className="flex flex-col gap-2 mt-5">
                     {result.ritual.importantNotes.map((n, i) => (
                       <div key={i} className="rounded p-3" style={{ background: '#1a1a2e' }}>
-                        <p className="text-sm" style={{ color: '#a0aec0' }}>✦ {n}</p>
+                        <p className="text-sm" style={{ color: '#a0aec0' }}>✅ {n}</p>
                       </div>
                     ))}
                   </div>

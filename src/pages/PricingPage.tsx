@@ -66,7 +66,7 @@ export function PricingPage() {
                   <ul className="text-left mt-5 flex flex-col gap-2 flex-1">
                     {plan.features.map((feature, i) => (
                       <li key={i} className="text-white text-sm flex gap-2">
-                        <span className="text-or">✦</span>
+                        <span className="text-or">✅</span>
                         <span>{feature}</span>
                       </li>
                     ))}

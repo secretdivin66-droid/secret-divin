@@ -659,7 +659,7 @@ export function FormationPage() {
               <h2 className="text-or font-bold">Points Clés</h2>
               <div className="flex flex-col gap-2 mt-3">
                 {lessonData.keyPoints.map((point, i) => (
-                  <p key={i} className="text-white">✦ {point}</p>
+                  <p key={i} className="text-white">✅ {point}</p>
                 ))}
               </div>
 

@@ -397,7 +397,7 @@ export function TutorielsPage() {
                 <h2 className="text-or font-bold">Points Essentiels à Retenir</h2>
                 <div className="flex flex-col gap-2 mt-3">
                   {tutorialData.keyTakeaways.map((point, i) => (
-                    <p key={i} className="text-white">✦ {point}</p>
+                    <p key={i} className="text-white">✅ {point}</p>
                   ))}
                 </div>
 
