@@ -207,17 +207,43 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* SECTION 1.7 — CTA FINAL */}
-      <section className="px-4 py-16 text-center">
-        <p className="reveal arabic text-or" style={{ opacity: 0.4, textAlign: 'center' }}>إِنَّ مَعَ الْعُسْرِ يُسْرًا</p>
-        <h2 className="reveal text-2xl font-bold mt-6">
-          <span className="text-white">Commence ton voyage</span>
-          <br />
-          <span className="text-or">spirituel aujourd'hui</span>
-        </h2>
-        <div className="reveal flex flex-col sm:flex-row gap-4 justify-center mt-8">
-          <Link to="/auth?mode=register" className="btn-principal rounded">Créer mon compte gratuitement</Link>
-          <Link to="/fonctionnalites" className="btn-secondaire rounded">Voir les fonctionnalités</Link>
+      {/* SECTION 1.7 — VERSET */}
+      <section className="px-4 pt-16 pb-8 text-center">
+        <p
+          className="reveal arabic text-or font-bold mx-auto"
+          style={{ textAlign: 'center', fontSize: 'clamp(1.75rem, 5vw, 3rem)', maxWidth: '48rem' }}
+        >
+          وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا وَيَرْزُقْهُ مِنْ حَيْثُ لَا يَحْتَسِبُ
+        </p>
+        <p className="reveal italic max-w-xl mx-auto mt-6" style={{ color: '#a0aec0' }}>
+          « Quiconque craint Allah, Il lui trouvera une issue et le pourvoira de là où il ne s'y attend pas. »
+        </p>
+        <p className="reveal text-or text-sm mt-3">— At-Talaq : 2-3</p>
+        <Separateur />
+      </section>
+
+      {/* SECTION 1.8 — CTA FINAL */}
+      <section className="px-4 pb-16 text-center">
+        <h2 className="reveal text-2xl font-bold text-white">Votre chemin spirituel commence ici</h2>
+        <p className="reveal max-w-xl mx-auto mt-4" style={{ color: '#a0aec0' }}>
+          Rejoignez des milliers de personnes qui utilisent les sciences ésotériques islamiques pour comprendre leur
+          destin et leur vocation.
+        </p>
+        <div className="reveal w-full max-w-md flex flex-col gap-4 mt-8 mx-auto">
+          <Link
+            to="/auth?mode=register"
+            className="w-full rounded font-bold py-3 text-center"
+            style={{ background: '#f5c842', color: '#0a0f2e' }}
+          >
+            Commencer maintenant
+          </Link>
+          <Link
+            to="/contact"
+            className="w-full rounded font-bold py-3 text-center text-or"
+            style={{ background: 'transparent', border: '1px solid #f5c842' }}
+          >
+            Nous contacter
+          </Link>
         </div>
       </section>
     </div>
