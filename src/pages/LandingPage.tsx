@@ -59,7 +59,7 @@ export function LandingPage() {
         <h1 className="reveal font-bold leading-tight" style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)' }}>
           <span className="text-white">Découvre les Secrets</span>
           <br />
-          <span className="text-divine-blue">de ton Destin</span>
+          <span className="text-or">de ton Destin</span>
         </h1>
         <p className="reveal max-w-2xl text-lg" style={{ color: '#a0aec0' }}>
           Poids mystique, géomancie, carrés magiques, talismans, interprétation des rêves et sciences spirituelles
@@ -93,7 +93,7 @@ export function LandingPage() {
       <section className="max-w-6xl mx-auto px-4 py-12">
         <h2 className="reveal text-center text-2xl font-bold mb-6">
           <span className="text-white">Tout ce dont tu as besoin</span>{' '}
-          <span className="text-divine-blue">en un seul endroit</span>
+          <span className="text-or">en un seul endroit</span>
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {OUTILS.map((o) => (
@@ -125,7 +125,7 @@ export function LandingPage() {
       {/* SECTION 1.4 — COMMENT ÇA MARCHE */}
       <section className="max-w-5xl mx-auto px-4 py-12">
         <h2 className="reveal text-center text-2xl font-bold mb-6">
-          <span className="text-white">Comment ça</span> <span className="text-divine-blue">fonctionne ?</span>
+          <span className="text-white">Comment ça</span> <span className="text-or">fonctionne ?</span>
         </h2>
         <div className="reveal grid grid-cols-1 sm:grid-cols-3 gap-5">
           {STEPS.map((step) => (
@@ -143,7 +143,7 @@ export function LandingPage() {
       {/* SECTION 1.5 — TARIFS */}
       <section className="max-w-6xl mx-auto px-4 py-12">
         <h2 className="reveal text-center text-2xl font-bold mb-6">
-          <span className="text-white">Des crédits pour</span> <span className="text-divine-blue">chaque besoin</span>
+          <span className="text-white">Des crédits pour</span> <span className="text-or">chaque besoin</span>
         </h2>
         <div className="reveal grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
           {PACKS.map((pack) => (
@@ -175,7 +175,7 @@ export function LandingPage() {
       {/* SECTION 1.6 — TÉMOIGNAGES */}
       <section className="max-w-6xl mx-auto px-4 py-12">
         <h2 className="reveal text-center text-2xl font-bold mb-6">
-          <span className="text-white">Ce que disent</span> <span className="text-divine-blue">nos utilisateurs</span>
+          <span className="text-white">Ce que disent</span> <span className="text-or">nos utilisateurs</span>
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {TEMOIGNAGES.map((t) => (
@@ -193,7 +193,7 @@ export function LandingPage() {
         <h2 className="reveal text-2xl font-bold mt-6">
           <span className="text-white">Commence ton voyage</span>
           <br />
-          <span className="text-divine-blue">spirituel aujourd'hui</span>
+          <span className="text-or">spirituel aujourd'hui</span>
         </h2>
         <div className="reveal flex flex-col sm:flex-row gap-4 justify-center mt-8">
           <Link to="/auth?mode=register" className="btn-principal rounded">Créer mon compte gratuitement</Link>

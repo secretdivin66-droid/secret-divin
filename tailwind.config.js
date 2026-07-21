@@ -15,7 +15,6 @@ export default {
         'divine-card': '#0d1545',
         'divine-gold': '#f5c842',
         'divine-gold-dark': '#e8a020',
-        'divine-blue': '#3b9ff5',
         'divine-border': 'rgba(245, 200, 66, 0.2)',
       },
       fontFamily: {
