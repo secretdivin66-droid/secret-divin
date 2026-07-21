@@ -126,7 +126,7 @@ export function FonctionnalitesPage() {
               <p className="text-or font-bold mt-5 mb-2">Ce que tu obtiens</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {feature.items.map((item, i) => (
-                  <p key={i} className="text-white text-sm">✦ {item}</p>
+                  <p key={i} className="text-white text-sm">✅ {item}</p>
                 ))}
               </div>
             </div>
