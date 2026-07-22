@@ -4,11 +4,11 @@ import { PACKS, WHATSAPP_NUMBER } from '../utils/mystique';
 const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}`;
 
 const PACK_SUBTITLES: Record<string, string> = {
-  starter: 'Pour découvrir',
-  essentiel: 'Usage régulier',
-  premium: 'Meilleur rapport',
-  expert: 'Pour les passionnés',
-  unlimited: 'Accès illimité',
+  starter: 'Pour découvrir, sans engagement',
+  essentiel: 'Pour un usage régulier',
+  premium: 'Le meilleur rapport crédit/prix',
+  expert: 'Pour aller plus loin',
+  unlimited: 'Accès total, un mois complet',
 };
 
 function Separateur() {
@@ -57,6 +57,7 @@ function PackCard({ pack }: { pack: typeof PACKS[0] }) {
 
 function BuyButton({ pack }: { pack: typeof PACKS[0] }) {
   const [showToast, setShowToast] = useState(false);
+  const ctaLabel = pack.credits ? `Recharger ${pack.credits} crédits` : "Activer l'accès illimité";
 
   return (
     <div className="w-full mt-5">
@@ -65,13 +66,13 @@ function BuyButton({ pack }: { pack: typeof PACKS[0] }) {
         className="w-full rounded font-bold py-3"
         style={{ background: '#f5c842', color: '#0a0f2e' }}
       >
-        ACHETER
+        {ctaLabel}
       </button>
 
       {showToast && (
         <div className="rounded-lg p-3 mt-3 text-center" style={{ background: '#0a0f2e', border: '1px solid #f5c842' }}>
           <p className="text-white text-sm">
-            Paiement en ligne disponible prochainement. Contactez-nous sur WhatsApp pour commander.
+            Le paiement en ligne arrive très bientôt. En attendant, écris-nous sur WhatsApp et récupère tes crédits en quelques minutes.
           </p>
           <a
             href={WHATSAPP_LINK}
@@ -96,14 +97,14 @@ export function CreditsPage() {
     <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-5xl mx-auto">
         {/* HEADER */}
-        <h1 className="text-center font-bold text-or text-[2rem]">Recharger mes crédits</h1>
+        <h1 className="text-center font-bold text-or text-[2rem]">Des crédits qui ne périment jamais</h1>
         <p className="text-center mt-3 text-white">
-          Des crédits permanents, des tarifs transparents, une recharge en quelques minutes
+          Achète un pack une seule fois. Utilise tes crédits quand tu veux — aucun abonnement, aucune date limite.
         </p>
 
         <Separateur />
 
-        <h2 className="text-center text-or font-bold text-xl mb-8">Choisissez votre pack ✦</h2>
+        <h2 className="text-center text-or font-bold text-xl mb-8">Choisis ton pack ✦</h2>
 
         {/* GRILLE 2x2 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -118,6 +119,10 @@ export function CreditsPage() {
             <PackCard pack={unlimitedPack} />
           </div>
         )}
+
+        <p className="text-center text-sm mt-6" style={{ color: '#a0aec0' }}>
+          Paiement unique. Crédits valables à vie. Aucune carte enregistrée, aucun renouvellement automatique.
+        </p>
       </div>
     </div>
   );
