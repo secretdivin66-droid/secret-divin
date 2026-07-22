@@ -26,6 +26,14 @@ const FEATURES: FeatureCard[] = [
     items: ['17 points mystiques complets', 'Nom divin personnalisé', 'Verset coranique', 'Talisman avec carré magique', 'Sacrifice recommandé', 'Plante mystique', 'Export PDF', 'Lecture vocale'],
   },
   {
+    title: 'Secret de ton Jour',
+    titleArabic: 'سر يومك',
+    free: false,
+    description:
+      "Chaque jour de la semaine est lié à une planète et une énergie propre. En croisant ton jour de naissance avec ton poids mystique, révèle l'influence planétaire qui façonne ta personnalité et les périodes les plus favorables pour agir.",
+    items: ['Planète associée à ton jour', 'Influence sur ta personnalité', 'Nom divin et verset adaptés', 'Talisman du jour', 'Plante recommandée'],
+  },
+  {
     title: 'Carrés Magiques',
     titleArabic: 'المربعات السحرية',
     free: false,
@@ -66,6 +74,14 @@ const FEATURES: FeatureCard[] = [
     items: ['1 à 7 plantes selon ton besoin', 'Nom scientifique et bambara', 'Préparation du rituel complet', 'Versets coraniques associés', 'Sacrifice recommandé'],
   },
   {
+    title: 'Compatibilité',
+    titleArabic: 'التوافق',
+    free: false,
+    description:
+      "Analyse l'harmonie entre deux personnes à travers leurs poids mystiques et leurs éléments respectifs. Un score de compatibilité, les forces et tensions de la relation, et des conseils concrets pour l'équilibrer.",
+    items: ['Score de compatibilité', 'Analyse des deux profils', 'Interaction entre les éléments', 'Forces et défis de la relation', 'Conseils pour harmoniser'],
+  },
+  {
     title: 'Attraper ou Réconcilier',
     titleArabic: 'الجذب أو المصالحة',
     free: false,
@@ -80,6 +96,14 @@ const FEATURES: FeatureCard[] = [
     description:
       "15 tutoriels détaillés pour apprendre à utiliser chaque outil pas à pas : calculs, constructions de carrés magiques, interprétation des symboles et bien plus.",
     items: ['15 tutoriels complets', 'Filtrage par catégorie et niveau', 'Exemples pratiques résolus', 'Erreurs courantes à éviter', 'Accès illimité et gratuit'],
+  },
+  {
+    title: 'Formation',
+    titleArabic: 'التكوين',
+    free: false,
+    description:
+      "9 modules structurés en 3 niveaux (débutant, intermédiaire, expert) pour comprendre en profondeur les sciences ésotériques islamiques, de l'Ilm al-Huruf jusqu'aux techniques avancées. Chaque leçon se termine par un quiz noté.",
+    items: ['9 modules, 3 niveaux', '27 leçons au total', 'Quiz noté après chaque leçon', 'Suivi de ta progression'],
   },
 ];
 
@@ -101,7 +125,7 @@ export function FonctionnalitesPage() {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-center font-bold text-or text-[2rem]">Commence gratuitement, va aussi loin que tu veux</h1>
         <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
-          9 outils de guidance spirituelle — du calcul gratuit à la lecture complète de ton destin
+          12 outils de guidance spirituelle — du calcul gratuit à la lecture complète de ton destin
         </p>
 
         <Separateur />

@@ -1,23 +1,11 @@
 import { Link } from 'react-router-dom';
-import { PACKS, PACK_SUBTITLES } from '../utils/mystique';
+import { PACKS, PACK_SUBTITLES, TOOLS, TOOL_COSTS } from '../utils/mystique';
 import { useRevealOnScroll } from '../hooks/useRevealOnScroll';
 
 const STATS = [
-  { value: '9', label: 'Outils spirituels' },
+  { value: '12', label: 'Outils spirituels' },
   { value: '2', label: 'Outils 100% gratuits' },
   { value: '100%', label: 'Basé sur les sciences islamiques traditionnelles' },
-];
-
-const OUTILS = [
-  { title: 'Poids Mystique', desc: 'Calcul selon la table Abjad islamique traditionnelle.', cost: 'GRATUIT', free: true },
-  { title: 'Secret de ton Destin', titleArabic: 'سر قدرك', desc: '17 points mystiques pour une lecture complète de ta destinée.', cost: '2 crédits par génération', free: false },
-  { title: 'Carrés Magiques', titleArabic: 'المربعات السحرية', desc: '7 types de carrés, de 3x3 à 9x9, selon ton poids mystique.', cost: '2 crédits par génération', free: false },
-  { title: 'Géomancie', titleArabic: 'علم الرمل', desc: "Les 16 figures géomantiques de la tradition africaine.", cost: '2 crédits par génération', free: false },
-  { title: 'Interprétation des Rêves', titleArabic: 'تفسير الأحلام', desc: 'Tradition islamique et africaine réunies.', cost: '2 crédits', free: false },
-  { title: 'Secrets mystiques', titleArabic: 'الأسرار الروحانية', desc: 'Un talisman personnalisé selon ton objectif.', cost: '2 crédits', free: false },
-  { title: 'Secrets des Plantes', titleArabic: 'أسرار النباتات', desc: 'Les plantes sacrées africaines et leurs rituels.', cost: '2 crédits', free: false },
-  { title: 'Attraper ou Réconcilier', titleArabic: 'الجذب أو المصالحة', desc: 'Un talisman basé sur les noms arabes de deux personnes.', cost: '2 crédits', free: false },
-  { title: 'Tutoriels', titleArabic: 'الدروس التعليمية', desc: '15 tutoriels détaillés pour apprendre pas à pas.', cost: 'GRATUIT', free: true },
 ];
 
 const STEPS = [
@@ -110,27 +98,33 @@ export function LandingPage() {
           <span className="text-or">en un seul endroit</span>
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {OUTILS.map((o) => (
-            <div
-              key={o.title}
-              className="reveal rounded-lg p-5 flex flex-col items-center text-center sm:items-start sm:text-left gap-2 transition hover:-translate-y-1"
-              style={{ background: 'linear-gradient(160deg, #161f6b, #0e1550)', border: '1px solid rgba(245,200,66,0.15)' }}
-            >
-              {o.free && (
-                <span className="self-center sm:self-start px-2 py-1 rounded-full text-xs font-bold" style={{ background: '#1b3a1f', color: '#4caf50' }}>
-                  GRATUIT
-                </span>
-              )}
-              {o.titleArabic && (
-                <p className="arabic font-bold text-[1.1em]" style={{ color: '#f5c842' }}>
-                  {o.titleArabic}
+          {TOOLS.map((tool) => {
+            const cost = TOOL_COSTS[tool.id];
+            const free = cost === 0;
+            return (
+              <div
+                key={tool.id}
+                className="reveal rounded-lg p-5 flex flex-col items-center text-center sm:items-start sm:text-left gap-2 transition hover:-translate-y-1"
+                style={{ background: 'linear-gradient(160deg, #161f6b, #0e1550)', border: '1px solid rgba(245,200,66,0.15)' }}
+              >
+                {free && (
+                  <span className="self-center sm:self-start px-2 py-1 rounded-full text-xs font-bold" style={{ background: '#1b3a1f', color: '#4caf50' }}>
+                    GRATUIT
+                  </span>
+                )}
+                {tool.nameArabic && (
+                  <p className="arabic font-bold text-[1.1em]" style={{ color: '#f5c842' }}>
+                    {tool.nameArabic}
+                  </p>
+                )}
+                <h3 className="font-bold text-white">{tool.name}</h3>
+                <p className="text-sm" style={{ color: '#a0aec0' }}>{tool.description}</p>
+                <p className={`text-xs font-bold mt-auto ${free ? 'text-green-400' : 'text-or'}`}>
+                  {free ? 'Toujours gratuit' : `${cost} crédits par génération`}
                 </p>
-              )}
-              <h3 className="font-bold text-white">{o.title}</h3>
-              <p className="text-sm" style={{ color: '#a0aec0' }}>{o.desc}</p>
-              <p className={`text-xs font-bold mt-auto ${o.free ? 'text-green-400' : 'text-or'}`}>{o.free ? 'Toujours gratuit' : o.cost}</p>
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       </section>
 
