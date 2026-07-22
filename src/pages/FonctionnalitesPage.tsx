@@ -99,9 +99,9 @@ export function FonctionnalitesPage() {
   return (
     <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-center font-bold text-or text-[2rem]">Fonctionnalités</h1>
+        <h1 className="text-center font-bold text-or text-[2rem]">Commence gratuitement, va aussi loin que tu veux</h1>
         <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
-          Tout ce que Secret Divin peut faire pour toi
+          9 outils de guidance spirituelle — du calcul gratuit à la lecture complète de ton destin
         </p>
 
         <Separateur />
