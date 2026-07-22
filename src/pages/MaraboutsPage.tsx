@@ -63,7 +63,7 @@ export function MaraboutsPage() {
 
         <div className="text-center mt-6">
           <Link to="/marabouts/inscrire" className="btn-principal rounded inline-block">
-            Vous êtes marabout ? Inscrivez-vous ici
+            Tu es marabout ? Inscris-toi ici
           </Link>
         </div>
 
@@ -167,9 +167,9 @@ export function MaraboutsPage() {
       </div>
 
       <div className="mt-10 py-10 px-4 text-center" style={{ background: '#0d1545', borderTop: '1px solid rgba(245,200,66,0.3)' }}>
-        <p className="text-or font-bold text-xl">Vous êtes marabout professionnel ?</p>
+        <p className="text-or font-bold text-xl">Tu es marabout professionnel ?</p>
         <p className="mt-2" style={{ color: '#a0aec0' }}>
-          Rejoignez Secret Divin et trouvez de nouveaux clients. Abonnement à 5 000 FCFA/mois.
+          Rejoins Secret Divin et trouve de nouveaux clients. 5 000 FCFA/mois pour un profil vérifié, visible dans l'annuaire.
         </p>
         <Link to="/marabouts/inscrire" className="btn-principal rounded mt-5 inline-block">
           Créer mon profil marabout
