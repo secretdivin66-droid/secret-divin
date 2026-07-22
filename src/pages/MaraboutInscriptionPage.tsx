@@ -13,7 +13,7 @@ const AVANTAGES = [
   'Bouton WhatsApp direct',
   "Système d'avis clients",
   'Dashboard personnel',
-  "Visibilité auprès de milliers d'utilisateurs",
+  'Visibilité auprès de nouveaux clients potentiels',
 ];
 
 function Separateur() {
@@ -326,7 +326,7 @@ export function MaraboutInscriptionPage() {
           </div>
 
           <div>
-            <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>Vos spécialités</label>
+            <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>Tes spécialités</label>
             <CheckboxGroup options={SPECIALITES} selected={selectedSpecialites} onToggle={toggleSpecialite} />
           </div>
 
@@ -336,7 +336,7 @@ export function MaraboutInscriptionPage() {
           </div>
 
           <div>
-            <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Description de vos services</label>
+            <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Description de tes services</label>
             <textarea
               rows={4}
               value={description}
@@ -356,7 +356,7 @@ export function MaraboutInscriptionPage() {
           </div>
 
           <div>
-            <label className="block text-sm mb-1 text-center" style={{ color: '#a0aec0' }}>Votre photo (optionnelle)</label>
+            <label className="block text-sm mb-1 text-center" style={{ color: '#a0aec0' }}>Ta photo (optionnelle)</label>
             <PhotoUpload
               userId={user?.id ?? ''}
               currentPhotoUrl={photoUrl}
@@ -378,7 +378,7 @@ export function MaraboutInscriptionPage() {
             disabled={isDisabled || submitting}
             className="btn-principal w-full rounded disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {submitting ? 'Envoi...' : 'SOUMETTRE MA DEMANDE'}
+            {submitting ? 'Envoi...' : 'Soumettre ma demande'}
           </button>
         </div>
       </div>
