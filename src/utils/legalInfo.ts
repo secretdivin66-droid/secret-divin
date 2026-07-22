@@ -10,7 +10,7 @@ export const COMPANY = {
   rccm: 'GN.TCC.2026.A.05915',
   adresse: 'Conakry, Commune de Gbessia, Quartier Tanènè Marché, République de Guinée',
   telephone: '(+224) 624-27-92-00',
-  email: 'contact@secredivin66.com',
+  email: 'business@secretdivin.com',
   hebergeur: {
     nom: 'Vercel Inc.',
     adresse: '340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis',

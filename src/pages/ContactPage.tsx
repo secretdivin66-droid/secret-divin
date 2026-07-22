@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { WHATSAPP_NUMBER } from '../utils/mystique';
+import { COMPANY } from '../utils/legalInfo';
 import { useRevealOnScroll } from '../hooks/useRevealOnScroll';
 
 const SUJETS = ['Question générale', 'Problème crédits', 'Problème technique', 'Suggestion', 'Partenariat', 'Autre'];
@@ -90,7 +91,7 @@ export function ContactPage() {
                   />
                 </div>
                 <button type="submit" className="btn-principal w-full rounded">
-                  ENVOYER MON MESSAGE
+                  Envoyer mon message
                 </button>
               </form>
             )}
@@ -110,7 +111,7 @@ export function ContactPage() {
 
             <div>
               <p className="text-sm" style={{ color: '#a0aec0' }}>Email</p>
-              <p className="text-white">contact@secredivin66.com</p>
+              <p className="text-white">{COMPANY.email}</p>
             </div>
 
             <div>
