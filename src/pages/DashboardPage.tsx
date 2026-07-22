@@ -13,13 +13,20 @@ export function DashboardPage() {
         <h1 className="text-2xl font-bold">
           Bienvenue, <span className="text-or">{displayName}</span>
         </h1>
-        <span
-          className={`px-4 py-2 rounded-full font-bold text-sm w-fit ${
-            credits > 3 ? 'bg-or text-white' : 'bg-red-600 text-white'
-          }`}
-        >
-          Solde : {credits} crédit{credits > 1 ? 's' : ''}
-        </span>
+        <div className="flex flex-col items-start sm:items-end gap-1">
+          <span
+            className={`px-4 py-2 rounded-full font-bold text-sm w-fit ${
+              credits > 3 ? 'bg-or text-white' : 'bg-red-600 text-white'
+            }`}
+          >
+            Solde : {credits} crédit{credits > 1 ? 's' : ''}
+          </span>
+          {credits <= 3 && (
+            <Link to="/credits" className="text-xs font-bold hover:underline" style={{ color: '#f5c842' }}>
+              {credits === 0 ? 'Crédits épuisés — Recharger maintenant' : 'Il te reste peu de crédits — Recharger'}
+            </Link>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
