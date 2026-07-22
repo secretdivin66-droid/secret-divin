@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabaseClient';
 import { SPECIALITES, PAYS_LIST, LANGUES, ABONNEMENT_PRIX_FCFA, whatsappContactUrl } from '../utils/marabouts';
 import { WHATSAPP_NUMBER } from '../utils/mystique';
 import { PhotoUpload } from '../components/PhotoUpload';
+import { notifyMaraboutRegistration } from '../lib/novu';
 
 const AVANTAGES = [
   'Profil visible sur la plateforme',
@@ -195,6 +196,10 @@ export function MaraboutInscriptionPage() {
       console.log('INSERT marabouts — error (JSON) :', JSON.stringify(insertError, null, 2));
       if (insertError) {
         throw insertError;
+      }
+      const newMaraboutId = insertData?.[0]?.id;
+      if (newMaraboutId) {
+        void notifyMaraboutRegistration(newMaraboutId);
       }
       setSubmitted(true);
     } catch (err) {

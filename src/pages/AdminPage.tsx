@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabaseClient';
 import { ABONNEMENT_PRIX_FCFA } from '../utils/marabouts';
 import type { Marabout } from '../utils/marabouts';
 import { BlogAdminPanel } from '../components/BlogAdminPanel';
+import { notifyMaraboutActivation } from '../lib/novu';
 
 function formatDate(dateString: string | null): string {
   if (!dateString) return '—';
@@ -38,6 +39,7 @@ export function AdminPage() {
     setMaraboutActionLoading(m.id);
     try {
       await supabase.rpc('verify_marabout', { p_marabout_id: m.id });
+      void notifyMaraboutActivation(m.id);
       await loadMarabouts();
     } finally {
       setMaraboutActionLoading(null);
