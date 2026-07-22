@@ -143,7 +143,7 @@ export function ResetPasswordPage() {
 
         {success && (
           <div className="rounded-lg p-4 text-center" style={{ background: '#1b3a1f', border: '1px solid #4caf50' }}>
-            <p className="text-green-400 text-sm">Mot de passe mis à jour ! Redirection vers ton tableau de bord...</p>
+            <p className="text-green-400 text-sm">Mot de passe mis à jour. Redirection vers ton tableau de bord...</p>
           </div>
         )}
       </div>

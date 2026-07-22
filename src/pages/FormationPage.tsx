@@ -738,7 +738,7 @@ export function FormationPage() {
                     <>
                       {selectedOption === q.correctAnswer ? (
                         <div className="rounded-lg p-4 mt-5" style={{ background: '#1b3a1f', border: '1px solid #4caf50' }}>
-                          <p className="text-green-400 font-bold text-sm">✓ Bonne réponse !</p>
+                          <p className="text-green-400 font-bold text-sm">✓ Bonne réponse</p>
                           <p className="text-white text-sm mt-1">{q.explanation}</p>
                         </div>
                       ) : (
@@ -779,7 +779,7 @@ export function FormationPage() {
 
               {quizPassed ? (
                 <div className="rounded-lg p-5 text-center" style={{ background: '#1b3a1f', border: '1px solid #4caf50' }}>
-                  <p className="text-green-400 font-bold">Félicitations ! Tu as réussi cette leçon.</p>
+                  <p className="text-green-400 font-bold">Bravo, tu as réussi cette leçon.</p>
                   <p className="text-white mt-2 text-sm">Le contenu suivant est maintenant disponible.</p>
                   <button onClick={handleContinue} className="btn-principal rounded mt-4">
                     CONTINUER
