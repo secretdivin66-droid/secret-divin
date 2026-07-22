@@ -251,7 +251,7 @@ export function MaraboutDashboardPage() {
           </div>
 
           <div>
-            <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>Vos spécialités</label>
+            <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>Tes spécialités</label>
             <CheckboxGroup options={SPECIALITES} selected={selectedSpecialites} onToggle={toggleSpecialite} />
           </div>
 
@@ -261,7 +261,7 @@ export function MaraboutDashboardPage() {
           </div>
 
           <div>
-            <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Description de vos services</label>
+            <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Description de tes services</label>
             <textarea rows={4} value={description} onChange={(e) => setDescription(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or resize-y" />
           </div>
 
@@ -271,7 +271,7 @@ export function MaraboutDashboardPage() {
           </div>
 
           <div>
-            <label className="block text-sm mb-1 text-center" style={{ color: '#a0aec0' }}>Votre photo</label>
+            <label className="block text-sm mb-1 text-center" style={{ color: '#a0aec0' }}>Ta photo</label>
             <PhotoUpload
               userId={user?.id ?? ''}
               currentPhotoUrl={photoUrl}
