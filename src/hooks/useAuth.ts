@@ -45,11 +45,13 @@ export function useAuth(): AuthState {
       }
     }
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (!active) return;
       setUser(session?.user ?? null);
-      if (session?.user) loadProfile(session.user.id);
-      setLoading(false);
+      if (session?.user) {
+        await loadProfile(session.user.id);
+      }
+      if (active) setLoading(false);
     });
 
     const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
