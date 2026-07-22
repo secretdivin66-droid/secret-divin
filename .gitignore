@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 
 .claude/
+
+# Cache local du CLI Supabase (créé par `supabase link`)
+supabase/.temp/
