@@ -84,7 +84,7 @@ export function AuthPage() {
           },
         });
         if (signUpError) throw signUpError;
-        setMessage('Compte créé ! Vérifie ton email pour confirmer ton inscription avant de te connecter.');
+        setMessage('Compte créé. Vérifie ton email pour confirmer ton inscription avant de te connecter.');
         setTab('login');
         setPassword('');
       }
