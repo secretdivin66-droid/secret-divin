@@ -156,9 +156,12 @@ export function LandingPage() {
 
       {/* SECTION 1.5 — TARIFS */}
       <section className="max-w-6xl mx-auto px-4 py-12">
-        <h2 className="reveal text-center text-2xl font-bold mb-6">
-          <span className="text-white">Des crédits pour</span> <span className="text-or">chaque besoin</span>
+        <h2 className="reveal text-center text-2xl font-bold mb-3">
+          <span className="text-white">Des crédits qui</span> <span className="text-or">ne périment jamais</span>
         </h2>
+        <p className="reveal text-center text-sm mb-6" style={{ color: '#a0aec0' }}>
+          Paye une fois, utilise quand tu veux — aucun abonnement, aucune date limite.
+        </p>
         <div className="reveal grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
           {PACKS.map((pack) => (
             <div
@@ -175,10 +178,15 @@ export function LandingPage() {
               </p>
               <p className="text-white font-bold text-3xl mt-1">{pack.credits ?? '∞'}</p>
               <p className="text-or font-bold text-xl mt-2">{pack.price.toLocaleString('fr-FR')} FCFA</p>
-              <Link to="/credits" className="btn-secondaire rounded mt-4">Choisir</Link>
+              <Link to="/credits" className="btn-secondaire rounded mt-4">
+                {pack.credits ? `Recharger ${pack.credits} crédits` : "Activer l'accès illimité"}
+              </Link>
             </div>
           ))}
         </div>
+        <p className="reveal text-center text-sm mt-8" style={{ color: '#a0aec0' }}>
+          Paiement unique. Crédits valables à vie. Aucune carte enregistrée, aucun renouvellement automatique.
+        </p>
       </section>
 
       <Separateur />
