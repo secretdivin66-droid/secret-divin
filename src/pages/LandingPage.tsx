@@ -102,10 +102,11 @@ export function LandingPage() {
             const cost = TOOL_COSTS[tool.id];
             const free = cost === 0;
             return (
-              <div
+              <Link
                 key={tool.id}
-                className="reveal rounded-lg p-5 flex flex-col items-center text-center sm:items-start sm:text-left gap-2 transition hover:-translate-y-1"
-                style={{ background: 'linear-gradient(160deg, #161f6b, #0e1550)', border: '1px solid rgba(245,200,66,0.15)' }}
+                to={tool.route}
+                className="reveal rounded-lg p-5 flex flex-col items-center text-center sm:items-start sm:text-left gap-2 transition hover:-translate-y-1 cursor-pointer border border-or/15 hover:border-or/50"
+                style={{ background: 'linear-gradient(160deg, #161f6b, #0e1550)' }}
               >
                 {free && (
                   <span className="self-center sm:self-start px-2 py-1 rounded-full text-xs font-bold" style={{ background: '#1b3a1f', color: '#4caf50' }}>
@@ -122,7 +123,7 @@ export function LandingPage() {
                 <p className={`text-xs font-bold mt-auto ${free ? 'text-green-400' : 'text-or'}`}>
                   {free ? 'Toujours gratuit' : `${cost} crédits par génération`}
                 </p>
-              </div>
+              </Link>
             );
           })}
         </div>
