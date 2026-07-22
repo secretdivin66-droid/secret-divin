@@ -112,6 +112,14 @@ export const PACKS = [
   { id:'unlimited', name:'Illimité', credits:null, price:49000, currency:'FCFA', period:'mois', description: 'Accès total à tous les outils pendant 1 mois.' },
 ];
 
+export const PACK_SUBTITLES: Record<string, string> = {
+  starter: 'Pour découvrir, sans engagement',
+  essentiel: 'Pour un usage régulier',
+  premium: 'Le meilleur rapport crédit/prix',
+  expert: 'Pour aller plus loin',
+  unlimited: 'Accès total, un mois complet',
+};
+
 export const WHATSAPP_NUMBER = '224624279200';
 
 export const SQUARE_INFO: Record<number, { name: string; planet: string }> = {

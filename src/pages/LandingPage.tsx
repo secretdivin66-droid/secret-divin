@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { PACKS } from '../utils/mystique';
+import { PACKS, PACK_SUBTITLES } from '../utils/mystique';
 import { useRevealOnScroll } from '../hooks/useRevealOnScroll';
 
 const STATS = [
@@ -166,19 +166,34 @@ export function LandingPage() {
           {PACKS.map((pack) => (
             <div
               key={pack.id}
-              className="carte rounded-lg text-center flex flex-col"
-              style={pack.popular ? { border: '2px solid #f5c842' } : undefined}
+              className="rounded-lg p-6 flex flex-col items-center text-center"
+              style={{
+                background: '#0d1545',
+                border: pack.popular ? '2px solid #f5c842' : '1px solid rgba(245,200,66,0.2)',
+              }}
             >
               {pack.popular && (
-                <span className="self-center px-3 py-1 rounded-full text-xs font-bold bg-or text-white mb-2">POPULAIRE</span>
+                <span
+                  className="self-center px-3 py-1 rounded-full text-xs font-bold mb-3"
+                  style={{ background: '#f5c842', color: '#0a0f2e' }}
+                >
+                  POPULAIRE
+                </span>
               )}
-              <p className="text-sm" style={{ color: '#a0aec0' }}>{pack.name}</p>
-              <p className="text-xs text-center mt-1" style={{ color: '#a0aec0' }}>
-                {pack.credits === null ? 'Crédits illimités' : `${pack.credits} Crédits`}
-              </p>
-              <p className="text-white font-bold text-3xl mt-1">{pack.credits ?? '∞'}</p>
-              <p className="text-or font-bold text-xl mt-2">{pack.price.toLocaleString('fr-FR')} FCFA</p>
-              <Link to="/credits" className="btn-secondaire rounded mt-4">
+              <h3 className="text-white font-bold text-lg">{pack.name}</h3>
+              <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>{PACK_SUBTITLES[pack.id]}</p>
+              <p className="text-or font-bold text-[1.6rem] mt-4">{pack.price.toLocaleString('fr-FR')} FCFA</p>
+              <span
+                className="mt-3 px-4 py-1 rounded-full text-sm font-bold"
+                style={{ background: 'rgba(245,200,66,0.1)', border: '1px solid #f5c842', color: '#f5c842' }}
+              >
+                {pack.credits ? `${pack.credits} crédits` : '∞ crédits illimités'}
+              </span>
+              <Link
+                to="/credits"
+                className="w-full rounded font-bold py-3 text-center mt-5"
+                style={{ background: '#f5c842', color: '#0a0f2e' }}
+              >
                 {pack.credits ? `Recharger ${pack.credits} crédits` : "Activer l'accès illimité"}
               </Link>
             </div>

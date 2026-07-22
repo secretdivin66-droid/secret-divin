@@ -1,15 +1,7 @@
 import { useState } from 'react';
-import { PACKS, WHATSAPP_NUMBER } from '../utils/mystique';
+import { PACKS, PACK_SUBTITLES, WHATSAPP_NUMBER } from '../utils/mystique';
 
 const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}`;
-
-const PACK_SUBTITLES: Record<string, string> = {
-  starter: 'Pour découvrir, sans engagement',
-  essentiel: 'Pour un usage régulier',
-  premium: 'Le meilleur rapport crédit/prix',
-  expert: 'Pour aller plus loin',
-  unlimited: 'Accès total, un mois complet',
-};
 
 function Separateur() {
   return (
