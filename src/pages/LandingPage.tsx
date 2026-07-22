@@ -3,9 +3,9 @@ import { PACKS } from '../utils/mystique';
 import { useRevealOnScroll } from '../hooks/useRevealOnScroll';
 
 const STATS = [
-  { value: '10 000+', label: 'Consultations effectuées' },
-  { value: '11', label: 'Outils spirituels' },
-  { value: '100%', label: 'Basé sur les sciences islamiques' },
+  { value: '9', label: 'Outils spirituels' },
+  { value: '2', label: 'Outils 100% gratuits' },
+  { value: '100%', label: 'Basé sur les sciences islamiques traditionnelles' },
 ];
 
 const OUTILS = [
@@ -24,12 +24,6 @@ const STEPS = [
   { number: '01', title: 'Crée ton compte', text: 'Inscription gratuite en quelques secondes, par email ou avec Google.' },
   { number: '02', title: 'Recharge tes crédits', text: 'Choisis ton pack — 2 crédits par génération.' },
   { number: '03', title: 'Reçois tes secrets', text: 'Une consultation personnalisée en quelques secondes.' },
-];
-
-const TEMOIGNAGES = [
-  { text: "Le calcul du destin m'a vraiment ouvert les yeux sur ma propre personnalité et mon chemin.", author: 'Mamadou K., Dakar' },
-  { text: 'Les carrés magiques sont générés avec une précision remarquable, exactement comme dans les textes traditionnels.', author: 'Ibrahim D., Abidjan' },
-  { text: 'L\'interprétation de mes rêves était tellement juste que ça m\'a bouleversée.', author: 'Aïcha B., Bamako' },
 ];
 
 function Separateur() {
@@ -185,27 +179,9 @@ export function LandingPage() {
             </div>
           ))}
         </div>
-        <p className="reveal text-center text-sm mt-8" style={{ color: '#a0aec0' }}>
-          Paiement via Orange Money, Wave, Moov Money, MTN Mobile Money
-        </p>
       </section>
 
       <Separateur />
-
-      {/* SECTION 1.6 — TÉMOIGNAGES */}
-      <section className="max-w-6xl mx-auto px-4 py-12">
-        <h2 className="reveal text-center text-2xl font-bold mb-6">
-          <span className="text-white">Ce que disent</span> <span className="text-or">nos utilisateurs</span>
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {TEMOIGNAGES.map((t) => (
-            <div key={t.author} className="reveal carte rounded-lg">
-              <p className="italic text-white">« {t.text} »</p>
-              <p className="text-or font-bold text-sm mt-4">{t.author}</p>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* SECTION 1.7 — VERSET */}
       <section className="px-4 pt-16 pb-8 text-center">
@@ -224,10 +200,9 @@ export function LandingPage() {
 
       {/* SECTION 1.8 — CTA FINAL */}
       <section className="px-4 pb-16 text-center">
-        <h2 className="reveal text-2xl font-bold text-white">Votre chemin spirituel commence ici</h2>
+        <h2 className="reveal text-2xl font-bold text-white">Ton chemin spirituel commence ici</h2>
         <p className="reveal max-w-xl mx-auto mt-4" style={{ color: '#a0aec0' }}>
-          Rejoignez des milliers de personnes qui utilisent les sciences ésotériques islamiques pour comprendre leur
-          destin et leur vocation.
+          Utilise les sciences ésotériques islamiques pour comprendre ton destin et ta vocation.
         </p>
         <div className="reveal w-full max-w-md flex flex-col gap-4 mt-8 mx-auto">
           <Link
