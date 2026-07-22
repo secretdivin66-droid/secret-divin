@@ -54,3 +54,32 @@ export async function uploadMaraboutPhoto(userId: string, file: File): Promise<U
 export async function deleteMaraboutPhoto(userId: string): Promise<void> {
   await clearExistingFiles(userId);
 }
+
+// Bucket "blog-images" : écrit uniquement par les admins (voir policies RLS
+// dans 0014_blog_images_bucket.sql), pas de dossier par utilisateur — le
+// chemin inclut juste un timestamp pour rester unique.
+export async function uploadBlogImage(file: File): Promise<UploadResult> {
+  if (!ALLOWED_TYPES.includes(file.type)) {
+    return { success: false, error: 'Format non supporté. Utilise JPG, PNG ou WEBP.' };
+  }
+  if (file.size > MAX_SIZE_BYTES) {
+    return { success: false, error: "L'image ne doit pas dépasser 5 Mo." };
+  }
+
+  try {
+    const ext = file.name.split('.').pop() || 'jpg';
+    const path = `cover-${Date.now()}.${ext}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('blog-images')
+      .upload(path, file, { upsert: true, contentType: file.type });
+    if (uploadError) {
+      return { success: false, error: "Erreur lors de l'upload. Réessaie." };
+    }
+
+    const { data: urlData } = supabase.storage.from('blog-images').getPublicUrl(path);
+    return { success: true, url: urlData.publicUrl };
+  } catch {
+    return { success: false, error: 'Erreur inattendue. Réessaie.' };
+  }
+}

@@ -37,6 +37,7 @@ import { TutorielsPage } from './pages/TutorielsPage';
 import { FormationPage } from './pages/FormationPage';
 import { ProfilPage } from './pages/ProfilPage';
 import { AdminPage } from './pages/AdminPage';
+import { AdminBlogPage } from './pages/AdminBlogPage';
 import { MaraboutDashboardPage } from './pages/MaraboutDashboardPage';
 
 function App() {
@@ -79,6 +80,7 @@ function App() {
         <Route path="/profil" element={<PrivateRoute><ProfilPage /></PrivateRoute>} />
         <Route path="/billing" element={<PrivateRoute><BillingPage /></PrivateRoute>} />
         <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
+        <Route path="/admin/blog" element={<AdminBlogPage />} />
         <Route path="/marabout-dashboard" element={<PrivateRoute><MaraboutDashboardPage /></PrivateRoute>} />
       </Route>
     </Routes>
