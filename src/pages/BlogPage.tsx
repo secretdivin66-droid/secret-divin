@@ -56,7 +56,7 @@ export function BlogPage() {
       <div className="max-w-6xl mx-auto">
         <h1 className="text-center font-bold text-or text-[2rem]">Blog Secret Divin</h1>
         <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
-          Découvrez les secrets des sciences mystiques islamiques
+          Découvre les secrets des sciences mystiques islamiques
         </p>
 
         <Separateur />
