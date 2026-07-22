@@ -22,7 +22,7 @@ export class CinetPayProvider implements PaymentProvider {
   async initiateSubscription(_params: SubscribeParams): Promise<SubscribeResult> {
     return {
       status: 'unavailable',
-      message: "Le paiement en ligne arrive bientôt. En attendant, contacte-nous sur WhatsApp pour activer ton abonnement.",
+      message: "Le paiement en ligne arrive très bientôt. En attendant, écris-nous sur WhatsApp et active ton abonnement en quelques minutes.",
     };
   }
 }

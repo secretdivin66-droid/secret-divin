@@ -24,9 +24,9 @@ export function PricingPage() {
   return (
     <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-center font-bold text-or text-[2rem]">Nos Plans d'Abonnement</h1>
+        <h1 className="text-center font-bold text-or text-[2rem]">Des crédits chaque mois, sans y penser</h1>
         <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
-          Choisis le plan qui correspond à ton usage. Les crédits n'expirent jamais, quel que soit le plan.
+          Choisis l'abonnement qui correspond à ton usage. Tes crédits ne périment jamais, même si tu changes de plan.
         </p>
 
         <Separateur />
@@ -108,6 +108,10 @@ export function PricingPage() {
             Ton abonnement actuel se renouvelle le {formatDate(expiresAt)}.
           </p>
         )}
+
+        <p className="text-center text-sm mt-6" style={{ color: '#a0aec0' }}>
+          Annule à tout moment, sans engagement. Tu repasses immédiatement au plan Free.
+        </p>
       </div>
     </div>
   );

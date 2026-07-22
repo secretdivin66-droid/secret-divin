@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { paymentProvider } from '../lib/payments';
 import type { PlanId } from '../hooks/useSubscription';
+import { WHATSAPP_NUMBER } from '../utils/mystique';
+
+const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}`;
 
 interface Props {
   planId: PlanId;
@@ -63,7 +66,15 @@ export function SubscribeButton({ planId, planName, userId, userEmail, className
             onClick={(e) => e.stopPropagation()}
           >
             <p className="text-white mb-5">{notice}</p>
-            <button onClick={() => setNotice(null)} className="btn-principal rounded w-full">Fermer</button>
+            <a
+              href={WHATSAPP_LINK}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn-principal rounded w-full inline-block mb-3"
+            >
+              Écrire sur WhatsApp
+            </a>
+            <button onClick={() => setNotice(null)} className="btn-secondaire rounded w-full">Fermer</button>
           </div>
         </div>
       )}
