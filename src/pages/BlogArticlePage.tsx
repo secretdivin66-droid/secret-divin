@@ -3,6 +3,11 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useRevealOnScroll } from '../hooks/useRevealOnScroll';
 
+interface FaqItem {
+  question: string;
+  answer: string;
+}
+
 interface Article {
   id: string;
   title: string;
@@ -12,6 +17,7 @@ interface Article {
   cover_image: string | null;
   published_at: string | null;
   views: number;
+  faq: FaqItem[] | null;
 }
 
 interface ArticleNavEntry {
@@ -133,9 +139,30 @@ export function BlogArticlePage() {
 
         <Separateur />
 
-        <div className="text-white whitespace-pre-line" style={{ lineHeight: 1.8 }}>
-          {article.content}
-        </div>
+        {/* Contenu écrit par les admins uniquement (RLS admin_manage_blog) —
+            même niveau de confiance que l'accès direct au panneau d'admin. */}
+        <div
+          className="blog-content text-white"
+          style={{ lineHeight: 1.8 }}
+          dangerouslySetInnerHTML={{ __html: article.content ?? '' }}
+        />
+
+        {article.faq && article.faq.length > 0 && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                '@context': 'https://schema.org',
+                '@type': 'FAQPage',
+                mainEntity: article.faq.map((item) => ({
+                  '@type': 'Question',
+                  name: item.question,
+                  acceptedAnswer: { '@type': 'Answer', text: item.answer },
+                })),
+              }),
+            }}
+          />
+        )}
 
         <Separateur />
 
