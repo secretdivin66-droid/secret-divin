@@ -1,9 +1,24 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { callGeminiProxy } from '../lib/geminiProxy';
 import { BLOG_CATEGORIES, slugify } from '../utils/blog';
-import { uploadBlogImage } from '../utils/upload';
+
+interface CloudinaryUploadResult {
+  event: string;
+  info: { secure_url: string };
+}
+
+declare global {
+  interface Window {
+    cloudinary?: {
+      createUploadWidget: (
+        options: Record<string, unknown>,
+        callback: (error: unknown, result: CloudinaryUploadResult) => void
+      ) => { open: () => void };
+    };
+  }
+}
 
 interface Article {
   id: string;
@@ -26,7 +41,6 @@ function formatDate(dateString: string | null): string {
 
 export function BlogAdminPanel() {
   const { user } = useAuth();
-  const coverFileInputRef = useRef<HTMLInputElement>(null);
 
   const [view, setView] = useState<'list' | 'form'>('list');
   const [articles, setArticles] = useState<Article[]>([]);
@@ -42,7 +56,6 @@ export function BlogAdminPanel() {
   const [status, setStatus] = useState<'draft' | 'published'>('draft');
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [uploadingCover, setUploadingCover] = useState(false);
   const [coverError, setCoverError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -96,21 +109,33 @@ export function BlogAdminPanel() {
     setSlug(value);
   }
 
-  async function handleCoverFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = '';
-
+  function handleOpenCloudinaryWidget() {
     setCoverError(null);
-    setUploadingCover(true);
-    const result = await uploadBlogImage(file);
-    setUploadingCover(false);
 
-    if (!result.success || !result.url) {
-      setCoverError(result.error ?? "Erreur lors de l'upload.");
+    if (!window.cloudinary) {
+      setCoverError("Le widget d'upload n'est pas encore chargé. Réessaie dans quelques instants.");
       return;
     }
-    setCoverImage(result.url);
+
+    const widget = window.cloudinary.createUploadWidget(
+      {
+        cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME,
+        uploadPreset: 'blog_images',
+        folder: 'secret-divin/blog',
+        maxFileSize: 5000000,
+        allowedFormats: ['jpg', 'png', 'webp'],
+      },
+      (error, result) => {
+        if (error) {
+          setCoverError("Erreur lors de l'upload.");
+          return;
+        }
+        if (result?.event === 'success') {
+          setCoverImage(result.info.secure_url);
+        }
+      }
+    );
+    widget.open();
   }
 
   async function handleGenerateWithGemini() {
@@ -310,22 +335,12 @@ export function BlogAdminPanel() {
             onChange={(e) => setCoverImage(e.target.value)}
             className="flex-1 bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
           />
-          <input
-            ref={coverFileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            onChange={(e) => {
-              void handleCoverFileChange(e);
-            }}
-            className="hidden"
-          />
           <button
             type="button"
-            onClick={() => coverFileInputRef.current?.click()}
-            disabled={uploadingCover}
-            className="btn-secondaire rounded px-4 disabled:opacity-50 shrink-0"
+            onClick={handleOpenCloudinaryWidget}
+            className="btn-secondaire rounded px-4 shrink-0"
           >
-            {uploadingCover ? 'Envoi...' : 'Uploader'}
+            Uploader
           </button>
         </div>
         {coverError && <p className="text-red-400 text-xs mt-1">{coverError}</p>}
