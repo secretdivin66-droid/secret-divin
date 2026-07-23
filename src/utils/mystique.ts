@@ -95,7 +95,7 @@ export const TOOLS: ToolInfo[] = [
   { id: 'jours', name: 'Secret de ton Jour', nameArabic: 'سر يومك', route: '/jours', description: "Les jours les plus favorables selon les correspondances planétaires." },
   { id: 'secrets', name: 'Secrets mystiques', nameArabic: 'الأسرار الروحانية', route: '/secrets', description: "Des secrets spirituels ciblés selon ton objectif : protection, amour, richesse..." },
   { id: 'carres-magiques', name: 'Carrés Magiques', nameArabic: 'المربعات السحرية', route: '/carres-magiques', description: "Ton carré magique personnel, de 3×3 à 9×9, selon ton poids mystique." },
-  { id: 'geomancie', name: 'Géomancie', nameArabic: 'علم الرمل', route: '/geomancie', description: "L'art divinatoire ancestral du Khatt ar-Raml pour éclairer tes décisions." },
+  { id: 'geomancie', name: 'Voyance avec Geomancie', nameArabic: 'علم الرمل', route: '/geomancie', description: "L'art divinatoire ancestral du Khatt ar-Raml pour éclairer tes décisions." },
   { id: 'reves', name: 'Interprétation des Rêves', nameArabic: 'تفسير الأحلام', route: '/reves', description: "Le sens caché de tes rêves selon la tradition islamique." },
   { id: 'plantes', name: 'Secrets des Plantes', nameArabic: 'أسرار النباتات', route: '/plantes', description: "Les plantes et leurs vertus spirituelles, adaptées à ton profil." },
   { id: 'compatibilite', name: 'Compatibilité', nameArabic: 'التوافق', route: '/compatibilite', description: "L'harmonie entre deux personnes à travers leurs poids mystiques." },

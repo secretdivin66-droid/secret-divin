@@ -253,7 +253,7 @@ export function GeomanciePage() {
 
       await supabase.from('saved_rituals').insert({
         user_id: user.id,
-        title: 'Géomancie — ' + questionText.substring(0, 50),
+        title: 'Voyance avec Geomancie — ' + questionText.substring(0, 50),
         content: data,
         page_source: 'geomancie',
       });
@@ -300,7 +300,7 @@ export function GeomanciePage() {
     <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-4xl mx-auto">
         {/* SECTION 1 — EN-TÊTE */}
-        <h1 className="text-center font-bold text-or text-[2rem]">Géomancie Africaine</h1>
+        <h1 className="text-center font-bold text-or text-[2rem]">Voyance avec Geomancie Africaine</h1>
         <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
           Pose ta question et reçois une réponse
           <br />
@@ -574,7 +574,7 @@ export function GeomanciePage() {
       </div>
 
       {showCreditModal && (
-        <CreditModal toolName="Géomancie" balance={modalBalance} onClose={() => setShowCreditModal(false)} />
+        <CreditModal toolName="Voyance avec Geomancie" balance={modalBalance} onClose={() => setShowCreditModal(false)} />
       )}
     </div>
   );

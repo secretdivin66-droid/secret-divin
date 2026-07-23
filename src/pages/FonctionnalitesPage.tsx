@@ -42,7 +42,7 @@ const FEATURES: FeatureCard[] = [
     items: ['7 types de carrés (3x3 à 9x9)', 'Calcul basé sur ton poids mystique', 'Vérification automatique de la somme', 'Export en image', 'Chiffres en français et en arabe'],
   },
   {
-    title: 'Géomancie',
+    title: 'Voyance avec Geomancie',
     titleArabic: 'علم الرمل',
     free: false,
     description:
