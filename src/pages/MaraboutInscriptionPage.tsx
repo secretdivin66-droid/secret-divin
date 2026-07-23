@@ -295,9 +295,20 @@ export function MaraboutInscriptionPage() {
             <input
               value={whatsapp}
               onChange={(e) => setWhatsapp(e.target.value.replace(/[^0-9]/g, ''))}
-              placeholder="Format international sans + ni espaces, ex: 221771234567"
+              placeholder="Ex: 224624279200"
               className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
             />
+            {whatsapp && (
+              <a
+                href={`https://wa.me/${whatsapp}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: '#25D366', fontSize: '0.85rem' }}
+                className="block mt-1"
+              >
+                Tester le lien → wa.me/{whatsapp}
+              </a>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
