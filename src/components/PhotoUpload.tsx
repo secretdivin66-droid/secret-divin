@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react';
-import { uploadMaraboutPhoto } from '../utils/upload';
+import { useState } from 'react';
+import { openCloudinaryUploadWidget } from '../lib/cloudinary';
 
 interface Props {
   userId: string;
@@ -7,40 +7,31 @@ interface Props {
   onUploadSuccess: (url: string) => void;
 }
 
-// Distinct de AvatarUploader.tsx (bucket "avatars", écrit directement dans
-// profiles) : ce composant ne persiste rien en base lui-même — à
-// l'inscription, la ligne marabouts n'existe pas encore, donc seul l'appelant
-// sait quand/où sauvegarder l'URL (voir MaraboutInscriptionPage/
-// MaraboutDashboardPage).
-export function PhotoUpload({ userId, currentPhotoUrl, onUploadSuccess }: Props) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
+// Distinct de AvatarUploader.tsx : ce composant ne persiste rien en base
+// lui-même — à l'inscription, la ligne marabouts n'existe pas encore, donc
+// seul l'appelant sait quand/où sauvegarder l'URL (voir
+// MaraboutInscriptionPage/MaraboutDashboardPage).
+export function PhotoUpload({ currentPhotoUrl, onUploadSuccess }: Props) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preview, setPreview] = useState<string | null>(currentPhotoUrl ?? null);
 
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = '';
-
+  function handleOpenWidget() {
     setError(null);
-
-    // Aperçu immédiat pendant l'upload, avant confirmation du serveur.
-    const localPreview = URL.createObjectURL(file);
-    setPreview(localPreview);
     setUploading(true);
-
-    const result = await uploadMaraboutPhoto(userId, file);
-    setUploading(false);
-
-    if (!result.success || !result.url) {
-      setError(result.error ?? "Erreur lors de l'upload.");
-      setPreview(currentPhotoUrl ?? null);
-      return;
-    }
-
-    setPreview(result.url);
-    onUploadSuccess(result.url);
+    openCloudinaryUploadWidget({
+      uploadPreset: 'marabout_images',
+      folder: 'secret-divin/marabouts',
+      onSuccess: (url) => {
+        setUploading(false);
+        setPreview(url);
+        onUploadSuccess(url);
+      },
+      onError: (message) => {
+        setUploading(false);
+        setError(message);
+      },
+    });
   }
 
   return (
@@ -66,19 +57,9 @@ export function PhotoUpload({ userId, currentPhotoUrl, onUploadSuccess }: Props)
         )}
       </div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp"
-        onChange={(e) => {
-          void handleFileChange(e);
-        }}
-        className="hidden"
-      />
-
       <button
         type="button"
-        onClick={() => fileInputRef.current?.click()}
+        onClick={handleOpenWidget}
         disabled={uploading}
         className="btn-secondaire rounded text-sm px-4 py-1.5 disabled:opacity-50"
       >

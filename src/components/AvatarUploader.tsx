@@ -1,8 +1,6 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-
-const MAX_SIZE_BYTES = 2 * 1024 * 1024; // 2 Mo
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+import { openCloudinaryUploadWidget } from '../lib/cloudinary';
 
 interface Props {
   userId: string;
@@ -11,11 +9,10 @@ interface Props {
   onChange: (newUrl: string | null) => void;
 }
 
-// Supprime tous les fichiers existants du dossier de l'utilisateur avant
-// d'uploader/de supprimer : évite d'accumuler des fichiers orphelins
-// (ex: ancienne photo en .png remplacée par une en .jpg) puisque le nom de
-// fichier inclut un timestamp et change à chaque upload.
-async function clearExistingFiles(userId: string) {
+// Nettoie un éventuel ancien avatar Supabase Storage (avant la migration
+// vers Cloudinary) — les nouveaux avatars ne sont plus écrits ici, mais on
+// évite de laisser un fichier orphelin pour les comptes qui en avaient un.
+async function clearLegacySupabaseAvatar(userId: string) {
   const { data: existing } = await supabase.storage.from('avatars').list(userId);
   if (existing && existing.length > 0) {
     await supabase.storage.from('avatars').remove(existing.map((f) => `${userId}/${f.name}`));
@@ -23,67 +20,48 @@ async function clearExistingFiles(userId: string) {
 }
 
 export function AvatarUploader({ userId, avatarUrl, fallbackLabel, onChange }: Props) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleFileSelected(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    e.target.value = '';
-
-    setError(null);
-
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      setError('Format non supporté. Utilise une image JPEG, PNG, WebP ou GIF.');
-      return;
-    }
-    if (file.size > MAX_SIZE_BYTES) {
-      setError('Image trop lourde (2 Mo maximum).');
-      return;
-    }
-
+  async function handleUploadSuccess(url: string) {
     setUploading(true);
     try {
-      await clearExistingFiles(userId);
-
-      const ext = file.name.split('.').pop() || 'jpg';
-      // Convention documentée par la policy RLS de 0009_profile_avatar_
-      // contact.sql : (storage.foldername(name))[1] = auth.uid()::text —
-      // seul le premier segment de dossier (userId) compte, le nom de
-      // fichier lui-même (avatar-<timestamp>.<ext>) est libre.
-      const path = `${userId}/avatar-${Date.now()}.${ext}`;
-
-      console.log('[Supabase Storage] upload avatars —', { path, contentType: file.type, size: file.size });
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(path, file, { upsert: true, contentType: file.type });
-      console.log('[Supabase Storage] réponse upload avatars —', { data: uploadData, error: uploadError });
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
+      void clearLegacySupabaseAvatar(userId);
 
       const { error: updateError } = await supabase
         .from('profiles')
-        .update({ avatar_url: urlData.publicUrl, updated_at: new Date().toISOString() })
+        .update({ avatar_url: url, updated_at: new Date().toISOString() })
         .eq('user_id', userId);
-      console.log('[Supabase] update profiles.avatar_url —', { error: updateError });
       if (updateError) throw updateError;
 
-      onChange(urlData.publicUrl);
+      onChange(url);
     } catch (err) {
-      console.error("[AvatarUploader] Échec de l'envoi de la photo :", err);
-      setError("Échec de l'envoi de la photo. Réessaie dans quelques instants.");
+      console.error("[AvatarUploader] Échec de l'enregistrement de la photo :", err);
+      setError("Échec de l'enregistrement de la photo. Réessaie dans quelques instants.");
     } finally {
       setUploading(false);
     }
+  }
+
+  function handleOpenWidget() {
+    setError(null);
+    openCloudinaryUploadWidget({
+      uploadPreset: 'avatar_images',
+      folder: 'secret-divin/avatars',
+      cropping: true,
+      croppingAspectRatio: 1,
+      onSuccess: (url) => {
+        void handleUploadSuccess(url);
+      },
+      onError: setError,
+    });
   }
 
   async function handleDelete() {
     setError(null);
     setUploading(true);
     try {
-      await clearExistingFiles(userId);
+      await clearLegacySupabaseAvatar(userId);
 
       const { error: updateError } = await supabase
         .from('profiles')
@@ -121,18 +99,10 @@ export function AvatarUploader({ userId, avatarUrl, fallbackLabel, onChange }: P
         )}
       </div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/jpeg,image/png,image/webp,image/gif"
-        onChange={handleFileSelected}
-        className="hidden"
-      />
-
       <div className="flex gap-3">
         <button
           type="button"
-          onClick={() => fileInputRef.current?.click()}
+          onClick={handleOpenWidget}
           disabled={uploading}
           className="btn-secondaire rounded text-sm px-3 py-1.5 disabled:opacity-50"
         >

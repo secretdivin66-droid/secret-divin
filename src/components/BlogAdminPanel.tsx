@@ -2,23 +2,8 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabaseClient';
 import { callGeminiProxy } from '../lib/geminiProxy';
+import { openCloudinaryUploadWidget } from '../lib/cloudinary';
 import { BLOG_CATEGORIES, slugify } from '../utils/blog';
-
-interface CloudinaryUploadResult {
-  event: string;
-  info: { secure_url: string };
-}
-
-declare global {
-  interface Window {
-    cloudinary?: {
-      createUploadWidget: (
-        options: Record<string, unknown>,
-        callback: (error: unknown, result: CloudinaryUploadResult) => void
-      ) => { open: () => void };
-    };
-  }
-}
 
 interface Article {
   id: string;
@@ -111,31 +96,12 @@ export function BlogAdminPanel() {
 
   function handleOpenCloudinaryWidget() {
     setCoverError(null);
-
-    if (!window.cloudinary) {
-      setCoverError("Le widget d'upload n'est pas encore chargé. Réessaie dans quelques instants.");
-      return;
-    }
-
-    const widget = window.cloudinary.createUploadWidget(
-      {
-        cloudName: import.meta.env.VITE_CLOUDINARY_CLOUD_NAME,
-        uploadPreset: 'blog_images',
-        folder: 'secret-divin/blog',
-        maxFileSize: 5000000,
-        allowedFormats: ['jpg', 'png', 'webp'],
-      },
-      (error, result) => {
-        if (error) {
-          setCoverError("Erreur lors de l'upload.");
-          return;
-        }
-        if (result?.event === 'success') {
-          setCoverImage(result.info.secure_url);
-        }
-      }
-    );
-    widget.open();
+    openCloudinaryUploadWidget({
+      uploadPreset: 'blog_images',
+      folder: 'secret-divin/blog',
+      onSuccess: setCoverImage,
+      onError: setCoverError,
+    });
   }
 
   async function handleGenerateWithGemini() {
