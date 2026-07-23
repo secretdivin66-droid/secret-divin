@@ -5,6 +5,11 @@ import { callGeminiProxy } from '../lib/geminiProxy';
 import { openCloudinaryUploadWidget } from '../lib/cloudinary';
 import { BLOG_CATEGORIES, slugify } from '../utils/blog';
 
+interface FaqItem {
+  question: string;
+  answer: string;
+}
+
 interface Article {
   id: string;
   title: string;
@@ -17,6 +22,7 @@ interface Article {
   published_at: string | null;
   views: number;
   created_at: string;
+  faq: FaqItem[] | null;
 }
 
 function formatDate(dateString: string | null): string {
@@ -37,6 +43,7 @@ export function BlogAdminPanel() {
   const [category, setCategory] = useState(BLOG_CATEGORIES[0]);
   const [excerpt, setExcerpt] = useState('');
   const [content, setContent] = useState('');
+  const [faq, setFaq] = useState<FaqItem[]>([]);
   const [coverImage, setCoverImage] = useState('');
   const [status, setStatus] = useState<'draft' | 'published'>('draft');
   const [generating, setGenerating] = useState(false);
@@ -60,6 +67,7 @@ export function BlogAdminPanel() {
     setCategory(BLOG_CATEGORIES[0]);
     setExcerpt('');
     setContent('');
+    setFaq([]);
     setCoverImage('');
     setStatus('draft');
     setCoverError(null);
@@ -78,6 +86,7 @@ export function BlogAdminPanel() {
     setCategory(article.category ?? BLOG_CATEGORIES[0]);
     setExcerpt(article.excerpt ?? '');
     setContent(article.content ?? '');
+    setFaq(article.faq ?? []);
     setCoverImage(article.cover_image ?? '');
     setStatus(article.is_published ? 'published' : 'draft');
     setCoverError(null);
@@ -92,6 +101,18 @@ export function BlogAdminPanel() {
   function handleSlugChange(value: string) {
     setSlugTouched(true);
     setSlug(value);
+  }
+
+  function addFaqItem() {
+    setFaq((prev) => [...prev, { question: '', answer: '' }]);
+  }
+
+  function updateFaqItem(index: number, field: keyof FaqItem, value: string) {
+    setFaq((prev) => prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
+  }
+
+  function removeFaqItem(index: number) {
+    setFaq((prev) => prev.filter((_, i) => i !== index));
   }
 
   function handleOpenCloudinaryWidget() {
@@ -127,6 +148,9 @@ export function BlogAdminPanel() {
     setSaving(true);
     try {
       const isPublished = status === 'published';
+      const cleanedFaq = faq
+        .map((item) => ({ question: item.question.trim(), answer: item.answer.trim() }))
+        .filter((item) => item.question && item.answer);
       await supabase.from('blog_articles').upsert(
         {
           id: editingArticle?.id,
@@ -137,6 +161,7 @@ export function BlogAdminPanel() {
           content: content || null,
           category,
           cover_image: coverImage || null,
+          faq: cleanedFaq.length > 0 ? cleanedFaq : null,
           is_published: isPublished,
           published_at: isPublished ? editingArticle?.published_at ?? new Date().toISOString() : null,
           views: editingArticle?.views ?? 0,
@@ -286,6 +311,46 @@ export function BlogAdminPanel() {
           onChange={(e) => setContent(e.target.value)}
           className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or resize-y font-mono text-sm"
         />
+      </div>
+
+      <div>
+        <div className="flex items-center justify-between mb-1">
+          <label className="block text-sm" style={{ color: '#a0aec0' }}>FAQ (optionnelle)</label>
+          <button type="button" onClick={addFaqItem} className="btn-secondaire rounded text-xs px-3 py-1">
+            + Ajouter une question
+          </button>
+        </div>
+        <p className="text-xs mb-2" style={{ color: '#a0aec0' }}>
+          Affichée sur la page de l'article et exposée en schema FAQPage pour le SEO.
+        </p>
+        {faq.length > 0 && (
+          <div className="flex flex-col gap-3">
+            {faq.map((item, i) => (
+              <div key={i} className="rounded p-3" style={{ background: '#0a0f2e', border: '1px solid rgba(245,200,66,0.2)' }}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold" style={{ color: '#a0aec0' }}>Question {i + 1}</span>
+                  <button type="button" onClick={() => removeFaqItem(i)} className="text-red-400 text-xs hover:underline">
+                    Supprimer
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Question"
+                  value={item.question}
+                  onChange={(e) => updateFaqItem(i, 'question', e.target.value)}
+                  className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white text-sm mb-2 focus:outline-none focus:border-or"
+                />
+                <textarea
+                  rows={2}
+                  placeholder="Réponse"
+                  value={item.answer}
+                  onChange={(e) => updateFaqItem(i, 'answer', e.target.value)}
+                  className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white text-sm resize-y focus:outline-none focus:border-or"
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div>
