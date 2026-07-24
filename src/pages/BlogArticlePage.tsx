@@ -51,6 +51,19 @@ export function BlogArticlePage() {
   const [nextArticle, setNextArticle] = useState<ArticleNavEntry | null>(null);
   const [notFound, setNotFound] = useState(false);
 
+  // Le <title> statique de index.html ("Secret Divin — Sagesse Spirituelle")
+  // ne différencie pas les articles entre eux dans l'onglet du navigateur,
+  // l'historique, ni les partages — chaque article prend le sien ici, et on
+  // restaure le titre par défaut en quittant la page.
+  useEffect(() => {
+    if (!article) return;
+    const previousTitle = document.title;
+    document.title = `${article.title} — Secret Divin`;
+    return () => {
+      document.title = previousTitle;
+    };
+  }, [article]);
+
   useEffect(() => {
     let active = true;
 
