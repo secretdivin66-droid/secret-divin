@@ -36,6 +36,21 @@
     <changefreq>weekly</changefreq>
   </url>
   <url>
+    <loc>https://www.secretdivin.com/blog/comment-utiliser-secret-divin-guide-debutant</loc>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://www.secretdivin.com/blog/12-outils-spirituels-secret-divin-fonctionnalites</loc>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://www.secretdivin.com/blog/marabouts-rejoindre-secret-divin-clientele-ligne</loc>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
     <loc>https://www.secretdivin.com/contact</loc>
     <priority>0.6</priority>
     <changefreq>monthly</changefreq>
