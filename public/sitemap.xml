@@ -51,6 +51,21 @@
     <changefreq>monthly</changefreq>
   </url>
   <url>
+    <loc>https://www.secretdivin.com/blog/trouver-marabout-serieux-eviter-arnaques</loc>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://www.secretdivin.com/blog/poids-mystique-islam-calcul-abjad</loc>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
+    <loc>https://www.secretdivin.com/blog/table-abjad-complete-lettres-arabes</loc>
+    <priority>0.6</priority>
+    <changefreq>monthly</changefreq>
+  </url>
+  <url>
     <loc>https://www.secretdivin.com/contact</loc>
     <priority>0.6</priority>
     <changefreq>monthly</changefreq>
