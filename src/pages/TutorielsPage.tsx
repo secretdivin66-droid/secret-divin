@@ -189,7 +189,7 @@ export function TutorielsPage() {
     setLoading(true);
     try {
       const prompt = buildTutorielPrompt(tutoriel);
-      const data: TutorielData = await callGeminiWithRetry('gemini-2.5-flash', prompt, {
+      const data: TutorielData = await callGeminiWithRetry('gemini-3.5-flash', prompt, {
         temperature: 0.7,
         maxOutputTokens: 2000,
       });

@@ -249,7 +249,7 @@ export function FormationPage() {
       }
 
       const prompt = buildLessonPrompt(module, lesson);
-      const data: LessonData = await callGeminiWithRetry('gemini-2.5-flash', prompt, {
+      const data: LessonData = await callGeminiWithRetry('gemini-3.5-flash', prompt, {
         temperature: 0.7,
         maxOutputTokens: 2000,
       });

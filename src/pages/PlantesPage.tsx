@@ -337,7 +337,7 @@ export function PlantesPage() {
       }
 
       const prompt = buildPlantesPrompt(objectiveText, category);
-      const data: PlantesData = await callGeminiWithRetry('gemini-2.5-flash', prompt, {
+      const data: PlantesData = await callGeminiWithRetry('gemini-3.5-flash', prompt, {
         temperature: 0.8,
         maxOutputTokens: 3000,
       });

@@ -130,7 +130,7 @@ export function BlogAdminPanel() {
     setGenerating(true);
     try {
       const prompt = `Génère un article de blog complet en français sur ce sujet mystique islamique africain : ${title}. 500-800 mots. Retourne UNIQUEMENT le texte.`;
-      const json = await callGeminiProxy('gemini-2.5-flash', {
+      const json = await callGeminiProxy('gemini-3.5-flash', {
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { temperature: 0.8, maxOutputTokens: 2000 },
       });

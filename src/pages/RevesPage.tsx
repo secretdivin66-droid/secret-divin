@@ -270,7 +270,7 @@ export function RevesPage() {
       }
 
       const prompt = buildRevesPrompt(dreamText, context, currentState);
-      const data: RevesData = await callGeminiWithRetry('gemini-2.5-flash', prompt, {
+      const data: RevesData = await callGeminiWithRetry('gemini-3.5-flash', prompt, {
         temperature: 0.85,
         maxOutputTokens: 2500,
       });

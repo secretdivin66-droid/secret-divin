@@ -41,7 +41,7 @@ Retourne UNIQUEMENT du JSON :
 { "arabic": "النص", "weight": 0 }
 Nom : ${name}`;
 
-  const json = await callGeminiProxy('gemini-2.0-flash', { contents: [{ parts: [{ text: prompt }] }] });
+  const json = await callGeminiProxy('gemini-3.5-flash', { contents: [{ parts: [{ text: prompt }] }] });
   const text = json?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error('empty');
   const clean = text.replace(/```json|```/g, '').trim();

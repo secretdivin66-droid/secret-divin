@@ -60,7 +60,7 @@ interface PMData {
 const RELIGIONS = ['Islam', 'Christianisme', 'Traditionnel africain', 'Autre'];
 
 async function callGeminiRaw(prompt: string): Promise<{ arabic: string }> {
-  const json = await callGeminiProxy('gemini-2.0-flash', {
+  const json = await callGeminiProxy('gemini-3.5-flash', {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: { temperature: 0.1, maxOutputTokens: 200 },
   });

@@ -11,11 +11,13 @@
 // - plafond serveur sur maxOutputTokens, indépendant de ce que le client demande.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
-const ALLOWED_MODELS = new Set([
-  'gemini-2.0-flash',
-  'gemini-2.5-flash',
-  'gemini-2.5-flash-preview-tts',
-]);
+// gemini-2.0-flash (quota gratuit à 0 sur ce projet) et gemini-2.5-flash
+// (404 "no longer available to new users") ne fonctionnent plus avec la
+// clé GEMINI_API_KEY actuelle — vérifié en direct contre l'API Gemini le
+// 2026-07-25. gemini-3.5-flash répond normalement avec la même clé.
+// gemini-2.5-flash-preview-tts (utilisé uniquement par src/utils/tts.ts)
+// fonctionne toujours, contrairement à son équivalent non-TTS.
+const ALLOWED_MODELS = new Set(['gemini-3.5-flash', 'gemini-2.5-flash-preview-tts']);
 
 const MAX_OUTPUT_TOKENS = 4000;
 
@@ -87,6 +89,17 @@ Deno.serve(async (req) => {
 
     if (body.generationConfig?.maxOutputTokens > MAX_OUTPUT_TOKENS) {
       body.generationConfig.maxOutputTokens = MAX_OUTPUT_TOKENS;
+    }
+
+    // gemini-3.5-flash consomme par défaut une grosse part du budget de
+    // sortie en "thinking" interne (~1400 tokens observés), ce qui
+    // tronquait les réponses JSON avant leur fin — vérifié le 2026-07-25.
+    // Aucun des usages de ce proxy (fiches outils, blog, chat) n'a besoin
+    // de raisonnement complexe. Ignoré pour la TTS (responseModalities
+    // AUDIO), non testé avec thinkingConfig et non concerné par le
+    // problème (modèle distinct).
+    if (model !== 'gemini-2.5-flash-preview-tts') {
+      body.generationConfig = { ...body.generationConfig, thinkingConfig: { thinkingBudget: 0 } };
     }
 
     const geminiKey = Deno.env.get('GEMINI_API_KEY');
