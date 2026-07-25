@@ -22,12 +22,15 @@
 // Slug : jamais deux articles avec le même slug — si le slug généré
 // existe déjà, un suffixe timestamp est ajouté (voir uniqueSlug).
 //
-// Insère toujours en is_published=false (brouillon) : la relecture et la
-// publication restent manuelles via /admin (BlogAdminPanel) — il n'y a
-// pas d'étape de publication automatique séparée comme sur un autre
-// projet (pas de second appel cron un peu plus tard) ; la validation
-// déterministe ci-dessous tourne en revanche dans ce même appel, voir
-// plus bas.
+// Publication : is_published/published_at reflètent directement le
+// résultat de la validation déterministe ci-dessous (pas de colonne
+// "status" séparée dans ce schéma — BlogAdminPanel, BlogPage et
+// BlogArticlePage lisent tous is_published, en ajouter une seconde
+// source de vérité créerait une désynchronisation possible). Publié
+// automatiquement UNIQUEMENT si validation_notes commence par "Passed" ;
+// sinon inséré en brouillon (is_published=false) pour relecture manuelle
+// dans /admin (BlogAdminPanel) — jamais republié automatiquement après
+// coup, pas de second appel cron de validation comme sur un autre projet.
 //
 // Contenu obligatoire (SYSTEM_PROMPT) : au moins 5 liens internes fondus
 // dans le texte, un CTA milieu vers l'outil de la catégorie, un CTA fin
@@ -44,9 +47,9 @@
 //   au moins 5 liens internes distincts, au moins 5 mentions de "Secret
 //   Divin", CTA milieu présent avant les 15% derniers du contenu. Le
 //   résultat (pass ou liste des échecs restants après la régénération)
-//   est écrit dans blog_articles.validation_notes (migration 0017) pour
-//   relecture dans BlogAdminPanel — ça n'empêche jamais l'insertion en
-//   brouillon, ce projet ne publie jamais automatiquement.
+//   est écrit dans blog_articles.validation_notes (migration 0017) — un
+//   "Passed" déclenche la publication immédiate, une liste d'échecs
+//   laisse l'article en brouillon pour relecture dans BlogAdminPanel.
 //
 // La FAQ n'est PAS injectée comme <script> dans "content" : elle est
 // stockée dans la colonne blog_articles.faq (jsonb), déjà rendue par
@@ -609,9 +612,9 @@ Deno.serve(async (req) => {
 
     // Vérifie les règles obligatoires (liens, mentions, CTA milieu) sur
     // le brouillon brut ; une seule régénération si ça échoue, avec un
-    // rappel explicite des règles manquées — jamais plus, pour ne pas
-    // multiplier les appels Gemini sur un article qui finira de toute
-    // façon en brouillon relu manuellement.
+    // rappel explicite des règles manquées — jamais plus, pour limiter le
+    // coût Gemini. isValidated (juste en dessous) décide ensuite si
+    // l'article part publié tel quel ou reste en brouillon.
     let failures = runDeterministicChecks(generated.content, toolUrl);
     if (failures.length > 0) {
       result = await generateArticle(geminiApiKey, SYSTEM_PROMPT, buildRetryUserPrompt(userPrompt, failures));
@@ -621,10 +624,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    const validationNotes =
-      failures.length > 0
-        ? failures.join('; ')
-        : 'Passed automatic validation (internal links, brand mentions, mid-article CTA).';
+    const isValidated = failures.length === 0;
+    const validationNotes = isValidated
+      ? 'Passed automatic validation (internal links, brand mentions, mid-article CTA).'
+      : failures.join('; ');
 
     const content = ensureFinalCta(ensureWhatsAppSection(generated.content));
 
@@ -646,7 +649,8 @@ Deno.serve(async (req) => {
         faq: generated.faq.length > 0 ? generated.faq : null,
         category,
         cover_image: coverImage,
-        is_published: false,
+        is_published: isValidated,
+        published_at: isValidated ? new Date().toISOString() : null,
         validation_notes: validationNotes,
       })
       .select('id, slug')
