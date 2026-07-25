@@ -77,7 +77,11 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-const GEMINI_MODEL = 'gemini-2.5-flash';
+// gemini-2.5-flash renvoie 404 "no longer available to new users" avec
+// la clé GEMINI_API_KEY de ce projet (comptes Google AI créés après la
+// dépréciation de ce modèle) — vérifié en direct via curl le 2026-07-25.
+// gemini-3.5-flash répond 200 avec la même clé.
+const GEMINI_MODEL = 'gemini-3.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 // Fallback si blog_queue est entièrement vide (ex: migration 0016 pas
@@ -319,11 +323,13 @@ Ne traite pas exactement le même angle qu'un de ces articles déjà publiés da
 ${existingList}`;
 }
 
+type GenerateResult = { ok: true; article: GeneratedArticle } | { ok: false; reason: string };
+
 async function generateArticle(
   apiKey: string,
   systemPrompt: string,
   userPrompt: string,
-): Promise<GeneratedArticle | null> {
+): Promise<GenerateResult> {
   let response: Response;
   try {
     response = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
@@ -336,34 +342,62 @@ async function generateArticle(
           responseMimeType: 'application/json',
           responseSchema: GENERATION_SCHEMA,
           temperature: 0.8,
-          maxOutputTokens: 4000,
+          maxOutputTokens: 6000,
+          // gemini-3.5-flash consomme une grosse part du budget de sortie
+          // en "thinking" interne par défaut (~1400 tokens observés sur un
+          // test), ce qui tronquait le JSON avant la fin de l'article
+          // (erreur "Unterminated string in JSON", vérifié le 2026-07-25).
+          // Cette tâche n'a besoin d'aucun raisonnement complexe, juste de
+          // rédaction — thinkingBudget=0 élimine la troncature et coûte
+          // moins cher.
+          thinkingConfig: { thinkingBudget: 0 },
         },
       }),
     });
-  } catch {
-    return null;
+  } catch (error) {
+    return { ok: false, reason: `fetch_error: ${error instanceof Error ? error.message : String(error)}` };
   }
 
-  if (!response.ok) return null;
+  if (!response.ok) {
+    const body = await response.text();
+    return { ok: false, reason: `gemini_http_${String(response.status)}: ${body.slice(0, 500)}` };
+  }
 
   const payload = (await response.json()) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
+    candidates?: {
+      content?: { parts?: { text?: string }[] };
+      finishReason?: string;
+    }[];
+    promptFeedback?: { blockReason?: string };
   };
+
   const text = payload.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (typeof text !== 'string') return null;
+  if (typeof text !== 'string') {
+    const finishReason = payload.candidates?.[0]?.finishReason ?? 'unknown';
+    const blockReason = payload.promptFeedback?.blockReason;
+    return {
+      ok: false,
+      reason: `no_text_in_response: finishReason=${finishReason}${blockReason ? `, blockReason=${blockReason}` : ''}`,
+    };
+  }
 
   try {
     const parsed = JSON.parse(text) as Partial<GeneratedArticle>;
-    if (!parsed.title || !parsed.excerpt || !parsed.content) return null;
+    if (!parsed.title || !parsed.excerpt || !parsed.content) {
+      return { ok: false, reason: 'incomplete_json: missing title/excerpt/content' };
+    }
     const faq = Array.isArray(parsed.faq)
       ? parsed.faq.filter(
           (item): item is FaqItem =>
             typeof item?.question === 'string' && typeof item.answer === 'string',
         )
       : [];
-    return { title: parsed.title, excerpt: parsed.excerpt, content: parsed.content, faq };
-  } catch {
-    return null;
+    return { ok: true, article: { title: parsed.title, excerpt: parsed.excerpt, content: parsed.content, faq } };
+  } catch (error) {
+    return {
+      ok: false,
+      reason: `json_parse_error: ${error instanceof Error ? error.message : String(error)}`,
+    };
   }
 }
 
@@ -567,10 +601,11 @@ Deno.serve(async (req) => {
 
     const toolUrl = TOOL_PAGE_URLS[category] ?? DEFAULT_TOOL_URL;
     const userPrompt = buildUserPrompt(category, topic, isNewAngle, existingTitles, toolUrl);
-    let generated = await generateArticle(geminiApiKey, SYSTEM_PROMPT, userPrompt);
-    if (!generated) {
-      return jsonResponse({ error: 'generation_failed' }, 502);
+    let result = await generateArticle(geminiApiKey, SYSTEM_PROMPT, userPrompt);
+    if (!result.ok) {
+      return jsonResponse({ error: 'generation_failed', reason: result.reason }, 502);
     }
+    let generated = result.article;
 
     // Vérifie les règles obligatoires (liens, mentions, CTA milieu) sur
     // le brouillon brut ; une seule régénération si ça échoue, avec un
@@ -579,13 +614,9 @@ Deno.serve(async (req) => {
     // façon en brouillon relu manuellement.
     let failures = runDeterministicChecks(generated.content, toolUrl);
     if (failures.length > 0) {
-      const retried = await generateArticle(
-        geminiApiKey,
-        SYSTEM_PROMPT,
-        buildRetryUserPrompt(userPrompt, failures),
-      );
-      if (retried) {
-        generated = retried;
+      result = await generateArticle(geminiApiKey, SYSTEM_PROMPT, buildRetryUserPrompt(userPrompt, failures));
+      if (result.ok) {
+        generated = result.article;
         failures = runDeterministicChecks(generated.content, toolUrl);
       }
     }
