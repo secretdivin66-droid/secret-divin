@@ -23,19 +23,30 @@
 // existe déjà, un suffixe timestamp est ajouté (voir uniqueSlug).
 //
 // Insère toujours en is_published=false (brouillon) : la relecture et la
-// publication restent manuelles via /admin (BlogAdminPanel), il n'existe
-// pas de pipeline de validation automatique sur ce projet.
+// publication restent manuelles via /admin (BlogAdminPanel) — il n'y a
+// pas d'étape de publication automatique séparée comme sur un autre
+// projet (pas de second appel cron un peu plus tard) ; la validation
+// déterministe ci-dessous tourne en revanche dans ce même appel, voir
+// plus bas.
 //
 // Contenu obligatoire (SYSTEM_PROMPT) : au moins 5 liens internes fondus
 // dans le texte, un CTA milieu vers l'outil de la catégorie, un CTA fin
 // vers /auth, le nom "Secret Divin" au moins 5 fois, et 3-5 questions FAQ
-// pour le schema FAQPage. Deux de ces règles sont EN PLUS garanties
-// déterministiquement côté code, pas seulement demandées au LLM (voir
-// ensureWhatsAppSection/ensureFinalCta) : le lien WhatsApp et le CTA
-// final /auth sont ajoutés en fin de contenu s'ils manquent — les autres
-// règles (5 liens, 5 mentions du nom, CTA milieu) restent au seul niveau
-// du prompt, sans vérification automatique après coup (pas de pipeline
-// de validation sur ce projet, voir plus haut).
+// pour le schema FAQPage.
+//
+// Validation en 2 niveaux, sur le contenu BRUT généré par Gemini (avant
+// tout patch) :
+// - Patché directement si absent (jamais laissé au hasard du prompt) :
+//   lien WhatsApp et CTA final /auth — voir ensureWhatsAppSection/
+//   ensureFinalCta, appliqués juste avant l'insertion.
+// - Vérifié + UNE régénération si ça échoue (liens/mentions/marque ne se
+//   patchent pas sans dégrader l'article, voir runDeterministicChecks) :
+//   au moins 5 liens internes distincts, au moins 5 mentions de "Secret
+//   Divin", CTA milieu présent avant les 15% derniers du contenu. Le
+//   résultat (pass ou liste des échecs restants après la régénération)
+//   est écrit dans blog_articles.validation_notes (migration 0017) pour
+//   relecture dans BlogAdminPanel — ça n'empêche jamais l'insertion en
+//   brouillon, ce projet ne publie jamais automatiquement.
 //
 // La FAQ n'est PAS injectée comme <script> dans "content" : elle est
 // stockée dans la colonne blog_articles.faq (jsonb), déjà rendue par
@@ -128,6 +139,36 @@ const TOOL_PAGE_URLS: Record<string, string> = {
   'Tutoriels': 'https://www.secretdivin.com/tutoriels',
 };
 const DEFAULT_TOOL_URL = 'https://www.secretdivin.com';
+
+// Pour le comptage déterministe de liens (voir runDeterministicChecks) —
+// même liste que celle listée dans SYSTEM_PROMPT. Ne PAS inclure
+// DEFAULT_TOOL_URL seule ("https://www.secretdivin.com") : elle est un
+// préfixe de toutes les autres, un comptage par sous-chaîne la
+// compterait à tort à chaque autre lien trouvé. On compte donc les hrefs
+// exacts extraits du HTML (voir extractHrefs), jamais par inclusion de
+// sous-chaîne.
+const ALL_INTERNAL_LINKS = [
+  'https://www.secretdivin.com/poids-mystique',
+  'https://www.secretdivin.com/carres-magiques',
+  'https://www.secretdivin.com/geomancie',
+  'https://www.secretdivin.com/reves',
+  'https://www.secretdivin.com/secrets',
+  'https://www.secretdivin.com/plantes',
+  'https://www.secretdivin.com/destin',
+  'https://www.secretdivin.com/attraper',
+  'https://www.secretdivin.com/jours',
+  'https://www.secretdivin.com/compatibilite',
+  'https://www.secretdivin.com/formation',
+  'https://www.secretdivin.com/tutoriels',
+  'https://www.secretdivin.com/auth',
+  'https://www.secretdivin.com/marabouts',
+  'https://www.secretdivin.com/marabouts/inscrire',
+  'https://www.secretdivin.com/credits',
+  'https://www.secretdivin.com',
+];
+
+const MIN_INTERNAL_LINKS = 5;
+const MIN_BRAND_MENTIONS = 5;
 
 const DIACRITICS_REGEX = new RegExp('[̀-ͯ]', 'g');
 
@@ -326,11 +367,70 @@ async function generateArticle(
   }
 }
 
+// Extrait toutes les valeurs de href="..." d'un contenu HTML, pour
+// compter les liens réellement posés (jamais par inclusion de
+// sous-chaîne, voir la remarque sur ALL_INTERNAL_LINKS ci-dessus).
+function extractHrefs(html: string): string[] {
+  return [...html.matchAll(/href="([^"]+)"/g)].map((m) => m[1]);
+}
+
+function countDistinctInternalLinks(content: string): number {
+  const hrefs = new Set(extractHrefs(content));
+  return ALL_INTERNAL_LINKS.filter((link) => hrefs.has(link)).length;
+}
+
+function countBrandMentions(content: string): number {
+  const text = content.replace(/<[^>]+>/g, ' ').toLowerCase();
+  return (text.match(/secret divin/g) ?? []).length;
+}
+
+// "Milieu" vérifié au sens large : le lien vers l'outil de la catégorie
+// doit apparaître avant les 15% derniers du contenu (donc pas seulement
+// mêlé au CTA final / à la section WhatsApp, tous deux en toute fin).
+function hasMiddleCta(content: string, toolUrl: string): boolean {
+  const idx = content.indexOf(`href="${toolUrl}"`);
+  if (idx === -1) return false;
+  return idx <= content.length * 0.85;
+}
+
+// Vérifie les 3 règles du system prompt qui ne sont PAS garanties par
+// ensureWhatsAppSection/ensureFinalCta (celles-là sont toujours vraies
+// après coup, donc inutiles à re-vérifier). Appelé sur le contenu BRUT
+// généré par Gemini, avant tout patch déterministe — pour un signal
+// honnête de ce que le LLM a réellement produit, voir l'appelant.
+function runDeterministicChecks(content: string, toolUrl: string): string[] {
+  const failures: string[] = [];
+
+  const linkCount = countDistinctInternalLinks(content);
+  if (linkCount < MIN_INTERNAL_LINKS) {
+    failures.push(`only ${String(linkCount)} internal link(s), need at least ${String(MIN_INTERNAL_LINKS)}`);
+  }
+
+  const mentions = countBrandMentions(content);
+  if (mentions < MIN_BRAND_MENTIONS) {
+    failures.push(`"Secret Divin" mentioned ${String(mentions)} time(s), need at least ${String(MIN_BRAND_MENTIONS)}`);
+  }
+
+  if (!hasMiddleCta(content, toolUrl)) {
+    failures.push(`missing mid-article CTA link to ${toolUrl}`);
+  }
+
+  return failures;
+}
+
+function buildRetryUserPrompt(basePrompt: string, failures: string[]): string {
+  return `${basePrompt}
+
+IMPORTANT : ta précédente tentative ne respectait pas ces règles obligatoires du system prompt, corrige-les strictement cette fois :
+${failures.map((f) => `- ${f}`).join('\n')}`;
+}
+
 // Garantit déterministiquement (sans compter sur le LLM) les deux règles
-// les plus simples à vérifier par code : le lien WhatsApp et le CTA final
-// vers /auth. Les autres règles du system prompt (5 liens min, CTA milieu,
-// 5 mentions du nom) restent au seul niveau du prompt, sans re-vérification
-// après coup.
+// les plus simples à patcher directement : le lien WhatsApp et le CTA
+// final vers /auth. Les 3 autres règles (voir runDeterministicChecks)
+// sont vérifiées et éventuellement corrigées via une régénération, pas
+// patchées directement (impossible d'ajouter "3 mentions de la marque"
+// par du texte générique sans dégrader l'article).
 function ensureWhatsAppSection(content: string): string {
   if (content.includes(WHATSAPP_URL)) return content;
   return `${content}\n<h2>Continue ta formation gratuitement</h2>\n<p>Rejoins la chaîne WhatsApp de formation gratuite Secret Divin pour approfondir ces enseignements chaque semaine : <a href="${WHATSAPP_URL}">rejoindre la chaîne WhatsApp</a>.</p>`;
@@ -467,10 +567,33 @@ Deno.serve(async (req) => {
 
     const toolUrl = TOOL_PAGE_URLS[category] ?? DEFAULT_TOOL_URL;
     const userPrompt = buildUserPrompt(category, topic, isNewAngle, existingTitles, toolUrl);
-    const generated = await generateArticle(geminiApiKey, SYSTEM_PROMPT, userPrompt);
+    let generated = await generateArticle(geminiApiKey, SYSTEM_PROMPT, userPrompt);
     if (!generated) {
       return jsonResponse({ error: 'generation_failed' }, 502);
     }
+
+    // Vérifie les règles obligatoires (liens, mentions, CTA milieu) sur
+    // le brouillon brut ; une seule régénération si ça échoue, avec un
+    // rappel explicite des règles manquées — jamais plus, pour ne pas
+    // multiplier les appels Gemini sur un article qui finira de toute
+    // façon en brouillon relu manuellement.
+    let failures = runDeterministicChecks(generated.content, toolUrl);
+    if (failures.length > 0) {
+      const retried = await generateArticle(
+        geminiApiKey,
+        SYSTEM_PROMPT,
+        buildRetryUserPrompt(userPrompt, failures),
+      );
+      if (retried) {
+        generated = retried;
+        failures = runDeterministicChecks(generated.content, toolUrl);
+      }
+    }
+
+    const validationNotes =
+      failures.length > 0
+        ? failures.join('; ')
+        : 'Passed automatic validation (internal links, brand mentions, mid-article CTA).';
 
     const content = ensureFinalCta(ensureWhatsAppSection(generated.content));
 
@@ -493,6 +616,7 @@ Deno.serve(async (req) => {
         category,
         cover_image: coverImage,
         is_published: false,
+        validation_notes: validationNotes,
       })
       .select('id, slug')
       .single();
