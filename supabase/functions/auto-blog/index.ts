@@ -8,7 +8,7 @@
 //   par thème). Une fois généré, l'angle passe en 'done'.
 // - Si plus aucun angle n'est 'pending' (file épuisée), pioche un thème
 //   déjà 'done' au hasard et demande à Gemini un ANGLE NOUVEAU sur ce
-//   même thème (jamais un doublon littéral — voir buildPrompt) : la file
+//   même thème (jamais un doublon littéral — voir buildUserPrompt) : la file
 //   ne se vide donc jamais réellement, elle grossit indéfiniment. Fallback
 //   supplémentaire si blog_queue est entièrement vide (ex: migration pas
 //   encore appliquée) : génère sur une catégorie BLOG_CATEGORIES au hasard
@@ -25,6 +25,24 @@
 // Insère toujours en is_published=false (brouillon) : la relecture et la
 // publication restent manuelles via /admin (BlogAdminPanel), il n'existe
 // pas de pipeline de validation automatique sur ce projet.
+//
+// Contenu obligatoire (SYSTEM_PROMPT) : au moins 5 liens internes fondus
+// dans le texte, un CTA milieu vers l'outil de la catégorie, un CTA fin
+// vers /auth, le nom "Secret Divin" au moins 5 fois, et 3-5 questions FAQ
+// pour le schema FAQPage. Deux de ces règles sont EN PLUS garanties
+// déterministiquement côté code, pas seulement demandées au LLM (voir
+// ensureWhatsAppSection/ensureFinalCta) : le lien WhatsApp et le CTA
+// final /auth sont ajoutés en fin de contenu s'ils manquent — les autres
+// règles (5 liens, 5 mentions du nom, CTA milieu) restent au seul niveau
+// du prompt, sans vérification automatique après coup (pas de pipeline
+// de validation sur ce projet, voir plus haut).
+//
+// La FAQ n'est PAS injectée comme <script> dans "content" : elle est
+// stockée dans la colonne blog_articles.faq (jsonb), déjà rendue par
+// BlogArticlePage.tsx en un vrai <script type="application/ld+json">
+// (voir migration 0015 — un <script> inline dans "content" ne produit
+// aucune donnée structurée exploitable une fois passé par
+// dangerouslySetInnerHTML, c'est exactement le bug que 0015 corrigeait).
 //
 // IMPORTANT AU DÉPLOIEMENT : --no-verify-jwt (pg_cron n'envoie pas de JWT
 // Supabase, voir migration 0016) :
@@ -89,6 +107,28 @@ const MYSTICAL_IMAGES = [
   'https://images.unsplash.com/photo-1519751138087-5bf79df62d5b?w=1200',
 ];
 
+const WHATSAPP_URL = 'https://whatsapp.com/channel/0029Vb61GC6Bvvsa4BN19I0W';
+const AUTH_URL = 'https://www.secretdivin.com/auth';
+
+// CTA "milieu d'article" : pointe vers la page outil de la catégorie
+// traitée. Les 2 catégories historiques sans page outil dédiée
+// ("Spiritualité islamique", "Talismans") retombent sur l'accueil.
+const TOOL_PAGE_URLS: Record<string, string> = {
+  'Poids mystique': 'https://www.secretdivin.com/poids-mystique',
+  'Carrés magiques': 'https://www.secretdivin.com/carres-magiques',
+  'Géomancie africaine': 'https://www.secretdivin.com/geomancie',
+  'Rêves': 'https://www.secretdivin.com/reves',
+  'Secrets Mystiques': 'https://www.secretdivin.com/secrets',
+  'Plantes mystiques': 'https://www.secretdivin.com/plantes',
+  'Destin': 'https://www.secretdivin.com/destin',
+  'Attraper ou Réconcilier': 'https://www.secretdivin.com/attraper',
+  'Jours de Naissance': 'https://www.secretdivin.com/jours',
+  'Compatibilité': 'https://www.secretdivin.com/compatibilite',
+  'Formation': 'https://www.secretdivin.com/formation',
+  'Tutoriels': 'https://www.secretdivin.com/tutoriels',
+};
+const DEFAULT_TOOL_URL = 'https://www.secretdivin.com';
+
 const DIACRITICS_REGEX = new RegExp('[̀-ͯ]', 'g');
 
 // Dupliqué depuis src/utils/blog.ts, même remarque que BLOG_CATEGORIES
@@ -132,10 +172,16 @@ interface QueueRow {
   category: string;
 }
 
+interface FaqItem {
+  question: string;
+  answer: string;
+}
+
 interface GeneratedArticle {
   title: string;
   excerpt: string;
   content: string;
+  faq: FaqItem[];
 }
 
 const GENERATION_SCHEMA = {
@@ -146,17 +192,72 @@ const GENERATION_SCHEMA = {
     content: {
       type: 'STRING',
       description:
-        'Corps complet en HTML : <h2>/<h3> pour les titres, <p> pour les paragraphes, <ul>/<ol> pour les listes. Pas de <h1>, pas de wrapper <html>/<body>.',
+        'Corps complet en HTML : <h2>/<h3> pour les titres, <p> pour les paragraphes, <ul>/<ol> pour les listes, <a href="..."> pour les liens obligatoires. Pas de <h1>, pas de wrapper <html>/<body>, pas de <script>.',
+    },
+    faq: {
+      type: 'ARRAY',
+      description:
+        '3 à 5 questions fréquentes pertinentes avec leur réponse, pour le schema FAQPage — affichées séparément par le site, ne pas les répéter dans "content".',
+      items: {
+        type: 'OBJECT',
+        properties: {
+          question: { type: 'STRING' },
+          answer: { type: 'STRING' },
+        },
+        required: ['question', 'answer'],
+      },
     },
   },
-  required: ['title', 'excerpt', 'content'],
+  required: ['title', 'excerpt', 'content', 'faq'],
 };
 
-function buildPrompt(
+// System prompt fixe (mêmes règles à chaque appel) — voir buildUserPrompt
+// pour ce qui varie par article (sujet précis, catégorie, CTA milieu).
+const SYSTEM_PROMPT = `Tu es expert en sciences islamiques ésotériques africaines. Rédige un article de blog en français de 1200-1500 mots, ton islamique et respectueux, optimisé SEO. Tutoiement ("tu"/"toi"), jamais "vous" — c'est la voix standard du site.
+
+LIENS OBLIGATOIRES à intégrer naturellement dans le texte (pas en liste, pas en footer) :
+
+Pages fonctionnalités :
+- Poids Mystique : https://www.secretdivin.com/poids-mystique
+- Carrés Magiques : https://www.secretdivin.com/carres-magiques
+- Géomancie : https://www.secretdivin.com/geomancie
+- Interprétation des Rêves : https://www.secretdivin.com/reves
+- Secrets Mystiques : https://www.secretdivin.com/secrets
+- Plantes Mystiques : https://www.secretdivin.com/plantes
+- Destin Complet : https://www.secretdivin.com/destin
+- Attraper ou Réconcilier : https://www.secretdivin.com/attraper
+- Jours de Naissance : https://www.secretdivin.com/jours
+- Compatibilité : https://www.secretdivin.com/compatibilite
+- Formation : https://www.secretdivin.com/formation
+- Tutoriels : https://www.secretdivin.com/tutoriels
+
+Pages principales :
+- Accueil : https://www.secretdivin.com
+- Inscription gratuite : https://www.secretdivin.com/auth
+- Annuaire marabouts : https://www.secretdivin.com/marabouts
+- Inscrire marabout : https://www.secretdivin.com/marabouts/inscrire
+- Crédits : https://www.secretdivin.com/credits
+
+Chaîne WhatsApp formation gratuite (mentionner comme ressource complémentaire) :
+https://whatsapp.com/channel/0029Vb61GC6Bvvsa4BN19I0W
+
+RÈGLES D'INTÉGRATION :
+- Intègre au minimum 5 des liens ci-dessus par article, fondus dans des phrases naturelles (jamais une liste à puces de liens, jamais un bloc "liens utiles").
+- Formate chaque lien en HTML : <a href="URL">texte d'ancre naturel</a>, jamais une URL brute.
+- Le lien WhatsApp doit apparaître dans une section dédiée vers la fin de l'article.
+- 2 CTA obligatoires : un au milieu de l'article vers la page de l'outil de la catégorie traitée (précisée dans le message suivant), un en fin d'article vers https://www.secretdivin.com/auth.
+- Mentionne "Secret Divin" par son nom au moins 5 fois dans l'article.
+- Concret et respectueux de la tradition : explique le sens et la pratique sans inventer de faits historiques précis ni de dates.
+- Aucune promesse de résultat garanti (pas de "tu obtiendras à coup sûr...").
+- Fournis aussi 3 à 5 questions fréquentes (FAQ) pertinentes avec réponse dans le champ JSON dédié, pour le schema FAQPage de la page — ne les répète pas dans le corps de l'article.
+- Réponds UNIQUEMENT avec le JSON demandé (title, excerpt, content, faq), aucun texte hors du JSON.`;
+
+function buildUserPrompt(
   category: string,
   topic: string | null,
   isNewAngle: boolean,
   existingTitles: string[],
+  toolUrl: string,
 ): string {
   const existingList =
     existingTitles.length > 0
@@ -164,38 +265,37 @@ function buildPrompt(
       : '(aucun article publié dans cette catégorie pour l\'instant)';
 
   const subjectInstruction = !topic
-    ? `Choisis toi-même un sujet précis et pertinent dans cette catégorie.`
+    ? `Choisis toi-même un sujet précis et pertinent dans la catégorie "${category}".`
     : isNewAngle
-      ? `Le thème de référence est "${topic}", déjà traité par le passé sur ce blog. Invente un ANGLE NOUVEAU et inédit sur ce même thème (par exemple : un approfondissement, "secret avancé de...", "X choses à savoir sur...", un angle pratique différent) — le "title" que tu renvoies doit être ce nouvel angle précis, pas une reformulation générique du thème.`
-      : `Le sujet exact à traiter est : "${topic}".`;
+      ? `Le thème de référence est "${topic}", déjà traité par le passé sur ce blog, dans la catégorie "${category}". Invente un ANGLE NOUVEAU et inédit sur ce même thème (par exemple : un approfondissement, "secret avancé de...", "X choses à savoir sur...", un angle pratique différent) — le "title" que tu renvoies doit être ce nouvel angle précis, pas une reformulation générique du thème.`
+      : `Le sujet exact à traiter est : "${topic}", dans la catégorie "${category}".`;
 
-  return `Tu écris un nouvel article de blog pour Secret Divin, un site de spiritualité et de pratiques mystiques traditionnelles, dans la catégorie "${category}".
+  return `${subjectInstruction}
 
-${subjectInstruction}
+Le CTA du milieu de l'article doit pointer vers ${toolUrl} — c'est la page de l'outil correspondant à cette catégorie.
 
-Règles :
-- Ton : tutoiement ("tu"/"toi"), jamais "vous" — c'est la voix standard du site.
-- 600-900 mots, structuré avec des <h2> qui reprennent les questions concrètes que se pose le lecteur.
-- Concret et respectueux de la tradition : explique le sens et la pratique sans inventer de faits historiques précis ni de dates.
-- Aucune promesse de résultat garanti (pas de "tu obtiendras à coup sûr...").
-- Ne traite pas exactement le même angle qu'un de ces articles déjà publiés dans cette catégorie :
-${existingList}
-- Réponds UNIQUEMENT avec le JSON demandé, aucun texte hors du JSON.`;
+Ne traite pas exactement le même angle qu'un de ces articles déjà publiés dans cette catégorie :
+${existingList}`;
 }
 
-async function generateArticle(apiKey: string, prompt: string): Promise<GeneratedArticle | null> {
+async function generateArticle(
+  apiKey: string,
+  systemPrompt: string,
+  userPrompt: string,
+): Promise<GeneratedArticle | null> {
   let response: Response;
   try {
     response = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        system_instruction: { parts: [{ text: systemPrompt }] },
+        contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
         generationConfig: {
           responseMimeType: 'application/json',
           responseSchema: GENERATION_SCHEMA,
           temperature: 0.8,
-          maxOutputTokens: 3000,
+          maxOutputTokens: 4000,
         },
       }),
     });
@@ -214,10 +314,31 @@ async function generateArticle(apiKey: string, prompt: string): Promise<Generate
   try {
     const parsed = JSON.parse(text) as Partial<GeneratedArticle>;
     if (!parsed.title || !parsed.excerpt || !parsed.content) return null;
-    return { title: parsed.title, excerpt: parsed.excerpt, content: parsed.content };
+    const faq = Array.isArray(parsed.faq)
+      ? parsed.faq.filter(
+          (item): item is FaqItem =>
+            typeof item?.question === 'string' && typeof item.answer === 'string',
+        )
+      : [];
+    return { title: parsed.title, excerpt: parsed.excerpt, content: parsed.content, faq };
   } catch {
     return null;
   }
+}
+
+// Garantit déterministiquement (sans compter sur le LLM) les deux règles
+// les plus simples à vérifier par code : le lien WhatsApp et le CTA final
+// vers /auth. Les autres règles du system prompt (5 liens min, CTA milieu,
+// 5 mentions du nom) restent au seul niveau du prompt, sans re-vérification
+// après coup.
+function ensureWhatsAppSection(content: string): string {
+  if (content.includes(WHATSAPP_URL)) return content;
+  return `${content}\n<h2>Continue ta formation gratuitement</h2>\n<p>Rejoins la chaîne WhatsApp de formation gratuite Secret Divin pour approfondir ces enseignements chaque semaine : <a href="${WHATSAPP_URL}">rejoindre la chaîne WhatsApp</a>.</p>`;
+}
+
+function ensureFinalCta(content: string): string {
+  if (content.includes(AUTH_URL)) return content;
+  return `${content}\n<p>Envie d'aller plus loin avec Secret Divin ? <a href="${AUTH_URL}">Crée ton compte gratuitement</a> et découvre tous nos outils.</p>`;
 }
 
 async function sha1Hex(input: string): Promise<string> {
@@ -344,11 +465,14 @@ Deno.serve(async (req) => {
       .limit(30);
     const existingTitles = (recentArticles ?? []).map((a) => a.title);
 
-    const prompt = buildPrompt(category, topic, isNewAngle, existingTitles);
-    const generated = await generateArticle(geminiApiKey, prompt);
+    const toolUrl = TOOL_PAGE_URLS[category] ?? DEFAULT_TOOL_URL;
+    const userPrompt = buildUserPrompt(category, topic, isNewAngle, existingTitles, toolUrl);
+    const generated = await generateArticle(geminiApiKey, SYSTEM_PROMPT, userPrompt);
     if (!generated) {
       return jsonResponse({ error: 'generation_failed' }, 502);
     }
+
+    const content = ensureFinalCta(ensureWhatsAppSection(generated.content));
 
     const sourceImage = pickRandom(MYSTICAL_IMAGES);
     const coverImage = await uploadToCloudinary(cloudName, cloudinaryApiKey, cloudinaryApiSecret, sourceImage);
@@ -364,7 +488,8 @@ Deno.serve(async (req) => {
         title: generated.title,
         slug,
         excerpt: generated.excerpt,
-        content: generated.content,
+        content,
+        faq: generated.faq.length > 0 ? generated.faq : null,
         category,
         cover_image: coverImage,
         is_published: false,
