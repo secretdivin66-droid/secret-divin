@@ -1,27 +1,45 @@
-// Génère automatiquement un article de blog Secret Divin : sujet +
-// contenu via Gemini (appel direct, PAS via gemini-proxy — ce proxy exige
-// un JWT utilisateur réel et un rate-limit pensé pour l'usage interactif,
-// inadapté à un appel serveur autonome), une image de couverture choisie
-// aléatoirement dans MYSTICAL_IMAGES puis re-uploadée vers Cloudinary
-// (upload signé, sans clé Unsplash : ces URLs sont déjà des photos
-// Unsplash valides, on ne fait que les rapatrier sur notre CDN).
+// Génère automatiquement un article de blog Secret Divin, en continu et
+// sans jamais s'arrêter, à raison de 2 appels/jour (8h et 18h UTC, voir
+// migration 0016 pour le planning pg_cron).
+//
+// Sujet :
+// - Pioche un angle 'pending' au hasard dans blog_queue (file thématique
+//   pré-remplie par la migration 0016, ~65 angles de référence groupés
+//   par thème). Une fois généré, l'angle passe en 'done'.
+// - Si plus aucun angle n'est 'pending' (file épuisée), pioche un thème
+//   déjà 'done' au hasard et demande à Gemini un ANGLE NOUVEAU sur ce
+//   même thème (jamais un doublon littéral — voir buildPrompt) : la file
+//   ne se vide donc jamais réellement, elle grossit indéfiniment. Fallback
+//   supplémentaire si blog_queue est entièrement vide (ex: migration pas
+//   encore appliquée) : génère sur une catégorie BLOG_CATEGORIES au hasard
+//   sans angle précis, plutôt que d'échouer.
+//
+// Image de couverture : une URL Unsplash tirée au hasard dans
+// MYSTICAL_IMAGES (pas de clé Unsplash requise, ce sont déjà des photos
+// valides), re-uploadée vers Cloudinary via un upload SIGNÉ (pas de preset
+// unsigned côté serveur, voir uploadToCloudinary).
+//
+// Slug : jamais deux articles avec le même slug — si le slug généré
+// existe déjà, un suffixe timestamp est ajouté (voir uniqueSlug).
 //
 // Insère toujours en is_published=false (brouillon) : la relecture et la
 // publication restent manuelles via /admin (BlogAdminPanel), il n'existe
-// pas ici de pipeline de validation automatique comme sur d'autres
-// projets — un admin humain publie après relecture.
+// pas de pipeline de validation automatique sur ce projet.
 //
-// Pas de déclenchement cron configuré pour l'instant (pas demandé) :
-// cette fonction s'invoque pour l'instant à la demande (dashboard
-// Supabase ou `supabase functions invoke auto-blog`).
+// IMPORTANT AU DÉPLOIEMENT : --no-verify-jwt (pg_cron n'envoie pas de JWT
+// Supabase, voir migration 0016) :
+//   supabase functions deploy auto-blog --no-verify-jwt
 //
-// Sécurité : seul un appelant présentant la clé service_role est accepté
-// — chaque appel consomme du quota Gemini/Cloudinary payant et écrit en
-// base, une clé anon (publique, dans le bundle client) ne doit pas
-// suffire à déclencher ça à volonté.
+// Sécurité : authentifiée par un secret partagé dédié (header
+// x-auto-blog-cron-secret comparé en temps constant à
+// AUTO_BLOG_CRON_SECRET), pas par la clé service_role — ni Vault ni
+// `alter database` ne sont disponibles sur le plan gratuit pour faire
+// porter un secret jusqu'à pg_cron (voir migration 0016, table
+// private.pipeline_secrets).
 //
 // Secrets requis (supabase secrets set) :
-//   GEMINI_API_KEY, CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+//   AUTO_BLOG_CRON_SECRET, GEMINI_API_KEY, CLOUDINARY_CLOUD_NAME,
+//   CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const CORS_HEADERS = {
@@ -33,6 +51,10 @@ const CORS_HEADERS = {
 const GEMINI_MODEL = 'gemini-2.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
+// Fallback si blog_queue est entièrement vide (ex: migration 0016 pas
+// encore appliquée) — mêmes 13 catégories que src/utils/blog.ts, dupliqué
+// volontairement (le frontend et les Edge Functions Deno ne partagent
+// jamais de code dans ce projet, voir gemini-proxy/novu-proxy).
 const BLOG_CATEGORIES = [
   'Spiritualité islamique',
   'Géomancie africaine',
@@ -41,13 +63,19 @@ const BLOG_CATEGORIES = [
   'Rêves',
   'Poids mystique',
   'Talismans',
+  'Secrets Mystiques',
+  'Destin',
+  'Jours de Naissance',
+  'Compatibilité',
+  'Formation',
+  'Attraper ou Réconcilier',
+  'Tutoriels',
 ];
 
 // Photos Unsplash génériques à thème mystique/spirituel, choisies au
 // préalable pour éviter tout appel à l'API de recherche Unsplash (pas de
 // clé requise) — une est tirée au hasard par article, puis re-hébergée
-// sur Cloudinary pour ne pas dépendre du lien Unsplash direct (poids,
-// disponibilité) sur le long terme.
+// sur Cloudinary pour ne pas dépendre du lien Unsplash direct sur la durée.
 const MYSTICAL_IMAGES = [
   'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=1200',
   'https://images.unsplash.com/photo-1519682337058-a94d519337bc?w=1200',
@@ -63,9 +91,8 @@ const MYSTICAL_IMAGES = [
 
 const DIACRITICS_REGEX = new RegExp('[̀-ͯ]', 'g');
 
-// Dupliqué depuis src/utils/blog.ts volontairement : le frontend et les
-// Edge Functions Deno ne partagent jamais de code dans ce projet (voir
-// gemini-proxy/novu-proxy, chacun autonome).
+// Dupliqué depuis src/utils/blog.ts, même remarque que BLOG_CATEGORIES
+// ci-dessus.
 function slugify(text: string): string {
   return text
     .normalize('NFD')
@@ -89,6 +116,22 @@ function pickRandom<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)];
 }
 
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
+interface QueueRow {
+  id: string;
+  theme: string;
+  topic: string;
+  category: string;
+}
+
 interface GeneratedArticle {
   title: string;
   excerpt: string;
@@ -109,17 +152,38 @@ const GENERATION_SCHEMA = {
   required: ['title', 'excerpt', 'content'],
 };
 
-async function generateArticle(apiKey: string, category: string): Promise<GeneratedArticle | null> {
-  const prompt = `Tu écris un nouvel article de blog pour Secret Divin, un site de spiritualité et de pratiques mystiques traditionnelles (géomancie, talismans, invocations, rêves), dans la catégorie "${category}".
+function buildPrompt(
+  category: string,
+  topic: string | null,
+  isNewAngle: boolean,
+  existingTitles: string[],
+): string {
+  const existingList =
+    existingTitles.length > 0
+      ? existingTitles.map((t) => `- ${t}`).join('\n')
+      : '(aucun article publié dans cette catégorie pour l\'instant)';
+
+  const subjectInstruction = !topic
+    ? `Choisis toi-même un sujet précis et pertinent dans cette catégorie.`
+    : isNewAngle
+      ? `Le thème de référence est "${topic}", déjà traité par le passé sur ce blog. Invente un ANGLE NOUVEAU et inédit sur ce même thème (par exemple : un approfondissement, "secret avancé de...", "X choses à savoir sur...", un angle pratique différent) — le "title" que tu renvoies doit être ce nouvel angle précis, pas une reformulation générique du thème.`
+      : `Le sujet exact à traiter est : "${topic}".`;
+
+  return `Tu écris un nouvel article de blog pour Secret Divin, un site de spiritualité et de pratiques mystiques traditionnelles, dans la catégorie "${category}".
+
+${subjectInstruction}
 
 Règles :
 - Ton : tutoiement ("tu"/"toi"), jamais "vous" — c'est la voix standard du site.
 - 600-900 mots, structuré avec des <h2> qui reprennent les questions concrètes que se pose le lecteur.
 - Concret et respectueux de la tradition : explique le sens et la pratique sans inventer de faits historiques précis ni de dates.
 - Aucune promesse de résultat garanti (pas de "tu obtiendras à coup sûr...").
-- N'utilise jamais le mot "vous".
+- Ne traite pas exactement le même angle qu'un de ces articles déjà publiés dans cette catégorie :
+${existingList}
 - Réponds UNIQUEMENT avec le JSON demandé, aucun texte hors du JSON.`;
+}
 
+async function generateArticle(apiKey: string, prompt: string): Promise<GeneratedArticle | null> {
   let response: Response;
   try {
     response = await fetch(`${GEMINI_URL}?key=${apiKey}`, {
@@ -200,6 +264,18 @@ async function uploadToCloudinary(
   return body.secure_url ?? null;
 }
 
+// Ajoute un court suffixe si le slug existe déjà — jamais deux articles
+// avec le même slug.
+async function uniqueSlug(
+  supabase: ReturnType<typeof createClient>,
+  title: string,
+): Promise<string> {
+  const base = slugify(title);
+  const { data } = await supabase.from('blog_articles').select('id').eq('slug', base).maybeSingle();
+  if (!data) return base;
+  return `${base}-${Date.now().toString(36)}`;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: CORS_HEADERS });
@@ -209,10 +285,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get('Authorization');
-    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+    const cronSecret = req.headers.get('x-auto-blog-cron-secret') ?? '';
+    const expectedCronSecret = Deno.env.get('AUTO_BLOG_CRON_SECRET') ?? '';
 
-    if (!serviceRoleKey || authHeader !== `Bearer ${serviceRoleKey}`) {
+    if (!expectedCronSecret || !timingSafeEqual(cronSecret, expectedCronSecret)) {
       return jsonResponse({ error: 'not_authorized' }, 403);
     }
 
@@ -220,13 +296,56 @@ Deno.serve(async (req) => {
     const cloudName = Deno.env.get('CLOUDINARY_CLOUD_NAME');
     const cloudinaryApiKey = Deno.env.get('CLOUDINARY_API_KEY');
     const cloudinaryApiSecret = Deno.env.get('CLOUDINARY_API_SECRET');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
     if (!geminiApiKey || !cloudName || !cloudinaryApiKey || !cloudinaryApiSecret) {
       return jsonResponse({ error: 'server_misconfigured' }, 500);
     }
 
-    const category = pickRandom(BLOG_CATEGORIES);
-    const generated = await generateArticle(geminiApiKey, category);
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+    const { data: pendingRows } = await supabase
+      .from('blog_queue')
+      .select('id, theme, topic, category')
+      .eq('status', 'pending');
+
+    const { data: doneRows } = await supabase
+      .from('blog_queue')
+      .select('id, theme, topic, category')
+      .eq('status', 'done');
+
+    let queueRow: QueueRow | null = null;
+    let isNewAngle = false;
+    let category: string;
+    let topic: string | null;
+
+    if (pendingRows && pendingRows.length > 0) {
+      queueRow = pickRandom(pendingRows);
+      category = queueRow.category;
+      topic = queueRow.topic;
+    } else if (doneRows && doneRows.length > 0) {
+      queueRow = pickRandom(doneRows);
+      isNewAngle = true;
+      category = queueRow.category;
+      topic = queueRow.topic;
+    } else {
+      // Fallback : blog_queue entièrement vide (migration pas encore
+      // appliquée, ou seed effacé) — ne bloque jamais la génération.
+      category = pickRandom(BLOG_CATEGORIES);
+      topic = null;
+    }
+
+    const { data: recentArticles } = await supabase
+      .from('blog_articles')
+      .select('title')
+      .eq('category', category)
+      .order('created_at', { ascending: false })
+      .limit(30);
+    const existingTitles = (recentArticles ?? []).map((a) => a.title);
+
+    const prompt = buildPrompt(category, topic, isNewAngle, existingTitles);
+    const generated = await generateArticle(geminiApiKey, prompt);
     if (!generated) {
       return jsonResponse({ error: 'generation_failed' }, 502);
     }
@@ -237,10 +356,8 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'cloudinary_upload_failed' }, 502);
     }
 
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    const slug = await uniqueSlug(supabase, generated.title);
 
-    const slug = slugify(generated.title);
     const { data: article, error: insertError } = await supabase
       .from('blog_articles')
       .insert({
@@ -255,11 +372,33 @@ Deno.serve(async (req) => {
       .select('id, slug')
       .single();
 
-    if (insertError) {
-      return jsonResponse({ error: 'insert_failed', detail: insertError.message }, 500);
+    if (insertError || !article) {
+      return jsonResponse({ error: 'insert_failed', detail: insertError?.message }, 500);
     }
 
-    return jsonResponse({ success: true, article });
+    // Fait avancer la file : marque l'angle 'pending' consommé comme
+    // 'done', ou enregistre le nouvel angle inventé par Gemini pour que
+    // le prochain cycle ne le repioche pas tel quel.
+    if (queueRow && !isNewAngle) {
+      await supabase
+        .from('blog_queue')
+        .update({ status: 'done', article_id: article.id, done_at: new Date().toISOString() })
+        .eq('id', queueRow.id);
+    } else if (queueRow && isNewAngle) {
+      await supabase.from('blog_queue').upsert(
+        {
+          theme: queueRow.theme,
+          topic: generated.title,
+          category,
+          status: 'done',
+          article_id: article.id,
+          done_at: new Date().toISOString(),
+        },
+        { onConflict: 'theme,topic', ignoreDuplicates: true },
+      );
+    }
+
+    return jsonResponse({ success: true, article, category, isNewAngle });
   } catch (error) {
     return jsonResponse({ error: error instanceof Error ? error.message : 'internal_error' }, 500);
   }
