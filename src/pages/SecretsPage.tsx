@@ -545,7 +545,7 @@ export function SecretsPage() {
               <div className="carte rounded-lg text-center">
                 <p className="text-or font-bold text-[2rem]">{firstName}</p>
                 <p className="arabic text-or mt-2">
-                  {result.nameArabic} بن/بنت {result.motherArabic}
+                  {result.nameArabic} {gender === 'homme' ? 'بن' : 'بنت'} {result.motherArabic}
                 </p>
                 <p className="text-white mt-3">PM : {result.PM}</p>
               </div>
