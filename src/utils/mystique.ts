@@ -28,6 +28,29 @@ export function toArabicIndic(n: number): string {
   return String(n).split('').map(c => d[parseInt(c)]).join('');
 }
 
+// Décomposition gloutonne d'un entier en lettres Abjad (valeurs décroissantes
+// de la table ABJAD ci-dessus, ex: 42 -> "مب" = م(40)+ب(2)) — dérivée de la
+// même table que calculateWeight, pour rester cohérente avec le reste du
+// site plutôt que de coder une deuxième liste de correspondances. 'ة'
+// (variante de ه, valeur 5) est exclue de la décomposition : ه est la forme
+// conventionnelle utilisée pour écrire un nombre en lettres.
+const ABJAD_DESCENDING: [string, number][] = Object.entries(ABJAD)
+  .filter(([letter]) => letter !== 'ة')
+  .sort((a, b) => b[1] - a[1]);
+
+export function toAbjadLetters(n: number): string {
+  if (n <= 0) return String(n);
+  let remaining = n;
+  let result = '';
+  for (const [letter, value] of ABJAD_DESCENDING) {
+    while (remaining >= value) {
+      result += letter;
+      remaining -= value;
+    }
+  }
+  return result;
+}
+
 export const GENDER_BONUS = { homme: 52, femme: 452 };
 
 export function calculatePM(
