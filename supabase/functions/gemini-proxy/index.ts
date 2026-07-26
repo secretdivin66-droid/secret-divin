@@ -1,6 +1,12 @@
-// Proxy Gemini côté serveur : la clé Google (GEMINI_API_KEY, secret Supabase)
-// ne quitte jamais ce runtime. Le client envoie { model, body } et ne connaît
-// jamais la clé — voir src/lib/geminiProxy.ts pour le point d'appel.
+// Proxy Gemini côté serveur : la clé Google (GEMINI_API_KEY_USER_TOOLS, secret
+// Supabase) ne quitte jamais ce runtime. Le client envoie { model, body } et
+// ne connaît jamais la clé — voir src/lib/geminiProxy.ts pour le point d'appel.
+//
+// Clé dédiée au projet Google Cloud "secretdivin-tools", séparée de celle
+// d'auto-blog ("secretdivin-autoblog", GEMINI_API_KEY_BLOG) depuis le
+// 2026-07-26 : les deux partageaient auparavant GEMINI_API_KEY, donc le même
+// quota Google (20 req/jour en free tier) — un usage épuisait le quota de
+// l'autre. Chaque fonction a maintenant son propre quota isolé.
 //
 // Sécurité :
 // - exige un JWT Supabase valide d'un VRAI utilisateur connecté (pas juste la
@@ -12,9 +18,9 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 // gemini-2.0-flash (quota gratuit à 0 sur ce projet) et gemini-2.5-flash
-// (404 "no longer available to new users") ne fonctionnent plus avec la
-// clé GEMINI_API_KEY actuelle — vérifié en direct contre l'API Gemini le
-// 2026-07-25. gemini-3.5-flash répond normalement avec la même clé.
+// (404 "no longer available to new users") ne fonctionnent plus avec cette
+// clé — vérifié en direct contre l'API Gemini le 2026-07-25. gemini-3.5-flash
+// répond normalement avec la même clé.
 // gemini-2.5-flash-preview-tts (utilisé uniquement par src/utils/tts.ts)
 // fonctionne toujours, contrairement à son équivalent non-TTS.
 const ALLOWED_MODELS = new Set(['gemini-3.5-flash', 'gemini-2.5-flash-preview-tts']);
@@ -110,7 +116,7 @@ Deno.serve(async (req) => {
       body.generationConfig = { ...body.generationConfig, thinkingConfig: { thinkingBudget: 0 } };
     }
 
-    const geminiKey = Deno.env.get('GEMINI_API_KEY');
+    const geminiKey = Deno.env.get('GEMINI_API_KEY_USER_TOOLS');
     if (!geminiKey) {
       return jsonResponse({ error: 'server_misconfigured' }, 500);
     }

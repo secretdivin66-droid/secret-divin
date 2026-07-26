@@ -79,10 +79,18 @@
 // private.pipeline_secrets).
 //
 // Secrets requis (supabase secrets set) :
-//   AUTO_BLOG_CRON_SECRET, GEMINI_API_KEY, CLOUDINARY_CLOUD_NAME,
+//   AUTO_BLOG_CRON_SECRET, GEMINI_API_KEY_BLOG, CLOUDINARY_CLOUD_NAME,
 //   CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
 // Secret optionnel (repli silencieux sur MYSTICAL_IMAGES si absent) :
 //   UNSPLASH_ACCESS_KEY
+//
+// GEMINI_API_KEY_BLOG est une clé dédiée au projet Google Cloud
+// "secretdivin-autoblog", séparée depuis le 2026-07-26 de celle utilisée par
+// gemini-proxy (GEMINI_API_KEY_USER_TOOLS, projet "secretdivin-tools") :
+// les deux partageaient auparavant GEMINI_API_KEY, donc le même quota
+// Google (20 req/jour en free tier) — auto-blog (2 runs cron/jour + retries)
+// pouvait à lui seul épuiser le quota des pages outils utilisateur, et
+// inversement. Chaque fonction a maintenant son propre quota isolé.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const CORS_HEADERS = {
@@ -92,9 +100,9 @@ const CORS_HEADERS = {
 };
 
 // gemini-2.5-flash renvoie 404 "no longer available to new users" avec
-// la clé GEMINI_API_KEY de ce projet (comptes Google AI créés après la
-// dépréciation de ce modèle) — vérifié en direct via curl le 2026-07-25.
-// gemini-3.5-flash répond 200 avec la même clé.
+// cette clé (comptes Google AI créés après la dépréciation de ce modèle) —
+// vérifié en direct via curl le 2026-07-25. gemini-3.5-flash répond 200
+// avec la même clé.
 const GEMINI_MODEL = 'gemini-3.5-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
@@ -623,7 +631,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'not_authorized' }, 403);
     }
 
-    const geminiApiKey = Deno.env.get('GEMINI_API_KEY');
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY_BLOG');
     const cloudName = Deno.env.get('CLOUDINARY_CLOUD_NAME');
     const cloudinaryApiKey = Deno.env.get('CLOUDINARY_API_KEY');
     const cloudinaryApiSecret = Deno.env.get('CLOUDINARY_API_SECRET');
