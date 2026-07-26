@@ -69,10 +69,18 @@ Deno.serve(async (req) => {
     // Limite serveur (20 appels / 60s par utilisateur) : contrairement à un
     // compteur client, celle-ci ne peut pas être contournée en appelant
     // cette fonction directement.
-    const { data: allowed } = await supabaseClient.rpc('check_gemini_rate_limit', {
+    const { data: allowed, error: rateLimitError } = await supabaseClient.rpc('check_gemini_rate_limit', {
       p_max_calls: 20,
       p_window_seconds: 60,
     });
+    // Une erreur RPC ici (fonction manquante, table absente...) laissait
+    // auparavant `allowed` à null en silence, bloquant TOUT appel avec un
+    // 429 trompeur (voir incident du 2026-07-26 : migration 0007 jamais
+    // appliquée en prod) — on continue à fermer l'accès par défaut (fail
+    // closed), mais on log clairement pour que ce ne soit plus invisible.
+    if (rateLimitError) {
+      console.error('[gemini-proxy] check_gemini_rate_limit RPC failed:', rateLimitError);
+    }
     if (!allowed) {
       return jsonResponse({ error: 'rate_limited' }, 429);
     }
