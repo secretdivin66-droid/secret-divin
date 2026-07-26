@@ -14,10 +14,19 @@
 //   encore appliquée) : génère sur une catégorie BLOG_CATEGORIES au hasard
 //   sans angle précis, plutôt que d'échouer.
 //
-// Image de couverture : une URL Unsplash tirée au hasard dans
-// MYSTICAL_IMAGES (pas de clé Unsplash requise, ce sont déjà des photos
-// valides), re-uploadée vers Cloudinary via un upload SIGNÉ (pas de preset
-// unsigned côté serveur, voir uploadToCloudinary).
+// Image de couverture : recherchée sur l'API Unsplash (endpoint
+// /search/photos) avec 2-3 mots-clés anglais dérivés de la catégorie de
+// l'article (voir CATEGORY_IMAGE_KEYWORDS/searchUnsplashImage), puis
+// re-uploadée vers Cloudinary via un upload SIGNÉ (pas de preset unsigned
+// côté serveur, voir uploadToCloudinary) — jamais l'URL Unsplash brute
+// stockée directement, même pipeline Cloudinary qu'avant. Le nom du
+// photographe et son lien de profil sont conservés dans
+// blog_articles.image_credit_name/image_credit_url (migration 0018) pour
+// attribution sous l'image (voir BlogArticlePage.tsx). Si UNSPLASH_ACCESS_KEY
+// est absent, la recherche échoue ou ne retourne aucun résultat : repli sur
+// MYSTICAL_IMAGES (aucune clé requise, ce sont déjà des photos valides) —
+// jamais de mention de crédit dans ce cas, voir searchUnsplashImage et son
+// appelant.
 //
 // Slug : jamais deux articles avec le même slug — si le slug généré
 // existe déjà, un suffixe timestamp est ajouté (voir uniqueSlug).
@@ -72,6 +81,8 @@
 // Secrets requis (supabase secrets set) :
 //   AUTO_BLOG_CRON_SECRET, GEMINI_API_KEY, CLOUDINARY_CLOUD_NAME,
 //   CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET
+// Secret optionnel (repli silencieux sur MYSTICAL_IMAGES si absent) :
+//   UNSPLASH_ACCESS_KEY
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const CORS_HEADERS = {
@@ -124,6 +135,68 @@ const MYSTICAL_IMAGES = [
   'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1200',
   'https://images.unsplash.com/photo-1519751138087-5bf79df62d5b?w=1200',
 ];
+
+// Mots-clés anglais (recherche Unsplash) par catégorie — un thème visuel
+// pertinent par catégorie plutôt qu'une extraction dynamique du sujet
+// précis (topic), pour rester déterministe même sur un angle inédit inventé
+// par Gemini (isNewAngle) : category est toujours connue, topic non.
+const CATEGORY_IMAGE_KEYWORDS: Record<string, string[]> = {
+  'Secrets Mystiques': ['islamic spirituality', 'sacred quran'],
+  'Poids mystique': ['numerology', 'sacred geometry'],
+  'Carrés magiques': ['magic squares', 'sacred geometry'],
+  'Rêves': ['dream interpretation', 'night sky'],
+  'Plantes mystiques': ['sacred herbs', 'medicinal plants'],
+  'Géomancie africaine': ['geomancy', 'african tradition'],
+  'Destin': ['fate destiny', 'starry sky'],
+  'Jours de Naissance': ['islamic astrology', 'moon phases'],
+  'Compatibilité': ['love connection', 'harmony'],
+  'Formation': ['ancient manuscript', 'learning wisdom'],
+  'Attraper ou Réconcilier': ['reconciliation', 'unity peace'],
+  'Tutoriels': ['spiritual guide', 'ancient knowledge'],
+  'Spiritualité islamique': ['islamic spirituality', 'mosque prayer'],
+  'Talismans': ['talisman amulet', 'protection symbol'],
+};
+const DEFAULT_IMAGE_KEYWORDS = ['mystical spirituality', 'ancient wisdom'];
+
+function getImageKeywords(category: string): string[] {
+  return CATEGORY_IMAGE_KEYWORDS[category] ?? DEFAULT_IMAGE_KEYWORDS;
+}
+
+interface UnsplashPhoto {
+  url: string;
+  photographerName: string;
+  photographerUrl: string;
+}
+
+// Cherche une photo pertinente sur Unsplash pour ces mots-clés ; retourne
+// null (jamais ne lève) sur toute défaillance — clé absente, erreur réseau,
+// réponse non-OK, ou aucun résultat — pour que l'appelant retombe
+// silencieusement sur MYSTICAL_IMAGES sans jamais bloquer la génération.
+async function searchUnsplashImage(accessKey: string | undefined, keywords: string[]): Promise<UnsplashPhoto | null> {
+  if (!accessKey) return null;
+
+  const query = keywords.join(' ');
+  let response: Response;
+  try {
+    response = await fetch(
+      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=5`,
+      { headers: { Authorization: `Client-ID ${accessKey}` } },
+    );
+  } catch {
+    return null;
+  }
+
+  if (!response.ok) return null;
+
+  const data = (await response.json()) as {
+    results?: { urls: { regular: string }; user: { name: string; links: { html: string } } }[];
+  };
+  const results = data.results ?? [];
+  if (results.length === 0) return null;
+
+  const photo = pickRandom(results);
+  return { url: photo.urls.regular, photographerName: photo.user.name, photographerUrl: photo.user.links.html };
+}
 
 const WHATSAPP_URL = 'https://whatsapp.com/channel/0029Vb61GC6Bvvsa4BN19I0W';
 const AUTH_URL = 'https://www.secretdivin.com/auth';
@@ -554,6 +627,9 @@ Deno.serve(async (req) => {
     const cloudName = Deno.env.get('CLOUDINARY_CLOUD_NAME');
     const cloudinaryApiKey = Deno.env.get('CLOUDINARY_API_KEY');
     const cloudinaryApiSecret = Deno.env.get('CLOUDINARY_API_SECRET');
+    // Optionnel : absent ou en échec => repli sur MYSTICAL_IMAGES, voir
+    // searchUnsplashImage. Ne fait jamais partie de server_misconfigured.
+    const unsplashAccessKey = Deno.env.get('UNSPLASH_ACCESS_KEY');
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
@@ -631,7 +707,26 @@ Deno.serve(async (req) => {
 
     const content = ensureFinalCta(ensureWhatsAppSection(generated.content));
 
-    const sourceImage = pickRandom(MYSTICAL_IMAGES);
+    const imageKeywords = getImageKeywords(category);
+    console.log(`[auto-blog] Unsplash search keywords for category "${category}":`, imageKeywords);
+    const unsplashPhoto = await searchUnsplashImage(unsplashAccessKey, imageKeywords);
+
+    let sourceImage: string;
+    let imageCreditName: string | null;
+    let imageCreditUrl: string | null;
+
+    if (unsplashPhoto) {
+      sourceImage = unsplashPhoto.url;
+      imageCreditName = unsplashPhoto.photographerName;
+      imageCreditUrl = unsplashPhoto.photographerUrl;
+      console.log(`[auto-blog] using Unsplash photo by ${imageCreditName}: ${sourceImage}`);
+    } else {
+      sourceImage = pickRandom(MYSTICAL_IMAGES);
+      imageCreditName = null;
+      imageCreditUrl = null;
+      console.log('[auto-blog] Unsplash unavailable or no results, falling back to static image:', sourceImage);
+    }
+
     const coverImage = await uploadToCloudinary(cloudName, cloudinaryApiKey, cloudinaryApiSecret, sourceImage);
     if (!coverImage) {
       return jsonResponse({ error: 'cloudinary_upload_failed' }, 502);
@@ -652,6 +747,8 @@ Deno.serve(async (req) => {
         is_published: isValidated,
         published_at: isValidated ? new Date().toISOString() : null,
         validation_notes: validationNotes,
+        image_credit_name: imageCreditName,
+        image_credit_url: imageCreditUrl,
       })
       .select('id, slug')
       .single();

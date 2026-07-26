@@ -15,6 +15,8 @@ interface Article {
   content: string | null;
   category: string | null;
   cover_image: string | null;
+  image_credit_name: string | null;
+  image_credit_url: string | null;
   published_at: string | null;
   views: number;
   faq: FaqItem[] | null;
@@ -130,13 +132,25 @@ export function BlogArticlePage() {
     <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-3xl mx-auto reveal visible">
         <div
-          className="h-56 rounded-lg mb-6"
+          className="h-56 rounded-lg mb-2"
           style={
             article.cover_image
               ? { backgroundImage: `url(${article.cover_image})`, backgroundSize: 'cover', backgroundPosition: 'center' }
               : { background: 'linear-gradient(135deg, #f5c842, #0d1545)' }
           }
         />
+
+        <div className="mb-4">
+          {article.image_credit_name && article.image_credit_url && (
+            <p className="text-xs" style={{ color: '#a0aec0' }}>
+              Photo par{' '}
+              <a href={article.image_credit_url} target="_blank" rel="noopener noreferrer" className="text-or">
+                {article.image_credit_name}
+              </a>{' '}
+              sur Unsplash
+            </p>
+          )}
+        </div>
 
         <div className="flex items-center gap-3 flex-wrap">
           <span className="px-2 py-1 rounded text-xs font-bold text-or" style={{ background: 'rgba(245,200,66,0.1)' }}>
