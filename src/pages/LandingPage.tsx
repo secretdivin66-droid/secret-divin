@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { PACKS, PACK_SUBTITLES, TOOLS, TOOL_COSTS } from '../utils/mystique';
 import { useRevealOnScroll } from '../hooks/useRevealOnScroll';
+import { useCanonicalUrl } from '../hooks/useCanonicalUrl';
 
 const STATS = [
   { value: '12', label: 'Outils spirituels' },
@@ -26,6 +27,7 @@ function Separateur() {
 
 export function LandingPage() {
   useRevealOnScroll();
+  useCanonicalUrl('/');
 
   return (
     <div>

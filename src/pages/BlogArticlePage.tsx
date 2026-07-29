@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { useRevealOnScroll } from '../hooks/useRevealOnScroll';
+import { useCanonicalUrl } from '../hooks/useCanonicalUrl';
 
 interface FaqItem {
   question: string;
@@ -47,6 +48,7 @@ export function BlogArticlePage() {
   useRevealOnScroll();
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  useCanonicalUrl(`/blog/${slug ?? ''}`);
 
   const [article, setArticle] = useState<Article | null>(null);
   const [prevArticle, setPrevArticle] = useState<ArticleNavEntry | null>(null);

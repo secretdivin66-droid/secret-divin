@@ -1,4 +1,12 @@
 {
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "secretdivin.com" }],
+      "destination": "https://www.secretdivin.com/$1",
+      "statusCode": 301
+    }
+  ],
   "rewrites": [
     { "source": "/((?!assets/|sitemap.xml|logo.svg|favicon.svg|robots.txt|llms.txt).*)", "destination": "/index.html" }
   ],

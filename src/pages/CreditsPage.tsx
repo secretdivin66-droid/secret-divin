@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { PACKS, PACK_SUBTITLES, WHATSAPP_NUMBER } from '../utils/mystique';
+import { useCanonicalUrl } from '../hooks/useCanonicalUrl';
 
 const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}`;
 
@@ -82,6 +83,7 @@ function BuyButton({ pack }: { pack: typeof PACKS[0] }) {
 }
 
 export function CreditsPage() {
+  useCanonicalUrl('/credits');
   const gridPacks = PACKS.filter((p) => p.id !== 'unlimited');
   const unlimitedPack = PACKS.find((p) => p.id === 'unlimited');
 

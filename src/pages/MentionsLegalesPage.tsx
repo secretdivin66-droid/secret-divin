@@ -1,7 +1,9 @@
 import { LegalLayout } from '../components/LegalLayout';
 import { COMPANY } from '../utils/legalInfo';
+import { useCanonicalUrl } from '../hooks/useCanonicalUrl';
 
 export function MentionsLegalesPage() {
+  useCanonicalUrl('/mentions-legales');
   return (
     <LegalLayout
       title="Mentions Légales"

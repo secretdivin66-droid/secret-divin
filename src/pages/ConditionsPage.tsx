@@ -1,7 +1,9 @@
 import { LegalLayout } from '../components/LegalLayout';
 import { COMPANY } from '../utils/legalInfo';
+import { useCanonicalUrl } from '../hooks/useCanonicalUrl';
 
 export function ConditionsPage() {
+  useCanonicalUrl('/conditions');
   return (
     <LegalLayout
       title="Conditions Générales d'Utilisation"

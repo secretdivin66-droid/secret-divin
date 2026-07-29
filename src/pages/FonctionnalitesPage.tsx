@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useRevealOnScroll } from '../hooks/useRevealOnScroll';
+import { useCanonicalUrl } from '../hooks/useCanonicalUrl';
 
 interface FeatureCard {
   title: string;
@@ -119,6 +120,7 @@ function Separateur() {
 
 export function FonctionnalitesPage() {
   useRevealOnScroll();
+  useCanonicalUrl('/fonctionnalites');
 
   return (
     <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { WHATSAPP_NUMBER } from '../utils/mystique';
 import { COMPANY } from '../utils/legalInfo';
 import { useRevealOnScroll } from '../hooks/useRevealOnScroll';
+import { useCanonicalUrl } from '../hooks/useCanonicalUrl';
 
 const SUJETS = ['Question générale', 'Problème crédits', 'Problème technique', 'Suggestion', 'Partenariat', 'Autre'];
 
@@ -17,6 +18,7 @@ function Separateur() {
 
 export function ContactPage() {
   useRevealOnScroll();
+  useCanonicalUrl('/contact');
 
   const [nom, setNom] = useState('');
   const [email, setEmail] = useState('');

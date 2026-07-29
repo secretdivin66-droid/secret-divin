@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { SPECIALITES, PAYS_LIST, LANGUES, averageNote, whatsappContactUrl } from '../utils/marabouts';
 import type { Marabout } from '../utils/marabouts';
+import { useCanonicalUrl } from '../hooks/useCanonicalUrl';
 
 function Separateur() {
   return (
@@ -15,6 +16,7 @@ function Separateur() {
 }
 
 export function MaraboutsPage() {
+  useCanonicalUrl('/marabouts');
   const [marabouts, setMarabouts] = useState<Marabout[]>([]);
   const [loading, setLoading] = useState(true);
 

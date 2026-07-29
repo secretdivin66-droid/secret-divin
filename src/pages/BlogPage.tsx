@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
 import { BLOG_CATEGORIES } from '../utils/blog';
 import { useRevealOnScroll } from '../hooks/useRevealOnScroll';
+import { useCanonicalUrl } from '../hooks/useCanonicalUrl';
 
 interface ArticleSummary {
   id: string;
@@ -32,6 +33,7 @@ function Separateur() {
 
 export function BlogPage() {
   useRevealOnScroll();
+  useCanonicalUrl('/blog');
 
   const [articles, setArticles] = useState<ArticleSummary[]>([]);
   const [category, setCategory] = useState('Tous');

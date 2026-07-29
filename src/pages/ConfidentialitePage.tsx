@@ -1,7 +1,9 @@
 import { LegalLayout } from '../components/LegalLayout';
 import { COMPANY } from '../utils/legalInfo';
+import { useCanonicalUrl } from '../hooks/useCanonicalUrl';
 
 export function ConfidentialitePage() {
+  useCanonicalUrl('/confidentialite');
   return (
     <LegalLayout
       title="Politique de Confidentialité"
