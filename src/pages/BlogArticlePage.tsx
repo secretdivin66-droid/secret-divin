@@ -16,6 +16,7 @@ interface Article {
   content: string | null;
   category: string | null;
   cover_image: string | null;
+  cover_image_alt: string | null;
   image_credit_name: string | null;
   image_credit_url: string | null;
   published_at: string | null;
@@ -134,13 +135,17 @@ export function BlogArticlePage() {
     <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-3xl mx-auto reveal visible">
         <div
-          className="h-56 rounded-lg mb-2"
-          style={
-            article.cover_image
-              ? { backgroundImage: `url(${article.cover_image})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-              : { background: 'linear-gradient(135deg, #f5c842, #0d1545)' }
-          }
-        />
+          className="h-56 rounded-lg mb-2 overflow-hidden"
+          style={!article.cover_image ? { background: 'linear-gradient(135deg, #f5c842, #0d1545)' } : undefined}
+        >
+          {article.cover_image && (
+            <img
+              src={article.cover_image}
+              alt={article.cover_image_alt || article.title}
+              className="w-full h-full object-cover"
+            />
+          )}
+        </div>
 
         <div className="mb-4">
           {article.image_credit_name && article.image_credit_url && (

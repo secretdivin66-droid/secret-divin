@@ -28,6 +28,14 @@
 // jamais de mention de crédit dans ce cas, voir searchUnsplashImage et son
 // appelant.
 //
+// Texte alternatif de la couverture (blog_articles.cover_image_alt,
+// migration 0019) : généré par Gemini dans le MÊME appel que title/
+// excerpt/content/faq (champ coverImageAlt du schéma), pas une recherche
+// d'image séparée — décrit le sujet de l'article, pas la photo Unsplash
+// elle-même (dont le contenu visuel exact n'est connu qu'après coup).
+// BlogArticlePage.tsx/BlogPage.tsx retombent sur le titre si NULL (articles
+// publiés avant cette migration, ou créés manuellement via BlogAdminPanel).
+//
 // Slug : jamais deux articles avec le même slug — si le slug généré
 // existe déjà, un suffixe timestamp est ajouté (voir uniqueSlug).
 //
@@ -101,9 +109,12 @@ const CORS_HEADERS = {
 
 // gemini-2.5-flash renvoie 404 "no longer available to new users" avec
 // cette clé (comptes Google AI créés après la dépréciation de ce modèle) —
-// vérifié en direct via curl le 2026-07-25. gemini-3.5-flash répond 200
-// avec la même clé.
-const GEMINI_MODEL = 'gemini-3.5-flash';
+// vérifié en direct via curl le 2026-07-25. gemini-3.5-flash répondait 200
+// avec la même clé à cette date, mais renvoie du 503 "high demand" de façon
+// persistante depuis le 2026-07-28 (constaté en direct le 2026-07-29, même
+// symptôme que sur un autre projet la veille) ; gemini-3.6-flash répond
+// normalement au même moment avec la même clé, d'où ce choix.
+const GEMINI_MODEL = 'gemini-3.6-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 // Fallback si blog_queue est entièrement vide (ex: migration 0016 pas
@@ -311,6 +322,7 @@ interface GeneratedArticle {
   excerpt: string;
   content: string;
   faq: FaqItem[];
+  coverImageAlt: string;
 }
 
 const GENERATION_SCHEMA = {
@@ -336,8 +348,13 @@ const GENERATION_SCHEMA = {
         required: ['question', 'answer'],
       },
     },
+    coverImageAlt: {
+      type: 'STRING',
+      description:
+        'Texte alternatif (attribut alt) de l\'image de couverture, pour l\'accessibilité et le SEO — décrit le SUJET de l\'article (pas l\'image Unsplash elle-même, inconnue à ce stade), 8 à 15 mots, sans "image de" ni "photo de" en préfixe. Exemple pour un article sur le poids mystique : "Calcul du poids mystique en numérologie Abjad selon la tradition islamique".',
+    },
   },
-  required: ['title', 'excerpt', 'content', 'faq'],
+  required: ['title', 'excerpt', 'content', 'faq', 'coverImageAlt'],
 };
 
 // System prompt fixe (mêmes règles à chaque appel) — voir buildUserPrompt
@@ -427,14 +444,15 @@ async function generateArticle(
           responseSchema: GENERATION_SCHEMA,
           temperature: 0.8,
           maxOutputTokens: 6000,
-          // gemini-3.5-flash consomme une grosse part du budget de sortie
+          // gemini-3.5-flash consommait une grosse part du budget de sortie
           // en "thinking" interne par défaut (~1400 tokens observés sur un
           // test), ce qui tronquait le JSON avant la fin de l'article
-          // (erreur "Unterminated string in JSON", vérifié le 2026-07-25).
-          // Cette tâche n'a besoin d'aucun raisonnement complexe, juste de
-          // rédaction — thinkingBudget=0 élimine la troncature et coûte
-          // moins cher.
-          thinkingConfig: { thinkingBudget: 0 },
+          // (erreur "Unterminated string in JSON", vérifié le 2026-07-25) —
+          // d'où thinkingBudget=0 à l'origine. gemini-3.6-flash REJETTE 0
+          // avec 400 INVALID_ARGUMENT (vérifié en direct le 2026-07-29,
+          // même comportement que sur un autre projet la veille) ; 1 est le
+          // minimum accepté par ce modèle.
+          thinkingConfig: { thinkingBudget: 1 },
         },
       }),
     });
@@ -476,7 +494,16 @@ async function generateArticle(
             typeof item?.question === 'string' && typeof item.answer === 'string',
         )
       : [];
-    return { ok: true, article: { title: parsed.title, excerpt: parsed.excerpt, content: parsed.content, faq } };
+    // coverImageAlt n'est volontairement pas dans la vérification
+    // "incomplete_json" ci-dessus : un alt manquant/vide ne doit jamais
+    // faire échouer un article par ailleurs valide — la valeur par défaut
+    // ici (chaîne vide) devient NULL à l'insertion (voir plus bas), et
+    // BlogArticlePage.tsx/BlogPage.tsx retombent alors sur le titre.
+    const coverImageAlt = typeof parsed.coverImageAlt === 'string' ? parsed.coverImageAlt : '';
+    return {
+      ok: true,
+      article: { title: parsed.title, excerpt: parsed.excerpt, content: parsed.content, faq, coverImageAlt },
+    };
   } catch (error) {
     return {
       ok: false,
@@ -750,6 +777,7 @@ Deno.serve(async (req) => {
         excerpt: generated.excerpt,
         content,
         faq: generated.faq.length > 0 ? generated.faq : null,
+        cover_image_alt: generated.coverImageAlt || null,
         category,
         cover_image: coverImage,
         is_published: isValidated,
