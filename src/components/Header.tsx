@@ -44,7 +44,7 @@ export function Header({ user, profile, onSignOut }: Props) {
   return (
     <header className="bg-bleu border-b border-or/20 overflow-x-hidden relative">
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-3 flex items-center justify-between gap-2 sm:gap-4">
-        <Link to="/" className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <Link to="/" className="flex items-center gap-2 sm:gap-3 min-w-0 shrink-0">
           <img src="/logo.svg" alt="Secrets Divins" className="h-10 w-10 rounded-full" />
           <div className="flex flex-col leading-tight min-w-0">
             <span className="text-or font-bold text-sm sm:text-lg truncate">Secret Divin</span>
@@ -53,7 +53,7 @@ export function Header({ user, profile, onSignOut }: Props) {
           <span className="arabic text-or text-sm hidden sm:inline">الحكمة الروحية</span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-4 text-sm">
+        <nav className="hidden md:flex items-center gap-4 text-sm min-w-0 overflow-x-auto whitespace-nowrap">
           {navLinks.map((link) => (
             <Link
               key={link.to}
