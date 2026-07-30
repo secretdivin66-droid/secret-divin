@@ -168,7 +168,7 @@ export function MaraboutsPage() {
         </div>
       </div>
 
-      <div className="mt-10 py-10 px-4 text-center" style={{ background: '#0d1545', borderTop: '1px solid rgba(245,200,66,0.3)' }}>
+      <div className="mt-8 py-8 px-4 text-center" style={{ background: '#0d1545', borderTop: '1px solid rgba(245,200,66,0.3)' }}>
         <p className="text-or font-bold text-xl">Tu es marabout professionnel ?</p>
         <p className="mt-2" style={{ color: '#a0aec0' }}>
           Rejoins Secret Divin et trouve de nouveaux clients. 5 000 FCFA/mois pour un profil vérifié, visible dans l'annuaire.

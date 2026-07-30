@@ -311,7 +311,7 @@ export function GeomanciePage() {
 
         <Separateur />
 
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-4">
           <span className="px-4 py-2 rounded-full text-sm font-bold border border-or text-or">
             2 crédits par génération
           </span>
@@ -347,14 +347,14 @@ export function GeomanciePage() {
         )}
 
         {loading && (
-          <div className="flex flex-col items-center gap-3 mt-6">
+          <div className="flex flex-col items-center gap-3 mt-4">
             <div className="w-10 h-10 border-4 border-or border-t-transparent rounded-full animate-spin" />
             <p className="text-or">Les figures géomantiques se révèlent...</p>
           </div>
         )}
 
         {error && (
-          <div className="carte rounded-lg mt-6 text-center" style={{ border: '1px solid #e53935' }}>
+          <div className="carte rounded-lg mt-4 text-center" style={{ border: '1px solid #e53935' }}>
             <p className="text-red-400 mb-4">{error}</p>
             <button onClick={handleGenerate} className="btn-principal rounded">
               Réessayer
@@ -412,7 +412,7 @@ export function GeomanciePage() {
                 </div>
 
                 {FIGURES[result.theme.dominantFigure] && (
-                  <div className="rounded-lg p-5 mt-6" style={{ background: '#0a0f2e', border: '1px solid #f5c842' }}>
+                  <div className="rounded-lg p-5 mt-4" style={{ background: '#0a0f2e', border: '1px solid #f5c842' }}>
                     <p className="text-or font-bold text-center">
                       Figure dominante : {result.theme.dominantFigure} — Maison {result.theme.dominantHouse}
                     </p>

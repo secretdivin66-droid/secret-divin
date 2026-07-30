@@ -524,7 +524,7 @@ export function DestinPage() {
 
         <Separateur />
 
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-4">
           <span className="px-4 py-2 rounded-full text-sm font-bold border border-or text-or">
             2 crédits par génération
           </span>
@@ -612,14 +612,14 @@ export function DestinPage() {
         )}
 
         {loading && (
-          <div className="flex flex-col items-center gap-3 mt-6">
+          <div className="flex flex-col items-center gap-3 mt-4">
             <div className="w-10 h-10 border-4 border-or border-t-transparent rounded-full animate-spin" />
             <p style={{ color: '#a0aec0' }}>Révélation de ton destin en cours...</p>
           </div>
         )}
 
         {error && (
-          <div className="carte rounded-lg mt-6 text-center" style={{ border: '1px solid #e53935' }}>
+          <div className="carte rounded-lg mt-4 text-center" style={{ border: '1px solid #e53935' }}>
             <p className="text-red-400 mb-4">{error}</p>
             <button onClick={handleGenerate} className="btn-principal rounded">
               Réessayer

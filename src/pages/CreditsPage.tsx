@@ -98,7 +98,7 @@ export function CreditsPage() {
 
         <Separateur />
 
-        <h2 className="text-center text-or font-bold text-xl mb-8">Choisis ton pack ✦</h2>
+        <h2 className="text-center text-or font-bold text-xl mb-6">Choisis ton pack ✦</h2>
 
         {/* GRILLE 2x2 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">

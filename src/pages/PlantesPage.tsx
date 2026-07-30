@@ -425,7 +425,7 @@ export function PlantesPage() {
 
         <Separateur />
 
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-4">
           <span className="px-4 py-2 rounded-full text-sm font-bold border border-or text-or">
             2 crédits par génération
           </span>
@@ -476,14 +476,14 @@ export function PlantesPage() {
         )}
 
         {loading && (
-          <div className="flex flex-col items-center gap-3 mt-6">
+          <div className="flex flex-col items-center gap-3 mt-4">
             <div className="w-10 h-10 border-4 border-or border-t-transparent rounded-full animate-spin" />
             <p className="text-or">Recherche des plantes mystiques pour toi...</p>
           </div>
         )}
 
         {error && (
-          <div className="carte rounded-lg mt-6 text-center" style={{ border: '1px solid #e53935' }}>
+          <div className="carte rounded-lg mt-4 text-center" style={{ border: '1px solid #e53935' }}>
             <p className="text-red-400 mb-4">{error}</p>
             <button onClick={handleGenerate} className="btn-principal rounded">
               Réessayer
@@ -632,7 +632,7 @@ export function PlantesPage() {
                   </div>
                 )}
 
-                <p className="font-bold mt-6 mb-3" style={{ color: '#a0aec0' }}>Rituel quotidien</p>
+                <p className="font-bold mt-4 mb-3" style={{ color: '#a0aec0' }}>Rituel quotidien</p>
                 <StepList steps={result.ritual.dailyRitual} />
 
                 <div className="rounded-lg p-4 mt-3" style={{ background: '#0a0f2e', border: '1px solid rgba(245,200,66,0.2)' }}>

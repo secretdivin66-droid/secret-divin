@@ -33,7 +33,7 @@ export function LandingPage() {
     <div>
       {/* SECTION 1.1 — HERO */}
       <section
-        className="px-4 pt-16 pb-16 text-center flex flex-col items-center gap-5"
+        className="px-4 pt-10 pb-10 text-center flex flex-col items-center gap-4"
         style={{ background: '#0a0f2e' }}
       >
         <img
@@ -80,7 +80,7 @@ export function LandingPage() {
 
       {/* SECTION 1.2 — STATS */}
       <section
-        className="py-10 px-4"
+        className="py-8 px-4"
         style={{ background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(245,200,66,0.1)', borderBottom: '1px solid rgba(245,200,66,0.1)' }}
       >
         <div className="reveal max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-5 text-center">
@@ -94,7 +94,7 @@ export function LandingPage() {
       </section>
 
       {/* SECTION 1.3 — OUTILS */}
-      <section className="max-w-6xl mx-auto px-4 py-12">
+      <section className="max-w-6xl mx-auto px-4 py-8">
         <h2 className="reveal text-center text-2xl font-bold mb-6">
           <span className="text-white">Tout ce dont tu as besoin</span>{' '}
           <span className="text-or">en un seul endroit</span>
@@ -134,7 +134,7 @@ export function LandingPage() {
       <Separateur />
 
       {/* SECTION 1.4 — COMMENT ÇA MARCHE */}
-      <section className="max-w-5xl mx-auto px-4 py-12">
+      <section className="max-w-5xl mx-auto px-4 py-8">
         <h2 className="reveal text-center text-2xl font-bold mb-6">
           <span className="text-white">Comment ça</span> <span className="text-or">fonctionne ?</span>
         </h2>
@@ -152,7 +152,7 @@ export function LandingPage() {
       <Separateur />
 
       {/* SECTION 1.5 — TARIFS */}
-      <section className="max-w-6xl mx-auto px-4 py-12">
+      <section className="max-w-6xl mx-auto px-4 py-8">
         <h2 className="reveal text-center text-2xl font-bold mb-3">
           <span className="text-white">Des crédits qui</span> <span className="text-or">ne périment jamais</span>
         </h2>
@@ -196,7 +196,7 @@ export function LandingPage() {
             </div>
           ))}
         </div>
-        <p className="reveal text-center text-sm mt-8" style={{ color: '#a0aec0' }}>
+        <p className="reveal text-center text-sm mt-6" style={{ color: '#a0aec0' }}>
           Paiement unique. Crédits valables à vie. Aucune carte enregistrée, aucun renouvellement automatique.
         </p>
       </section>
@@ -204,14 +204,14 @@ export function LandingPage() {
       <Separateur />
 
       {/* SECTION 1.7 — VERSET */}
-      <section className="px-4 pt-16 pb-8 text-center">
+      <section className="px-4 pt-10 pb-6 text-center">
         <p
           className="reveal arabic text-or font-bold mx-auto"
           style={{ textAlign: 'center', fontSize: 'clamp(1.75rem, 5vw, 3rem)', maxWidth: '48rem' }}
         >
           وَمَن يَتَّقِ اللَّهَ يَجْعَل لَّهُ مَخْرَجًا وَيَرْزُقْهُ مِنْ حَيْثُ لَا يَحْتَسِبُ
         </p>
-        <p className="reveal italic max-w-xl mx-auto mt-6" style={{ color: '#a0aec0' }}>
+        <p className="reveal italic max-w-xl mx-auto mt-4" style={{ color: '#a0aec0' }}>
           « Quiconque craint Allah, Il lui trouvera une issue et le pourvoira de là où il ne s'y attend pas. »
         </p>
         <p className="reveal text-or text-sm mt-3">— At-Talaq : 2-3</p>
@@ -219,12 +219,12 @@ export function LandingPage() {
       </section>
 
       {/* SECTION 1.8 — CTA FINAL */}
-      <section className="px-4 pb-16 text-center">
+      <section className="px-4 pb-10 text-center">
         <h2 className="reveal text-2xl font-bold text-white">Ton chemin spirituel commence ici</h2>
         <p className="reveal max-w-xl mx-auto mt-4" style={{ color: '#a0aec0' }}>
           Utilise les sciences ésotériques islamiques pour comprendre ton destin et ta vocation.
         </p>
-        <div className="reveal w-full max-w-md flex flex-col gap-4 mt-8 mx-auto">
+        <div className="reveal w-full max-w-md flex flex-col gap-4 mt-6 mx-auto">
           <Link
             to="/auth?mode=register"
             className="w-full rounded font-bold py-3 text-center"

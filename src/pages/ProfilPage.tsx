@@ -489,7 +489,7 @@ export function ProfilPage() {
 
         {/* SECTION 4 — INFORMATIONS PERSONNELLES */}
         <div className="carte rounded-lg" ref={formRef}>
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center justify-between mb-4">
             <h2 className="text-or font-bold">Mes Informations</h2>
             {!editMode && (
               <button onClick={() => setEditMode(true)} className="btn-secondaire rounded text-sm px-3 py-1">
@@ -579,7 +579,7 @@ export function ProfilPage() {
 
         {/* SECTION 5 — MON POIDS MYSTIQUE */}
         <div>
-          <h2 className="text-or font-bold mb-5">Mon Poids Mystique</h2>
+          <h2 className="text-or font-bold mb-4">Mon Poids Mystique</h2>
 
           {profile?.first_name && profile?.mother_name ? (
             pmLoading ? (
@@ -602,14 +602,14 @@ export function ProfilPage() {
                   </div>
                 </div>
 
-                <div className="carte rounded-lg text-center mt-5">
+                <div className="carte rounded-lg text-center mt-4">
                   <p className="text-sm" style={{ color: '#a0aec0' }}>Ton Poids Mystique</p>
                   <p className="text-or font-bold text-[4rem]">{pmData.PM}</p>
                   <p className="font-bold text-[1.5rem]" style={{ color: pmData.elementColor }}>{pmData.element}</p>
                   <p className="text-sm mt-2" style={{ color: '#a0aec0' }}>
                     {pmData.nameW} + {pmData.motherW} + {GENDER_BONUS[gender]} = {pmData.PM}
                   </p>
-                  <Link to="/destin" className="btn-principal rounded mt-5 inline-block">Découvrir mon destin complet</Link>
+                  <Link to="/destin" className="btn-principal rounded mt-4 inline-block">Découvrir mon destin complet</Link>
                 </div>
               </>
             ) : null
@@ -632,7 +632,7 @@ export function ProfilPage() {
 
         {/* SECTION 6 — MES PRÉFÉRENCES */}
         <div className="carte rounded-lg">
-          <h2 className="text-or font-bold mb-5">Mes Préférences</h2>
+          <h2 className="text-or font-bold mb-4">Mes Préférences</h2>
           <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Langue</label>
           <select value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or">
             <option value="fr">Français</option>
@@ -649,7 +649,7 @@ export function ProfilPage() {
 
         {/* SECTION 7 — MES DERNIÈRES CONSULTATIONS */}
         <div>
-          <h2 className="text-or font-bold mb-5">Mes Dernières Consultations</h2>
+          <h2 className="text-or font-bold mb-4">Mes Dernières Consultations</h2>
           {consultations.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {consultations.map((c) => {
@@ -680,16 +680,16 @@ export function ProfilPage() {
 
         {/* SECTION 8 — MA PROGRESSION FORMATION */}
         <div>
-          <h2 className="text-or font-bold mb-5">Ma Progression dans la Formation</h2>
+          <h2 className="text-or font-bold mb-4">Ma Progression dans la Formation</h2>
           <p className="text-white text-sm mb-2">{completedModules.length} / 9 modules</p>
-          <div className="w-full rounded-full overflow-hidden mb-5" style={{ height: 12, background: '#1a1a2e' }}>
+          <div className="w-full rounded-full overflow-hidden mb-4" style={{ height: 12, background: '#1a1a2e' }}>
             <div className="h-full transition-all" style={{ width: `${(completedModules.length / 9) * 100}%`, background: '#f5c842' }} />
           </div>
 
           {completedModules.length > 0 ? (
             <>
               <p className="font-bold mb-3" style={{ color: '#a0aec0' }}>Modules complétés :</p>
-              <div className="flex flex-col gap-2 mb-5">
+              <div className="flex flex-col gap-2 mb-4">
                 {completedModules.map((m) => (
                   <span key={m.module_id} className="px-3 py-2 rounded-full text-sm font-bold w-fit" style={{ background: '#1b3a1f', color: '#4caf50' }}>
                     Module {m.module_id} — Score : {m.best_score}/100
@@ -717,13 +717,13 @@ export function ProfilPage() {
           <p className="text-white text-sm">Crédits achetés au total : {credits?.total_purchased ?? 0}</p>
         </div>
 
-        <div className="text-center mt-6">
+        <div className="text-center mt-4">
           <button onClick={() => setShowSignOutModal(true)} className="rounded px-6 py-2 font-bold" style={{ border: '1px solid #e53935', color: '#e53935', background: 'transparent' }}>
             Se déconnecter
           </button>
         </div>
 
-        <div className="text-center mt-6">
+        <div className="text-center mt-4">
           <button onClick={() => setShowDeleteModal(true)} className="text-red-400 text-sm underline">
             Supprimer mon compte
           </button>
@@ -736,7 +736,7 @@ export function ProfilPage() {
           <div style={{ background: '#0d1545', border: '1px solid #f5c842', borderRadius: '8px', padding: '28px', maxWidth: '500px', width: '100%', maxHeight: '85vh', overflowY: 'auto' }}>
             <h2 className="text-or font-bold text-lg mb-4">{selectedConsultation.title}</h2>
             <ConsultationSummary consultation={selectedConsultation} />
-            <button onClick={() => setSelectedConsultation(null)} className="btn-secondaire rounded w-full mt-5">Fermer</button>
+            <button onClick={() => setSelectedConsultation(null)} className="btn-secondaire rounded w-full mt-4">Fermer</button>
           </div>
         </div>
       )}
@@ -745,7 +745,7 @@ export function ProfilPage() {
       {showSignOutModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
           <div style={{ background: '#0d1545', border: '1px solid #f5c842', borderRadius: '8px', padding: '28px', maxWidth: '400px', width: '100%' }} className="text-center">
-            <p className="text-white mb-5">Es-tu sûr de vouloir te déconnecter ?</p>
+            <p className="text-white mb-4">Es-tu sûr de vouloir te déconnecter ?</p>
             <div className="flex flex-col gap-3">
               <button onClick={handleSignOut} className="rounded py-2 font-bold" style={{ background: '#e53935', color: 'white' }}>Confirmer</button>
               <button onClick={() => setShowSignOutModal(false)} className="btn-secondaire rounded">Annuler</button>

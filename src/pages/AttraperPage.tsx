@@ -512,7 +512,7 @@ export function AttraperPage() {
 
         <Separateur />
 
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-4">
           <span className="px-4 py-2 rounded-full text-sm font-bold border border-or text-or">
             2 crédits par génération
           </span>
@@ -608,14 +608,14 @@ export function AttraperPage() {
         )}
 
         {loading && (
-          <div className="flex flex-col items-center gap-3 mt-6">
+          <div className="flex flex-col items-center gap-3 mt-4">
             <div className="w-10 h-10 border-4 border-or border-t-transparent rounded-full animate-spin" />
             <p className="text-or">Le talisman se prépare pour toi...</p>
           </div>
         )}
 
         {error && (
-          <div className="carte rounded-lg mt-6 text-center" style={{ border: '1px solid #e53935' }}>
+          <div className="carte rounded-lg mt-4 text-center" style={{ border: '1px solid #e53935' }}>
             <p className="text-red-400 mb-4">{error}</p>
             <button onClick={handleGenerate} className="btn-principal rounded">
               Réessayer
@@ -631,7 +631,7 @@ export function AttraperPage() {
               {/* BLOC 1 — Résumé Profils */}
               <div>
                 <p className="text-or font-bold text-[2rem] text-center">Ton Talisman Personnalisé</p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-4">
                   <div className="carte rounded-lg text-center">
                     <p className="text-white font-bold">{userName}</p>
                     <p className="arabic text-or mt-1">{result.userNameArabic}</p>
@@ -669,7 +669,7 @@ export function AttraperPage() {
                     </p>
                   </div>
                 </div>
-                <div className="text-center mt-6">
+                <div className="text-center mt-4">
                   <p className="arabic text-or text-[1.8em]">{result.data.divineNames.combined}</p>
                   <p className="text-white italic mt-2">{result.data.divineNames.reason}</p>
                   <div className="mt-3 flex justify-center">
@@ -722,7 +722,7 @@ export function AttraperPage() {
                 <BlocTitle>Carré Magique</BlocTitle>
                 <p className="text-white">{result.data.talisman.choiceReason}</p>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-4">
                   <div>
                     <p className="text-sm mb-2" style={{ color: '#a0aec0' }}>Base</p>
                     <TalismanGrid values={LAYOUTS[result.squareSize]} size={result.squareSize} variant="base" />
@@ -737,7 +737,7 @@ export function AttraperPage() {
                   </div>
                 </div>
 
-                <div className="flex justify-center mt-6">
+                <div className="flex justify-center mt-4">
                   <span className="px-4 py-2 rounded-full text-sm font-bold" style={{ background: '#1b3a1f', color: '#4caf50' }}>
                     ✓ Somme = {result.invocationWeight}
                   </span>

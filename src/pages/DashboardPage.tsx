@@ -8,7 +8,7 @@ export function DashboardPage() {
   const displayName = profile?.prenom || user?.email || '';
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-10">
+    <div className="max-w-6xl mx-auto px-4 py-8">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <h1 className="text-2xl font-bold">
           Bienvenue, <span className="text-or">{displayName}</span>
