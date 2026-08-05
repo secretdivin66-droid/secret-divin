@@ -99,7 +99,12 @@ Deno.serve(async (req) => {
       environment === 'production' ? 'https://api.pawapay.io/v2' : 'https://api.sandbox.pawapay.io/v2';
 
     const depositId = crypto.randomUUID();
-    const amountStr = Number(amount).toFixed(2);
+    // Ne jamais forcer un nombre fixe de décimales : PawaPay rejette un
+    // montant avec des décimales dès que le provider/devise ne les
+    // supporte pas (ex: XOF/ORANGE_CIV -> "0 decimal places", vu en
+    // sandbox avec "100.00" -> INVALID_AMOUNT). On envoie la
+    // représentation numérique la plus simple du montant reçu.
+    const amountStr = Number(amount).toString();
 
     // "customerId" est forcé à l'utilisateur authentifié : ce que le client
     // met dans body.metadata ne peut jamais l'écraser (voir en-tête).
@@ -144,13 +149,13 @@ Deno.serve(async (req) => {
       });
 
       pawapayResponseJson = await pawapayResponse.json().catch(() => null);
-      const parsed = pawapayResponseJson as { status?: string; rejectionReason?: unknown } | null;
+      const parsed = pawapayResponseJson as { status?: string; failureReason?: unknown } | null;
 
       if (parsed?.status) {
         pawapayStatus = parsed.status;
       }
-      if (parsed?.rejectionReason) {
-        failureReason = parsed.rejectionReason;
+      if (parsed?.failureReason) {
+        failureReason = parsed.failureReason;
       }
     } catch (err) {
       console.error('pawapay-initiate-deposit: call to PawaPay failed', { depositId, error: err });

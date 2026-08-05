@@ -59,17 +59,25 @@ interface PawaPayCallbackPayload {
   };
   clientReferenceId?: string;
   providerTransactionId?: string;
-  metadata?: Array<Record<string, string>>;
+  metadata?: Record<string, string> | Array<Record<string, string>>;
   failureReason?: { failureCode?: string; failureMessage?: string };
 }
 
-// PawaPay documente ses entrées "metadata" comme un tableau d'objets, mais
-// deux formes existent selon les intégrations : {"orderId": "..."} direct,
-// ou {"fieldName": "orderId", "fieldValue": "..."}. On gère les deux
-// plutôt que de parier sur une seule.
-function flattenMetadata(metadata: Array<Record<string, string>> | undefined): Record<string, string> {
+// Vérifié empiriquement en sandbox (2026-08-05) : PawaPay renvoie metadata
+// dans le callback comme un OBJET PLAT ({"planId": "...", "customerId":
+// "..."}), pas comme le tableau documenté par certains exemples/versions
+// de leur API ([{ "orderId": "..." }, ...] ou [{fieldName,fieldValue}]).
+// On gère les trois formes plutôt que de parier sur une seule, puisque le
+// format réel a déjà divergé une fois entre la doc et le comportement live.
+function flattenMetadata(metadata: Record<string, string> | Array<Record<string, string>> | undefined): Record<string, string> {
   const flat: Record<string, string> = {};
-  if (!Array.isArray(metadata)) return flat;
+  if (!metadata) return flat;
+  if (!Array.isArray(metadata)) {
+    for (const [key, value] of Object.entries(metadata)) {
+      if (typeof value === 'string') flat[key] = value;
+    }
+    return flat;
+  }
   for (const entry of metadata) {
     if (typeof entry.fieldName === 'string' && typeof entry.fieldValue === 'string') {
       flat[entry.fieldName] = entry.fieldValue;
