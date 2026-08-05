@@ -94,6 +94,36 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'server_misconfigured' }, 500);
     }
 
+    const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+    // Si un planId est fourni (abonnement), le montant/devise DOIVENT
+    // correspondre exactement au prix réel du plan (table plans, seule
+    // source de vérité — voir migration 0025) — jamais faire confiance au
+    // montant envoyé par le client, qui pourrait sinon demander "pro" en
+    // ne payant que le prix de "free". Autres usages de cette fonction
+    // (sans planId) ne sont pas concernés par ce contrôle.
+    const requestedPlanId = body.metadata?.planId;
+    if (requestedPlanId) {
+      const { data: plan, error: planError } = await adminClient
+        .from('plans')
+        .select('price, currency')
+        .eq('id', requestedPlanId)
+        .maybeSingle();
+
+      if (planError || !plan) {
+        return jsonResponse({ error: 'unknown_plan' }, 400);
+      }
+      if (plan.currency !== currency || Number(amount) !== plan.price) {
+        return jsonResponse(
+          {
+            error: 'amount_mismatch',
+            message: `Le montant envoyé ne correspond pas au prix du plan "${requestedPlanId}" (${plan.price} ${plan.currency}).`,
+          },
+          400
+        );
+      }
+    }
+
     const environment = Deno.env.get('PAWAPAY_ENV') === 'production' ? 'production' : 'sandbox';
     const baseUrl =
       environment === 'production' ? 'https://api.pawapay.io/v2' : 'https://api.sandbox.pawapay.io/v2';
@@ -162,7 +192,6 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'pawapay_unreachable' }, 502);
     }
 
-    const adminClient = createClient(supabaseUrl, serviceRoleKey);
     const { error: insertError } = await adminClient.from('payment_transactions').insert({
       deposit_id: depositId,
       client_reference_id: clientReferenceId,

@@ -95,14 +95,6 @@ function flattenMetadata(metadata: Record<string, string> | Array<Record<string,
 // migration 0020). D'autres domaines (ex: commande de livre sur
 // secretmystique.com) vivent hors de ce projet/schéma et devront être
 // branchés ici le jour où on aura leurs tables/API.
-//
-// Note sécurité : grant_subscription() ne revérifie pas ici que
-// payload.amount correspond bien au prix réel du plan (plans.price) — il
-// n'existe pas encore de mapping prix-par-devise dans ce schéma pour le
-// faire proprement (PawaPay est multi-devises selon le pays du payeur). À
-// ajouter avant de brancher un vrai bouton d'abonnement sur cette
-// fonction : voir src/lib/payments/cinetPayProvider.ts pour le contrat
-// PaymentProvider actuel (toujours 'unavailable' pour l'instant).
 async function runBusinessLogic(
   supabase: ReturnType<typeof createClient>,
   payload: PawaPayCallbackPayload
@@ -114,6 +106,39 @@ async function runBusinessLogic(
   const planId = meta.planId;
 
   if (userId && planId) {
+    // Ne jamais accorder l'abonnement sans revérifier que le montant
+    // RÉELLEMENT reçu par PawaPay correspond au prix du plan (table
+    // plans, seule source de vérité — voir migration 0025) : le montant
+    // demandé à l'initiation est déjà vérifié côté
+    // pawapay-initiate-deposit, mais ce callback doit rester sûr même si
+    // ce contrôle amont était contourné, buggé, ou si le payload a été
+    // altéré en route.
+    const { data: plan, error: planError } = await supabase
+      .from('plans')
+      .select('price, currency')
+      .eq('id', planId)
+      .maybeSingle();
+
+    if (planError || !plan) {
+      console.error('pawapay-callback: unknown planId, refusing grant_subscription', {
+        depositId: payload.depositId,
+        planId,
+      });
+      return;
+    }
+
+    const paidAmount = payload.amount ? Number(payload.amount) : NaN;
+    if (payload.currency !== plan.currency || paidAmount !== plan.price) {
+      console.error('pawapay-callback: amount/currency mismatch, refusing grant_subscription', {
+        depositId: payload.depositId,
+        userId,
+        planId,
+        expected: { price: plan.price, currency: plan.currency },
+        received: { amount: payload.amount, currency: payload.currency },
+      });
+      return;
+    }
+
     const { error } = await supabase.rpc('grant_subscription', {
       p_user_id: userId,
       p_plan_id: planId,
