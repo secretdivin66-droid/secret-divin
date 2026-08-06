@@ -27,3 +27,5 @@ dist-ssr
 
 # Cache local du CLI Supabase (créé par `supabase link`)
 supabase/.temp/
+.vercel
+.env*
