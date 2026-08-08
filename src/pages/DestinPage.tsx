@@ -5,7 +5,7 @@ import html2canvas from 'html2canvas';
 import { supabase } from '../lib/supabaseClient';
 import { CreditModal } from '../components/CreditModal';
 import { AudioButton } from '../components/AudioButton';
-import { calculateWeight, GENDER_BONUS, generateSquare, toAbjadLetters } from '../utils/mystique';
+import { calculateWeight, GENDER_BONUS, generateSquare, toArabicIndic } from '../utils/mystique';
 import type { SpendCreditsResult } from '../utils/mystique';
 import { callGeminiProxy } from '../lib/geminiProxy';
 import { isAdminUser } from '../utils/roles';
@@ -912,7 +912,7 @@ export function DestinPage() {
                         color: '#0d1545',
                       }}
                     >
-                      {toAbjadLetters(v)}
+                      {toArabicIndic(v)}
                     </div>
                   ))}
                 </div>
