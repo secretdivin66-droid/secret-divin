@@ -26,7 +26,7 @@ export function PricingPage() {
       <div className="max-w-6xl mx-auto">
         <h1 className="text-center font-bold text-or text-[2rem]">Des crédits chaque mois, sans y penser</h1>
         <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
-          Choisis l'abonnement qui correspond à ton usage. Tes crédits ne périment jamais, même si tu changes de plan.
+          Choisis l'abonnement qui correspond à ton usage. Tes crédits restent valables 30 jours après leur attribution, même si tu changes de plan.
         </p>
 
         <Separateur />

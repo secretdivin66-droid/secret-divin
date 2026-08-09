@@ -154,10 +154,10 @@ export function LandingPage() {
       {/* SECTION 1.5 — TARIFS */}
       <section className="max-w-6xl mx-auto px-4 py-8">
         <h2 className="reveal text-center text-2xl font-bold mb-3">
-          <span className="text-white">Des crédits qui</span> <span className="text-or">ne périment jamais</span>
+          <span className="text-white">Des crédits flexibles,</span> <span className="text-or">valables 1 mois</span>
         </h2>
         <p className="reveal text-center text-sm mb-6" style={{ color: '#a0aec0' }}>
-          Paye une fois, utilise quand tu veux — aucun abonnement, aucune date limite.
+          Paye une fois, utilise pendant 30 jours — aucun engagement, aucun renouvellement automatique.
         </p>
         <div className="reveal grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
           {PACKS.map((pack) => (
@@ -186,6 +186,9 @@ export function LandingPage() {
               >
                 {pack.credits ? `${pack.credits} crédits` : '∞ crédits illimités'}
               </span>
+              {pack.credits && (
+                <p className="text-xs mt-1" style={{ color: '#a0aec0' }}>Valable 30 jours</p>
+              )}
               <Link
                 to="/credits"
                 className="w-full rounded font-bold py-3 text-center mt-5"
@@ -197,7 +200,7 @@ export function LandingPage() {
           ))}
         </div>
         <p className="reveal text-center text-sm mt-6" style={{ color: '#a0aec0' }}>
-          Paiement unique. Crédits valables à vie. Aucune carte enregistrée, aucun renouvellement automatique.
+          Paiement unique. Crédits valables 1 mois à compter de l'achat. Aucune carte enregistrée, aucun renouvellement automatique.
         </p>
       </section>
 
