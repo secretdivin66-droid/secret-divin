@@ -21,6 +21,20 @@ html, body {
   overflow-x: hidden;
 }
 
+/* Le MobileBar (nav fixed bottom-0, ~4rem avec sa marge, voir
+   MobileBar.tsx/Layout.tsx's pb-16) est superposé au-dessus du contenu et
+   n'occupe aucun espace dans le flux normal. Sans scroll-padding-bottom, le
+   scroll natif du navigateur (scrollIntoView au focus d'un champ, ou
+   programmatique) ignore cette barre et peut caler un champ juste derrière
+   elle — visuellement caché et impossible à taper dessus. Ce
+   scroll-padding réserve la même zone pour que le scroll natif la
+   contourne, comme le pb-16 le fait déjà pour le repos en bas de page. */
+@media (max-width: 767px) {
+  html {
+    scroll-padding-bottom: 4rem;
+  }
+}
+
 body {
   background-color: var(--bleu);
   color: var(--blanc);
