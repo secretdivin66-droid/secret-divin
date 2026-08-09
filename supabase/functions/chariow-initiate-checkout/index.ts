@@ -7,11 +7,18 @@
 // - exige un JWT Supabase valide (utilisateur réel connecté) — jamais
 //   appelable anonymement, puisqu'elle appelle l'API Chariow avec une clé
 //   secrète et crée une vraie transaction.
-// - les infos client (email/prénom/nom/téléphone) envoyées à Chariow sont
-//   TOUJOURS résolues côté serveur depuis `profiles` via le user_id du
-//   JWT, jamais acceptées depuis le corps de la requête — un client ne
-//   peut donc pas faire un achat au nom d'un autre utilisateur ni forger
-//   un profil arbitraire.
+// - l'email envoyé à Chariow est TOUJOURS résolu côté serveur depuis
+//   `profiles` via le user_id du JWT, jamais accepté depuis le corps de la
+//   requête — c'est le champ qui lie la vente à une identité, un client ne
+//   peut donc pas faire un achat au nom d'un autre utilisateur.
+// - prénom/nom/téléphone sont en revanche acceptés depuis le corps de la
+//   requête (voir InitiateCheckoutBody) : Chariow les exige au checkout
+//   (confirmé en live le 2026-08-09 — pas documenté publiquement) et le
+//   profil permanent de l'utilisateur ne les contient pas forcément. Ce
+//   sont de simples infos de contact pour Chariow, pas des données
+//   d'autorisation : l'identité réelle qui reçoit l'abonnement reste
+//   entièrement déterminée par `user.id` (JWT) → `custom_metadata.userId`,
+//   jamais par ces champs. Validés non-vides ci-dessous, sinon 400.
 // - contrairement à PawaPay, l'API checkout Chariow ne prend PAS de
 //   montant en paramètre (POST /v1/checkout : product_id, email,
 //   first_name, last_name, phone, redirect_url, payment_currency,
@@ -43,6 +50,9 @@ function jsonResponse(payload: unknown, status = 200) {
 interface InitiateCheckoutBody {
   planId: string;
   redirectUrl?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: { number?: string; countryCode?: string };
 }
 
 interface ChariowCheckoutResponse {
@@ -85,10 +95,24 @@ Deno.serve(async (req) => {
     }
 
     const body: InitiateCheckoutBody = await req.json();
-    const { planId, redirectUrl } = body;
+    const { planId, redirectUrl, firstName, lastName, phone } = body;
 
     if (typeof planId !== 'string' || !planId) {
       return jsonResponse({ error: 'invalid_plan_id' }, 400);
+    }
+
+    // Chariow exige ces 3 champs au checkout (confirmé en live, voir le
+    // commentaire d'en-tête) — validés ici plutôt que de laisser Chariow
+    // renvoyer son propre message d'erreur générique, pour pouvoir
+    // afficher un message clair côté client sans dépendre du format de
+    // réponse de Chariow.
+    if (
+      typeof firstName !== 'string' || !firstName.trim() ||
+      typeof lastName !== 'string' || !lastName.trim() ||
+      typeof phone?.number !== 'string' || !phone.number.trim() ||
+      typeof phone?.countryCode !== 'string' || !phone.countryCode.trim()
+    ) {
+      return jsonResponse({ error: 'missing_contact_info' }, 400);
     }
 
     const apiKey = Deno.env.get('CHARIOW_API_KEY');
@@ -121,7 +145,7 @@ Deno.serve(async (req) => {
 
     const { data: profile, error: profileError } = await adminClient
       .from('profiles')
-      .select('email, first_name, last_name, phone')
+      .select('email')
       .eq('user_id', user.id)
       .maybeSingle();
 
@@ -134,8 +158,8 @@ Deno.serve(async (req) => {
     const chariowRequestBody: Record<string, unknown> = {
       product_id: plan.chariow_product_id,
       email: profile.email,
-      first_name: profile.first_name ?? undefined,
-      last_name: profile.last_name ?? undefined,
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
       payment_currency: plan.currency,
       redirect_url: redirectUrl ?? undefined,
       // Repris tel quel dans les Pulses (webhooks) selon la doc — c'est
@@ -150,13 +174,12 @@ Deno.serve(async (req) => {
         userId: user.id,
       },
     };
-    if (profile.phone) {
-      // Format exact du sous-objet "phone" (number/country_code) non
-      // confirmé indépendamment du texte brut stocké dans profiles.phone
-      // — voir le TODO en tête de chariow-pulse-webhook pour le contexte
-      // général sur les zones d'incertitude de cette intégration.
-      chariowRequestBody.phone = { number: profile.phone };
-    }
+    // number/country_code confirmés obligatoires en live (voir le
+    // commentaire d'en-tête). Format de country_code confirmé en live le
+    // 2026-08-09 : le code appelant nu ("225") est rejeté ("country not
+    // found"), le code ISO alpha-2 ("CI") est accepté — le frontend
+    // (SubscribeButton.tsx) envoie donc de l'ISO alpha-2.
+    chariowRequestBody.phone = { number: phone.number.trim(), country_code: phone.countryCode.trim() };
 
     let chariowResponseJson: ChariowCheckoutResponse | null = null;
     try {

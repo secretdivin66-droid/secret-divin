@@ -7,6 +7,15 @@ export interface SubscribeParams {
   planId: string;
   userId: string;
   userEmail: string;
+  // Optionnels : certains fournisseurs (Chariow) exigent ces infos de
+  // contact au checkout alors que le profil permanent ne les contient pas
+  // forcément — collectées à la volée juste avant le paiement plutôt que
+  // stockées sur `profiles`. Un fournisseur qui n'en a pas besoin les
+  // ignore simplement.
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  phoneCountryCode?: string;
 }
 
 export type SubscribeStatus = 'redirect' | 'unavailable' | 'error';
