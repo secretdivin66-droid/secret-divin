@@ -43,6 +43,9 @@ function PackCard({ pack }: { pack: typeof PACKS[0] }) {
       >
         {badge}
       </span>
+      {pack.credits && (
+        <p className="text-xs mt-1" style={{ color: '#a0aec0' }}>Valable 30 jours</p>
+      )}
       <BuyButton pack={pack} />
     </div>
   );
@@ -91,9 +94,9 @@ export function CreditsPage() {
     <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-5xl mx-auto">
         {/* HEADER */}
-        <h1 className="text-center font-bold text-or text-[2rem]">Des crédits qui ne périment jamais</h1>
+        <h1 className="text-center font-bold text-or text-[2rem]">Des crédits flexibles, valables 1 mois</h1>
         <p className="text-center mt-3 text-white">
-          Achète un pack une seule fois. Utilise tes crédits quand tu veux — aucun abonnement, aucune date limite.
+          Paye une fois, utilise pendant 30 jours — aucun engagement, aucun renouvellement automatique.
         </p>
 
         <Separateur />
@@ -115,7 +118,7 @@ export function CreditsPage() {
         )}
 
         <p className="text-center text-sm mt-6" style={{ color: '#a0aec0' }}>
-          Paiement unique. Crédits valables à vie. Aucune carte enregistrée, aucun renouvellement automatique.
+          Paiement unique. Crédits valables 1 mois à compter de l'achat. Aucune carte enregistrée, aucun renouvellement automatique.
         </p>
       </div>
     </div>
