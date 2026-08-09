@@ -2,36 +2,35 @@
 // est confirmée. Voir chariow-initiate-checkout pour la création de la
 // transaction en amont.
 //
-// TODO: vérifier format Pulses via support@chariow.com — malgré une
-// recherche approfondie (chariow.dev/*, help.chariow.com/*), je n'ai pas
-// trouvé de documentation publique donnant : (1) le nom exact de
-// l'en-tête de signature (s'il existe — plusieurs plateformes similaires
-// n'en ont pas et misent sur un secret dans l'URL), (2) le schéma JSON
-// exact du payload (je n'ai que des indices : un événement
-// "sale.completed", un corps `{ event, data }`, et un `custom_metadata`
-// répercuté depuis la requête de checkout), (3) si les montants sont en
-// unité principale ou en sous-unité. En attendant une confirmation,
-// cette fonction :
-// - authentifie l'appelant via un secret partagé en query string
-//   (CHARIOW_PULSE_SECRET), exactement comme pawapay-callback — À
-//   REMPLACER par une vraie vérification de signature HMAC si Chariow en
-//   fournit une, une fois confirmée.
-// - lit le montant/la devise/le statut à plusieurs emplacements plausibles
-//   du payload (voir extractSaleFields ci-dessous) plutôt que de parier
-//   sur un seul, et logue TOUJOURS le payload brut (raw_payload) pour
-//   pouvoir corriger le mapping sans perdre de données si la vraie forme
-//   diffère.
-// - ne fait JAMAIS confiance à un montant qui ne proviendrait pas de ce
-//   payload serveur-à-serveur pour activer un abonnement (même défense en
-//   profondeur que pawapay-callback : revérifie contre `plans` avant tout
-//   grant_subscription()).
+// Format CONFIRMÉ le 2026-08-09 via la documentation Chariow (dashboard,
+// Automations → Pulses) — remplace l'ancien mécanisme provisoire (secret
+// partagé en query string) par une vraie vérification de signature :
+// - header x-chariow-signature: "sha256=<hex>", HMAC-SHA256 du corps BRUT
+//   (avant tout parsing JSON) avec CHARIOW_WEBHOOK_SECRET (récupéré côté
+//   Chariow au moment de la création du Pulse dans leur dashboard — la
+//   valeur actuellement dans les secrets Supabase est un placeholder tant
+//   que le Pulse n'a pas été créé côté Chariow).
+// - header x-pulse-delivery-id : clé d'idempotence — Chariow peut renvoyer
+//   la même livraison plusieurs fois (retry), dédupliquée ici via la
+//   colonne payment_transactions.pulse_delivery_id (contrainte UNIQUE,
+//   voir migration 0029) plutôt que de la retraiter (double
+//   grant_subscription).
+// - header x-pulse-event : nom de l'événement — seul "successful.sale"
+//   est traité pour l'instant ; les autres sont logués et ignorés (200,
+//   sans écriture) en attendant qu'on en ait besoin.
+//
+// Comme pour pawapay-callback : la transaction est enregistrée en base
+// d'abord (source de vérité + dédup), la réponse 200 part dès que c'est
+// fait, puis la logique métier (vérif montant + grant_subscription) tourne
+// en arrière-plan (EdgeRuntime.waitUntil) pour ne jamais faire attendre
+// Chariow.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 declare const EdgeRuntime: { waitUntil: (promise: Promise<unknown>) => void } | undefined;
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'content-type',
+  'Access-Control-Allow-Headers': 'content-type, x-chariow-signature, x-pulse-id, x-pulse-delivery-id, x-pulse-event',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
@@ -51,93 +50,47 @@ function timingSafeEqual(a: string, b: string): boolean {
   return result === 0;
 }
 
-interface ChariowPulsePayload {
+async function hmacSha256Hex(secret: string, message: string): Promise<string> {
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const signature = await crypto.subtle.sign('HMAC', key, enc.encode(message));
+  return Array.from(new Uint8Array(signature))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+interface ChariowSale {
+  id?: string;
+  amount?: { value?: number; currency?: string };
+  status?: string;
+  custom_metadata?: { internalReference?: string; planId?: string; userId?: string };
+  completed_at?: string;
+}
+
+interface ChariowSalePulse {
   event?: string;
-  data?: Record<string, unknown>;
-  // Certaines plateformes envoient directement l'objet vente à la racine
-  // plutôt que sous "data" — on gère les deux (voir extractSaleFields).
-  [key: string]: unknown;
+  sale?: ChariowSale;
 }
 
-interface SaleFields {
-  saleId: string | null;
-  status: string | null;
-  amount: number | null;
-  currency: string | null;
-  customMetadata: Record<string, unknown>;
-}
-
-// TODO: à ajuster une fois le vrai payload d'un Pulse confirmé (voir le
-// TODO en tête de fichier). Cherche les champs plausibles à plusieurs
-// emplacements imbriqués courants (data.sale, data.purchase, data
-// directement) plutôt que de supposer une seule forme exacte.
-function extractSaleFields(payload: ChariowPulsePayload): SaleFields {
-  const data = (payload.data ?? payload) as Record<string, unknown>;
-  const nested =
-    (data.sale as Record<string, unknown> | undefined) ??
-    (data.purchase as Record<string, unknown> | undefined) ??
-    data;
-
-  const pick = (obj: Record<string, unknown>, keys: string[]): unknown => {
-    for (const key of keys) {
-      if (obj[key] !== undefined && obj[key] !== null) return obj[key];
-    }
-    return null;
-  };
-
-  const saleId = pick(nested, ['id', 'sale_id', 'purchase_id']);
-  const status = pick(nested, ['status']) ?? (payload.event === 'sale.completed' ? 'completed' : null);
-  const amountRaw = pick(nested, ['amount', 'total', 'price']);
-  const currency = pick(nested, ['currency', 'payment_currency']);
-  const customMetadata =
-    (nested.custom_metadata as Record<string, unknown> | undefined) ??
-    (data.custom_metadata as Record<string, unknown> | undefined) ??
-    {};
-
-  return {
-    saleId: typeof saleId === 'string' ? saleId : null,
-    status: typeof status === 'string' ? status : null,
-    amount: amountRaw !== null && amountRaw !== undefined && !Number.isNaN(Number(amountRaw)) ? Number(amountRaw) : null,
-    currency: typeof currency === 'string' ? currency : null,
-    customMetadata,
-  };
-}
-
-// PENDING/COMPLETED/FAILED : même vocabulaire que payment_transactions
-// pour PawaPay (contrainte CHECK posée en 0024) — voir 0028 pour pourquoi
-// on mappe dessus plutôt que d'élargir la contrainte.
-function mapStatus(chariowStatus: string | null, event: string | undefined): string {
-  const s = (chariowStatus ?? '').toLowerCase();
-  if (s.includes('complet') || s.includes('success') || event === 'sale.completed') return 'COMPLETED';
-  if (s.includes('fail') || s.includes('reject') || s.includes('cancel')) return 'FAILED';
-  return 'PENDING';
-}
-
-async function runBusinessLogic(
-  supabase: ReturnType<typeof createClient>,
-  fields: SaleFields,
-  mappedStatus: string
-) {
-  if (mappedStatus !== 'COMPLETED') return;
-
-  const userId = fields.customMetadata.userId;
-  const planId = fields.customMetadata.planId;
+// Point d'extension : la seule action métier concrète que ce schéma sait
+// faire aujourd'hui est activer un abonnement (grant_subscription, voir
+// migration 0020) — même limite documentée dans pawapay-callback.
+async function runBusinessLogic(supabase: ReturnType<typeof createClient>, sale: ChariowSale) {
+  const userId = sale.custom_metadata?.userId;
+  const planId = sale.custom_metadata?.planId;
   if (typeof userId !== 'string' || typeof planId !== 'string') {
-    console.log('chariow-pulse-webhook: COMPLETED sans custom_metadata reconnue, aucune action métier déclenchée', {
-      saleId: fields.saleId,
+    console.log('chariow-pulse-webhook: successful.sale sans custom_metadata reconnue, aucune action métier déclenchée', {
+      saleId: sale.id,
     });
     return;
   }
 
   // Même défense en profondeur que pawapay-callback (voir migration
-  // 0025/cbdf7dd) : ne jamais accorder l'abonnement sans revérifier que
-  // le montant RÉELLEMENT rapporté par Chariow correspond au prix du
-  // plan (table plans, seule source de vérité), même si
-  // chariow-initiate-checkout ne laisse déjà aucune prise à un montant
-  // falsifié par le client (voir son commentaire d'en-tête) — ce
-  // contrôle reste la dernière ligne de défense si le payload a été
-  // altéré en route ou si Chariow envoie un montant inattendu pour
-  // n'importe quelle raison.
+  // 0025/cbdf7dd) : ne jamais accorder l'abonnement sans revérifier que le
+  // montant RÉELLEMENT rapporté par Chariow correspond au prix du plan
+  // (table plans, seule source de vérité), même si chariow-initiate-
+  // checkout ne laisse déjà aucune prise à un montant falsifié par le
+  // client.
   const { data: plan, error: planError } = await supabase
     .from('plans')
     .select('price, currency')
@@ -145,28 +98,19 @@ async function runBusinessLogic(
     .maybeSingle();
 
   if (planError || !plan) {
-    console.error('chariow-pulse-webhook: unknown planId, refusing grant_subscription', {
-      saleId: fields.saleId,
-      planId,
-    });
+    console.error('chariow-pulse-webhook: unknown planId, refusing grant_subscription', { saleId: sale.id, planId });
     return;
   }
 
-  if (fields.amount === null || fields.currency === null) {
-    console.error('chariow-pulse-webhook: amount/currency not found in payload, refusing grant_subscription', {
-      saleId: fields.saleId,
-      planId,
-    });
-    return;
-  }
-
-  if (fields.amount !== plan.price || fields.currency !== plan.currency) {
+  const paidAmount = sale.amount?.value;
+  const paidCurrency = sale.amount?.currency;
+  if (paidAmount !== plan.price || paidCurrency !== plan.currency) {
     console.error('chariow-pulse-webhook: amount/currency mismatch, refusing grant_subscription', {
-      saleId: fields.saleId,
+      saleId: sale.id,
       userId,
       planId,
       expected: { price: plan.price, currency: plan.currency },
-      received: { amount: fields.amount, currency: fields.currency },
+      received: { amount: paidAmount, currency: paidCurrency },
     });
     return;
   }
@@ -175,15 +119,10 @@ async function runBusinessLogic(
     p_user_id: userId,
     p_plan_id: planId,
     p_provider: 'chariow',
-    p_provider_reference: fields.saleId,
+    p_provider_reference: sale.id,
   });
   if (error) {
-    console.error('chariow-pulse-webhook: grant_subscription failed', {
-      saleId: fields.saleId,
-      userId,
-      planId,
-      error,
-    });
+    console.error('chariow-pulse-webhook: grant_subscription failed', { saleId: sale.id, userId, planId, error });
   }
 }
 
@@ -196,74 +135,112 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const url = new URL(req.url);
-    const token = url.searchParams.get('token') ?? '';
-    const expectedToken = Deno.env.get('CHARIOW_PULSE_SECRET') ?? '';
-
-    if (!expectedToken || !timingSafeEqual(token, expectedToken)) {
-      return jsonResponse({ error: 'not_authorized' }, 401);
+    const secret = Deno.env.get('CHARIOW_WEBHOOK_SECRET') ?? '';
+    if (!secret) {
+      console.error('chariow-pulse-webhook: CHARIOW_WEBHOOK_SECRET not configured');
+      return jsonResponse({ error: 'server_misconfigured' }, 500);
     }
 
-    let payload: ChariowPulsePayload;
+    // Corps BRUT lu AVANT tout parsing JSON — le HMAC est calculé sur les
+    // octets exacts envoyés par Chariow ; un re-sérialisé JSON.stringify
+    // pourrait ne pas matcher (ordre des clés, espaces...).
+    const rawBody = await req.text();
+
+    const signatureHeader = req.headers.get('x-chariow-signature') ?? '';
+    const expectedSignature = `sha256=${await hmacSha256Hex(secret, rawBody)}`;
+    if (!signatureHeader || !timingSafeEqual(signatureHeader, expectedSignature)) {
+      console.error('chariow-pulse-webhook: invalid signature');
+      return jsonResponse({ error: 'invalid_signature' }, 401);
+    }
+
+    const deliveryId = req.headers.get('x-pulse-delivery-id');
+    if (!deliveryId) {
+      return jsonResponse({ error: 'missing_delivery_id' }, 400);
+    }
+
+    let payload: ChariowSalePulse;
     try {
-      payload = await req.json();
+      payload = JSON.parse(rawBody);
     } catch {
       return jsonResponse({ error: 'invalid_json' }, 400);
     }
 
-    const fields = extractSaleFields(payload);
-    const mappedStatus = mapStatus(fields.status, payload.event);
+    const event = req.headers.get('x-pulse-event') || payload.event;
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    // Déduplication : Chariow peut renvoyer la même livraison plusieurs
+    // fois (retry) — x-pulse-delivery-id est la clé d'idempotence.
+    const { data: existingDelivery } = await supabase
+      .from('payment_transactions')
+      .select('id')
+      .eq('pulse_delivery_id', deliveryId)
+      .maybeSingle();
+
+    if (existingDelivery) {
+      return jsonResponse({ received: true, duplicate: true }, 200);
+    }
+
+    if (event !== 'successful.sale' || !payload.sale) {
+      console.log('chariow-pulse-webhook: event ignoré', { event, deliveryId });
+      return jsonResponse({ received: true, ignored: true }, 200);
+    }
+
+    const sale = payload.sale;
+    const internalReference = sale.custom_metadata?.internalReference;
+
     // Corrélation avec la transaction créée par chariow-initiate-checkout
-    // via l'internalReference qu'on avait injectée dans custom_metadata
-    // (voir son commentaire d'en-tête) — c'est notre deposit_id.
-    const internalReference = fields.customMetadata.internalReference;
+    // via l'internalReference injecté dans custom_metadata au checkout.
     if (typeof internalReference === 'string') {
-      const { error: upsertError } = await supabase
+      const { error: updateError } = await supabase
         .from('payment_transactions')
         .update({
-          status: mappedStatus,
-          amount: fields.amount,
-          currency: fields.currency,
+          status: 'COMPLETED',
+          amount: sale.amount?.value ?? null,
+          currency: sale.amount?.currency ?? null,
+          pulse_delivery_id: deliveryId,
           raw_payload: payload,
           updated_at: new Date().toISOString(),
         })
         .eq('deposit_id', internalReference);
 
-      if (upsertError) {
-        console.error('chariow-pulse-webhook: update failed', { internalReference, error: upsertError });
+      if (updateError) {
+        console.error('chariow-pulse-webhook: update failed', { internalReference, deliveryId, error: updateError });
+        return jsonResponse({ error: 'db_error' }, 500);
       }
     } else {
-      // Pas d'internalReference reconnue dans le payload : on logue quand
-      // même une ligne pour ne perdre aucune notification pendant qu'on
-      // affine extractSaleFields, plutôt que de la jeter silencieusement.
+      // Pas d'internalReference reconnue : on logue quand même une ligne
+      // (avec pulse_delivery_id pour la dédup) plutôt que de la jeter
+      // silencieusement.
       console.error('chariow-pulse-webhook: no internalReference in custom_metadata, logging as orphan row', {
-        saleId: fields.saleId,
+        saleId: sale.id,
+        deliveryId,
       });
       const { error: insertError } = await supabase.from('payment_transactions').insert({
-        deposit_id: fields.saleId ?? crypto.randomUUID(),
-        status: mappedStatus,
-        amount: fields.amount,
-        currency: fields.currency,
+        deposit_id: sale.id ?? crypto.randomUUID(),
+        status: 'COMPLETED',
+        amount: sale.amount?.value ?? null,
+        currency: sale.amount?.currency ?? null,
         provider: 'chariow',
         environment: 'production',
+        pulse_delivery_id: deliveryId,
         raw_payload: payload,
       });
       if (insertError) {
-        console.error('chariow-pulse-webhook: orphan insert failed', { error: insertError });
+        console.error('chariow-pulse-webhook: orphan insert failed', { deliveryId, error: insertError });
+        return jsonResponse({ error: 'db_error' }, 500);
       }
     }
 
-    // On répond 200 dès que le paiement est durablement enregistré ; la
-    // logique métier tourne après, sans bloquer la réponse (même raison
-    // que pawapay-callback : ne pas risquer un retry Chariow à cause d'un
-    // bug dans grant_subscription).
-    const businessLogic = runBusinessLogic(supabase, fields, mappedStatus).catch((err) => {
-      console.error('chariow-pulse-webhook: business logic threw', { saleId: fields.saleId, error: err });
+    // On répond 200 dès que le paiement est durablement enregistré (et
+    // dédupliqué) ; la logique métier (vérif montant + grant_subscription)
+    // tourne après, sans bloquer la réponse (même raison que
+    // pawapay-callback : ne pas risquer un retry Chariow à cause d'un bug
+    // dans grant_subscription).
+    const businessLogic = runBusinessLogic(supabase, sale).catch((err) => {
+      console.error('chariow-pulse-webhook: business logic threw', { saleId: sale.id, error: err });
     });
     if (typeof EdgeRuntime !== 'undefined') {
       EdgeRuntime.waitUntil(businessLogic);
