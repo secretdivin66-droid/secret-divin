@@ -1,7 +1,10 @@
 // Initie un paiement Chariow (carte/mobile money via leur checkout hébergé)
-// depuis le client (utilisateur connecté), en parallèle de PawaPay (voir
-// pawapay-initiate-deposit). Voir chariow-pulse-webhook pour la
-// confirmation finale de la vente.
+// pour un pack de crédits (voir chariow-pulse-webhook pour la confirmation
+// finale de la vente). Réorienté le 2026-08-10 depuis les abonnements
+// (plans/subscriptions) vers les packs de crédits (credit_packs, voir
+// migration 0031) — Chariow ne sert que les packs de crédits sur ce
+// projet, les abonnements Free/Premium/Pro restent sans moyen de paiement
+// réel branché pour l'instant.
 //
 // Sécurité (même principes que pawapay-initiate-deposit) :
 // - exige un JWT Supabase valide (utilisateur réel connecté) — jamais
@@ -16,7 +19,7 @@
 //   (confirmé en live le 2026-08-09 — pas documenté publiquement) et le
 //   profil permanent de l'utilisateur ne les contient pas forcément. Ce
 //   sont de simples infos de contact pour Chariow, pas des données
-//   d'autorisation : l'identité réelle qui reçoit l'abonnement reste
+//   d'autorisation : l'identité réelle qui reçoit les crédits reste
 //   entièrement déterminée par `user.id` (JWT) → `custom_metadata.userId`,
 //   jamais par ces champs. Validés non-vides ci-dessous, sinon 400.
 // - contrairement à PawaPay, l'API checkout Chariow ne prend PAS de
@@ -24,12 +27,12 @@
 //   first_name, last_name, phone, redirect_url, payment_currency,
 //   custom_metadata — voir la doc chariow.dev/fr/guides/checkout) : le
 //   prix est entièrement déterminé côté Chariow par le produit
-//   (plans.chariow_product_id), donc il n'existe pas de champ "amount"
-//   qu'un client pourrait falsifier ici. La vérification "montant payé
-//   == prix du plan" (défense en profondeur façon PawaPay) se fait quand
-//   même, mais seulement côté chariow-pulse-webhook, sur le montant
+//   (credit_packs.chariow_product_id), donc il n'existe pas de champ
+//   "amount" qu'un client pourrait falsifier ici. La vérification "montant
+//   payé == prix du pack" (défense en profondeur façon PawaPay) se fait
+//   quand même, mais seulement côté chariow-pulse-webhook, sur le montant
 //   RÉELLEMENT rapporté par Chariow après paiement — cette fonction-ci se
-//   contente de vérifier que le planId existe et a un produit Chariow
+//   contente de vérifier que le packId existe et a un produit Chariow
 //   configuré.
 // - le token API Chariow (CHARIOW_API_KEY) ne quitte jamais ce runtime.
 import { createClient } from 'npm:@supabase/supabase-js@2';
@@ -48,7 +51,7 @@ function jsonResponse(payload: unknown, status = 200) {
 }
 
 interface InitiateCheckoutBody {
-  planId: string;
+  packId: string;
   redirectUrl?: string;
   firstName?: string;
   lastName?: string;
@@ -95,10 +98,10 @@ Deno.serve(async (req) => {
     }
 
     const body: InitiateCheckoutBody = await req.json();
-    const { planId, redirectUrl, firstName, lastName, phone } = body;
+    const { packId, redirectUrl, firstName, lastName, phone } = body;
 
-    if (typeof planId !== 'string' || !planId) {
-      return jsonResponse({ error: 'invalid_plan_id' }, 400);
+    if (typeof packId !== 'string' || !packId) {
+      return jsonResponse({ error: 'invalid_pack_id' }, 400);
     }
 
     // Chariow exige ces 3 champs au checkout (confirmé en live, voir le
@@ -123,24 +126,24 @@ Deno.serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Seule source de vérité pour le prix (voir 0025) ET pour le
-    // product_id Chariow (voir 0028) : jamais fait confiance à autre
-    // chose que la table `plans` pour déterminer ce qui va être facturé.
-    const { data: plan, error: planError } = await adminClient
-      .from('plans')
+    // Seule source de vérité pour le prix ET pour le product_id Chariow
+    // (voir migration 0031) : jamais fait confiance à autre chose que la
+    // table `credit_packs` pour déterminer ce qui va être facturé.
+    const { data: pack, error: packError } = await adminClient
+      .from('credit_packs')
       .select('id, price, currency, chariow_product_id')
-      .eq('id', planId)
+      .eq('id', packId)
       .maybeSingle();
 
-    if (planError || !plan) {
-      return jsonResponse({ error: 'unknown_plan' }, 400);
+    if (packError || !pack) {
+      return jsonResponse({ error: 'unknown_pack' }, 400);
     }
-    if (!plan.price || plan.price <= 0) {
-      return jsonResponse({ error: 'plan_not_payable' }, 400);
+    if (!pack.price || pack.price <= 0) {
+      return jsonResponse({ error: 'pack_not_payable' }, 400);
     }
-    if (!plan.chariow_product_id) {
-      console.error('chariow-initiate-checkout: plan has no chariow_product_id configured', { planId });
-      return jsonResponse({ error: 'plan_not_configured_for_chariow' }, 400);
+    if (!pack.chariow_product_id) {
+      console.error('chariow-initiate-checkout: pack has no chariow_product_id configured', { packId });
+      return jsonResponse({ error: 'pack_not_configured_for_chariow' }, 400);
     }
 
     const { data: profile, error: profileError } = await adminClient
@@ -156,21 +159,21 @@ Deno.serve(async (req) => {
     const internalReference = crypto.randomUUID();
 
     const chariowRequestBody: Record<string, unknown> = {
-      product_id: plan.chariow_product_id,
+      product_id: pack.chariow_product_id,
       email: profile.email,
       first_name: firstName.trim(),
       last_name: lastName.trim(),
-      payment_currency: plan.currency,
+      payment_currency: pack.currency,
       redirect_url: redirectUrl ?? undefined,
       // Repris tel quel dans les Pulses (webhooks) selon la doc — c'est
       // le seul lien fiable entre une vente Chariow et notre
-      // payment_transactions/utilisateur/plan. "userId" est TOUJOURS
+      // payment_transactions/utilisateur/pack. "userId" est TOUJOURS
       // résolu depuis le JWT ci-dessus, jamais depuis le corps de la
       // requête (même principe que "customerId" dans
       // pawapay-initiate-deposit).
       custom_metadata: {
         internalReference,
-        planId: plan.id,
+        packId: pack.id,
         userId: user.id,
       },
     };
@@ -178,7 +181,7 @@ Deno.serve(async (req) => {
     // commentaire d'en-tête). Format de country_code confirmé en live le
     // 2026-08-09 : le code appelant nu ("225") est rejeté ("country not
     // found"), le code ISO alpha-2 ("CI") est accepté — le frontend
-    // (SubscribeButton.tsx) envoie donc de l'ISO alpha-2.
+    // (BuyButton) envoie donc de l'ISO alpha-2.
     chariowRequestBody.phone = { number: phone.number.trim(), country_code: phone.countryCode.trim() };
 
     let chariowResponseJson: ChariowCheckoutResponse | null = null;
@@ -208,8 +211,8 @@ Deno.serve(async (req) => {
       deposit_id: internalReference,
       client_reference_id: internalReference,
       status,
-      amount: plan.price,
-      currency: plan.currency,
+      amount: pack.price,
+      currency: pack.currency,
       provider: 'chariow',
       environment: apiKey.startsWith('sk_live_') ? 'production' : 'sandbox',
       raw_payload: { request: chariowRequestBody, response: chariowResponseJson },
@@ -237,11 +240,11 @@ Deno.serve(async (req) => {
     }
 
     // 'completed' / 'already_purchased' : la vente est déjà finalisée côté
-    // Chariow, mais on n'active PAS l'abonnement ici — seul
+    // Chariow, mais on n'accorde PAS les crédits ici — seul
     // chariow-pulse-webhook (canal serveur-à-serveur authentifié, montant
-    // reconfirmé) appelle grant_subscription(), pour garder un seul point
-    // d'écriture et éviter tout octroi basé sur une réponse que le client
-    // pourrait rejouer ou falsifier.
+    // reconfirmé) appelle grant_credits()/grant_subscription(), pour
+    // garder un seul point d'écriture et éviter tout octroi basé sur une
+    // réponse que le client pourrait rejouer ou falsifier.
     return jsonResponse(
       {
         step,

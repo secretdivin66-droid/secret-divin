@@ -127,22 +127,6 @@ export const TOOLS: ToolInfo[] = [
   { id: 'formation', name: 'Formation', nameArabic: 'التكوين', route: '/formation', description: "Une formation complète pour approfondir tes connaissances mystiques." },
 ];
 
-export const PACKS = [
-  { id:'starter', name:'Starter', credits:20, price:4900, currency:'FCFA', description: 'Pour découvrir nos outils mystiques.' },
-  { id:'essentiel', name:'Essentiel', credits:50, price:6900, currency:'FCFA', description: "L'essentiel pour explorer ton destin." },
-  { id:'premium', name:'Premium', credits:70, price:9900, currency:'FCFA', popular:true, description: 'Le plus populaire pour un usage régulier.' },
-  { id:'expert', name:'Expert', credits:150, price:19900, currency:'FCFA', description: 'Pour les passionnés de mystique.' },
-  { id:'unlimited', name:'Illimité', credits:null, price:49000, currency:'FCFA', period:'mois', description: 'Accès total à tous les outils pendant 1 mois.' },
-];
-
-export const PACK_SUBTITLES: Record<string, string> = {
-  starter: 'Pour découvrir, sans engagement',
-  essentiel: 'Pour un usage régulier',
-  premium: 'Le meilleur rapport crédit/prix',
-  expert: 'Pour aller plus loin',
-  unlimited: 'Accès total, un mois complet',
-};
-
 export const WHATSAPP_NUMBER = '224624279200';
 
 export const SQUARE_INFO: Record<number, { name: string; planet: string }> = {

@@ -1,10 +1,13 @@
 import { Link } from 'react-router-dom';
-import { PACKS, WHATSAPP_NUMBER } from '../utils/mystique';
+import { WHATSAPP_NUMBER } from '../utils/mystique';
+import { useCreditPacks, type CreditPack } from '../hooks/useCreditPacks';
 
 interface Props { toolName: string; balance: number; onClose: () => void; }
 
 export function CreditModal({ toolName, balance, onClose }: Props) {
-  function openWhatsApp(pack: typeof PACKS[0]) {
+  const { packs } = useCreditPacks();
+
+  function openWhatsApp(pack: CreditPack) {
     const message = encodeURIComponent(
       `Bonjour, je veux acheter le pack ${pack.name} — ${pack.credits ?? '∞'} crédits pour ${pack.price} FCFA.`
     );
@@ -19,7 +22,7 @@ export function CreditModal({ toolName, balance, onClose }: Props) {
         <p style={{ color:'#a0aec0', marginBottom:'24px' }}>Il te faut <strong style={{ color:'#f5c842' }}>2 crédits</strong> pour utiliser <strong style={{ color:'white' }}>{toolName}</strong>.</p>
 
         <div style={{ display:'grid', gap:'10px', marginBottom:'20px' }}>
-          {PACKS.filter(p => p.id !== 'unlimited').map(pack => (
+          {packs.filter(p => p.id !== 'unlimited').map(pack => (
             <div
               key={pack.id}
               style={{

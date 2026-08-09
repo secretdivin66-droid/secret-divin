@@ -1,6 +1,8 @@
 // Reçoit les "Pulses" Chariow (leur système de webhooks) quand une vente
 // est confirmée. Voir chariow-initiate-checkout pour la création de la
-// transaction en amont.
+// transaction en amont. Réorienté le 2026-08-10 des abonnements vers les
+// packs de crédits (credit_packs, voir migration 0031) — voir
+// runBusinessLogic ci-dessous pour le détail du mapping packId → action.
 //
 // Format CONFIRMÉ le 2026-08-09 via la documentation Chariow (dashboard,
 // Automations → Pulses) — remplace l'ancien mécanisme provisoire (secret
@@ -14,14 +16,14 @@
 //   la même livraison plusieurs fois (retry), dédupliquée ici via la
 //   colonne payment_transactions.pulse_delivery_id (contrainte UNIQUE,
 //   voir migration 0029) plutôt que de la retraiter (double
-//   grant_subscription).
+//   grant_credits/grant_subscription).
 // - header x-pulse-event : nom de l'événement — seul "successful.sale"
 //   est traité pour l'instant ; les autres sont logués et ignorés (200,
 //   sans écriture) en attendant qu'on en ait besoin.
 //
 // Comme pour pawapay-callback : la transaction est enregistrée en base
 // d'abord (source de vérité + dédup), la réponse 200 part dès que c'est
-// fait, puis la logique métier (vérif montant + grant_subscription) tourne
+// fait, puis la logique métier (vérif montant + grant_credits/grant_subscription) tourne
 // en arrière-plan (EdgeRuntime.waitUntil) pour ne jamais faire attendre
 // Chariow.
 import { createClient } from 'npm:@supabase/supabase-js@2';
@@ -63,7 +65,7 @@ interface ChariowSale {
   id?: string;
   amount?: { value?: number; currency?: string };
   status?: string;
-  custom_metadata?: { internalReference?: string; planId?: string; userId?: string };
+  custom_metadata?: { internalReference?: string; packId?: string; userId?: string };
   completed_at?: string;
 }
 
@@ -72,13 +74,21 @@ interface ChariowSalePulse {
   sale?: ChariowSale;
 }
 
-// Point d'extension : la seule action métier concrète que ce schéma sait
-// faire aujourd'hui est activer un abonnement (grant_subscription, voir
-// migration 0020) — même limite documentée dans pawapay-callback.
+// Le pack 'unlimited' (49000 XOF/mois, credits=NULL — voir migration 0031)
+// n'accorde pas des crédits mais un accès illimité pendant 1 mois, exactement
+// ce que fait déjà grant_subscription() pour un abonnement `plans.pro`
+// (is_unlimited=true — voir useCredits.ts:isUnlimited, qui lit l'existence
+// d'une ligne `subscriptions` active, pas un solde de crédits). Plutôt que
+// de recréer un second mécanisme d'accès illimité, l'achat de ce pack route
+// vers grant_subscription('pro') : ça réutilise l'infra existante et reste
+// cohérent avec la seule notion d'"illimité" qui existe déjà dans le code.
+const UNLIMITED_PACK_ID = 'unlimited';
+const UNLIMITED_MAPS_TO_PLAN_ID = 'pro';
+
 async function runBusinessLogic(supabase: ReturnType<typeof createClient>, sale: ChariowSale) {
   const userId = sale.custom_metadata?.userId;
-  const planId = sale.custom_metadata?.planId;
-  if (typeof userId !== 'string' || typeof planId !== 'string') {
+  const packId = sale.custom_metadata?.packId;
+  if (typeof userId !== 'string' || typeof packId !== 'string') {
     console.log('chariow-pulse-webhook: successful.sale sans custom_metadata reconnue, aucune action métier déclenchée', {
       saleId: sale.id,
     });
@@ -86,43 +96,56 @@ async function runBusinessLogic(supabase: ReturnType<typeof createClient>, sale:
   }
 
   // Même défense en profondeur que pawapay-callback (voir migration
-  // 0025/cbdf7dd) : ne jamais accorder l'abonnement sans revérifier que le
-  // montant RÉELLEMENT rapporté par Chariow correspond au prix du plan
-  // (table plans, seule source de vérité), même si chariow-initiate-
-  // checkout ne laisse déjà aucune prise à un montant falsifié par le
-  // client.
-  const { data: plan, error: planError } = await supabase
-    .from('plans')
-    .select('price, currency')
-    .eq('id', planId)
+  // 0025/cbdf7dd) : ne jamais accorder de crédits/accès sans revérifier
+  // que le montant RÉELLEMENT rapporté par Chariow correspond au prix du
+  // pack (table credit_packs, seule source de vérité), même si
+  // chariow-initiate-checkout ne laisse déjà aucune prise à un montant
+  // falsifié par le client.
+  const { data: pack, error: packError } = await supabase
+    .from('credit_packs')
+    .select('price, currency, credits')
+    .eq('id', packId)
     .maybeSingle();
 
-  if (planError || !plan) {
-    console.error('chariow-pulse-webhook: unknown planId, refusing grant_subscription', { saleId: sale.id, planId });
+  if (packError || !pack) {
+    console.error('chariow-pulse-webhook: unknown packId, refusing to grant anything', { saleId: sale.id, packId });
     return;
   }
 
   const paidAmount = sale.amount?.value;
   const paidCurrency = sale.amount?.currency;
-  if (paidAmount !== plan.price || paidCurrency !== plan.currency) {
-    console.error('chariow-pulse-webhook: amount/currency mismatch, refusing grant_subscription', {
+  if (paidAmount !== pack.price || paidCurrency !== pack.currency) {
+    console.error('chariow-pulse-webhook: amount/currency mismatch, refusing to grant anything', {
       saleId: sale.id,
       userId,
-      planId,
-      expected: { price: plan.price, currency: plan.currency },
+      packId,
+      expected: { price: pack.price, currency: pack.currency },
       received: { amount: paidAmount, currency: paidCurrency },
     });
     return;
   }
 
-  const { error } = await supabase.rpc('grant_subscription', {
+  if (packId === UNLIMITED_PACK_ID) {
+    const { error } = await supabase.rpc('grant_subscription', {
+      p_user_id: userId,
+      p_plan_id: UNLIMITED_MAPS_TO_PLAN_ID,
+      p_provider: 'chariow',
+      p_provider_reference: sale.id,
+    });
+    if (error) {
+      console.error('chariow-pulse-webhook: grant_subscription failed', { saleId: sale.id, userId, packId, error });
+    }
+    return;
+  }
+
+  const { error } = await supabase.rpc('grant_credits', {
     p_user_id: userId,
-    p_plan_id: planId,
-    p_provider: 'chariow',
-    p_provider_reference: sale.id,
+    p_amount: pack.credits,
+    p_pack: packId,
+    p_description: `Achat pack ${packId} (Chariow)`,
   });
   if (error) {
-    console.error('chariow-pulse-webhook: grant_subscription failed', { saleId: sale.id, userId, planId, error });
+    console.error('chariow-pulse-webhook: grant_credits failed', { saleId: sale.id, userId, packId, error });
   }
 }
 
@@ -235,10 +258,10 @@ Deno.serve(async (req) => {
     }
 
     // On répond 200 dès que le paiement est durablement enregistré (et
-    // dédupliqué) ; la logique métier (vérif montant + grant_subscription)
+    // dédupliqué) ; la logique métier (vérif montant + grant_credits/grant_subscription)
     // tourne après, sans bloquer la réponse (même raison que
     // pawapay-callback : ne pas risquer un retry Chariow à cause d'un bug
-    // dans grant_subscription).
+    // dans grant_credits/grant_subscription).
     const businessLogic = runBusinessLogic(supabase, sale).catch((err) => {
       console.error('chariow-pulse-webhook: business logic threw', { saleId: sale.id, error: err });
     });

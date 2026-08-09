@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
-import { PACKS, PACK_SUBTITLES, TOOLS, TOOL_COSTS } from '../utils/mystique';
+import { TOOLS, TOOL_COSTS } from '../utils/mystique';
+import { useCreditPacks } from '../hooks/useCreditPacks';
 import { useRevealOnScroll } from '../hooks/useRevealOnScroll';
 import { useCanonicalUrl } from '../hooks/useCanonicalUrl';
 
@@ -28,6 +29,7 @@ function Separateur() {
 export function LandingPage() {
   useRevealOnScroll();
   useCanonicalUrl('/');
+  const { packs } = useCreditPacks();
 
   return (
     <div>
@@ -160,7 +162,7 @@ export function LandingPage() {
           Paye une fois, utilise pendant 30 jours — aucun engagement, aucun renouvellement automatique.
         </p>
         <div className="reveal grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
-          {PACKS.map((pack) => (
+          {packs.map((pack) => (
             <div
               key={pack.id}
               className="rounded-lg p-6 flex flex-col items-center text-center"
@@ -178,7 +180,7 @@ export function LandingPage() {
                 </span>
               )}
               <h3 className="text-white font-bold text-lg">{pack.name}</h3>
-              <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>{PACK_SUBTITLES[pack.id]}</p>
+              <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>{pack.subtitle}</p>
               <p className="text-or font-bold text-[1.6rem] mt-4">{pack.price.toLocaleString('fr-FR')} FCFA</p>
               <span
                 className="mt-3 px-4 py-1 rounded-full text-sm font-bold"
