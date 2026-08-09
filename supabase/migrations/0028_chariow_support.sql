@@ -1,0 +1,21 @@
+-- ============================================================
+-- Secret Divin — support Chariow comme second moyen de paiement, en
+-- parallèle de PawaPay (voir 0024/0025). Migration ADDITIVE et
+-- IDEMPOTENTE : peut être rejouée sans erreur.
+--
+-- payment_transactions.provider et .status n'ont volontairement PAS été
+-- touchés ici : provider est déjà du texte libre sans contrainte CHECK
+-- (vérifié en live : un insert avec provider='chariow' passe tel quel),
+-- et chariow-pulse-webhook mappe le vocabulaire Chariow sur le
+-- vocabulaire PawaPay existant (PENDING/COMPLETED/FAILED/...) plutôt que
+-- d'élargir la contrainte CHECK sur status — voir ce fichier pour le
+-- détail du mapping.
+-- ============================================================
+
+-- Id du produit Chariow correspondant à ce plan (créé manuellement dans
+-- app.chariow.com, aucune API de création de produit publique trouvée au
+-- moment de l'écriture — voir le résumé donné à l'utilisateur). NULL tant
+-- que le produit n'a pas été créé côté Chariow ; chariow-initiate-checkout
+-- refuse explicitement les plans sans chariow_product_id plutôt que
+-- d'appeler l'API Chariow avec un product_id vide.
+ALTER TABLE plans ADD COLUMN IF NOT EXISTS chariow_product_id text;
