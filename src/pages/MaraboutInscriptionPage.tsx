@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
-import { SPECIALITES, PAYS_LIST, LANGUES, ABONNEMENT_PRIX_FCFA } from '../utils/marabouts';
+import { SPECIALITES, PAYS_LIST, LANGUES, ABONNEMENT_PRIX_FCFA, whatsappContactUrl } from '../utils/marabouts';
+import { WHATSAPP_NUMBER } from '../utils/mystique';
 import { PhotoUpload } from '../components/PhotoUpload';
 import { notifyMaraboutRegistration } from '../lib/novu';
 import { MaraboutPaymentButton } from '../components/MaraboutPaymentButton';
@@ -231,6 +232,9 @@ export function MaraboutInscriptionPage() {
   }
 
   if (submitted) {
+    const paymentMessage =
+      'Bonjour, je viens de soumettre ma demande d\'inscription comme marabout sur Secret Divin. Je souhaite payer mon abonnement de ' +
+      ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR') + ' FCFA. Mon email : ' + (user?.email ?? '');
     return (
       <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#0a0f2e' }}>
         <div className="carte rounded-lg text-center max-w-[500px]">
@@ -239,6 +243,13 @@ export function MaraboutInscriptionPage() {
             {ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR')} FCFA est payé.
           </p>
           <MaraboutPaymentButton label={`Payer ${ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR')} FCFA`} />
+          <button
+            onClick={() => window.open(whatsappContactUrl(WHATSAPP_NUMBER, paymentMessage), '_blank', 'noopener,noreferrer')}
+            className="block mt-3 mx-auto text-sm underline"
+            style={{ color: '#a0aec0' }}
+          >
+            Un souci avec le paiement en ligne ? Paie via WhatsApp à la place
+          </button>
         </div>
       </div>
     );

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
-import { SPECIALITES, PAYS_LIST, LANGUES, ABONNEMENT_PRIX_FCFA, averageNote } from '../utils/marabouts';
+import { SPECIALITES, PAYS_LIST, LANGUES, ABONNEMENT_PRIX_FCFA, averageNote, whatsappContactUrl } from '../utils/marabouts';
+import { WHATSAPP_NUMBER } from '../utils/mystique';
 import type { Marabout } from '../utils/marabouts';
 import { PhotoUpload } from '../components/PhotoUpload';
 import { MaraboutPaymentButton } from '../components/MaraboutPaymentButton';
@@ -162,6 +163,9 @@ export function MaraboutDashboardPage() {
 
   const avisList = marabout.marabout_avis ?? [];
   const note = averageNote(avisList);
+  const paymentMessage =
+    'Bonjour, je souhaite payer/renouveler mon abonnement marabout sur Secret Divin pour ' +
+    ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR') + ' FCFA. Mon email : ' + user.email + ' Mon profil : ' + marabout.nom_complet;
 
   return (
     <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
@@ -180,6 +184,13 @@ export function MaraboutDashboardPage() {
           <div className="rounded-lg p-5 text-center mb-8" style={{ background: '#3a1b1b', border: '1px solid #e53935' }}>
             <p className="text-red-400 mb-3">Profil non actif. Abonnement à payer : {ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR')} FCFA/mois.</p>
             <MaraboutPaymentButton label="Payer maintenant" className="rounded font-bold py-2 px-6" style={{ background: '#f5c842', color: '#0a0f2e' }} />
+            <button
+              onClick={() => window.open(whatsappContactUrl(WHATSAPP_NUMBER, paymentMessage), '_blank', 'noopener,noreferrer')}
+              className="block mt-2 mx-auto text-sm underline"
+              style={{ color: '#a0aec0' }}
+            >
+              Ou paie via WhatsApp
+            </button>
           </div>
         )}
         {marabout.is_verified && marabout.abonnement_actif && (
@@ -303,6 +314,13 @@ export function MaraboutDashboardPage() {
               <span className="inline-block mt-3 px-3 py-1 rounded-full text-xs font-bold" style={{ background: '#1b3a1f', color: '#4caf50' }}>Actif</span>
               <p className="text-sm mt-2" style={{ color: '#a0aec0' }}>Expire le {formatDate(marabout.abonnement_expire_le)}</p>
               <MaraboutPaymentButton label="Renouveler mon abonnement" className="rounded font-bold py-2 px-6 mt-4" style={{ background: '#f5c842', color: '#0a0f2e' }} />
+              <button
+                onClick={() => window.open(whatsappContactUrl(WHATSAPP_NUMBER, paymentMessage), '_blank', 'noopener,noreferrer')}
+                className="block mt-2 mx-auto text-sm underline"
+                style={{ color: '#a0aec0' }}
+              >
+                Ou renouvelle via WhatsApp
+              </button>
             </>
           ) : (
             <>
@@ -313,6 +331,13 @@ export function MaraboutDashboardPage() {
                 className="rounded font-bold py-2 px-6 mt-4"
                 style={{ background: '#f5c842', color: '#0a0f2e' }}
               />
+              <button
+                onClick={() => window.open(whatsappContactUrl(WHATSAPP_NUMBER, paymentMessage), '_blank', 'noopener,noreferrer')}
+                className="block mt-2 mx-auto text-sm underline"
+                style={{ color: '#a0aec0' }}
+              >
+                Ou paie via WhatsApp
+              </button>
             </>
           )}
         </div>
