@@ -65,7 +65,13 @@ interface ChariowSale {
   id?: string;
   amount?: { value?: number; currency?: string };
   status?: string;
-  custom_metadata?: { internalReference?: string; packId?: string; userId?: string };
+  custom_metadata?: {
+    internalReference?: string;
+    type?: string;
+    packId?: string;
+    maraboutId?: string;
+    userId?: string;
+  };
   completed_at?: string;
 }
 
@@ -85,13 +91,10 @@ interface ChariowSalePulse {
 const UNLIMITED_PACK_ID = 'unlimited';
 const UNLIMITED_MAPS_TO_PLAN_ID = 'pro';
 
-async function runBusinessLogic(supabase: ReturnType<typeof createClient>, sale: ChariowSale) {
-  const userId = sale.custom_metadata?.userId;
+async function handleCreditPackSale(supabase: ReturnType<typeof createClient>, sale: ChariowSale, userId: string) {
   const packId = sale.custom_metadata?.packId;
-  if (typeof userId !== 'string' || typeof packId !== 'string') {
-    console.log('chariow-pulse-webhook: successful.sale sans custom_metadata reconnue, aucune action métier déclenchée', {
-      saleId: sale.id,
-    });
+  if (typeof packId !== 'string') {
+    console.log('chariow-pulse-webhook: credit_pack sans packId, aucune action métier déclenchée', { saleId: sale.id });
     return;
   }
 
@@ -147,6 +150,76 @@ async function runBusinessLogic(supabase: ReturnType<typeof createClient>, sale:
   if (error) {
     console.error('chariow-pulse-webhook: grant_credits failed', { saleId: sale.id, userId, packId, error });
   }
+}
+
+// Abonnement marabout (5000 FCFA/mois, voir migration 0032) — distinct des
+// packs de crédits : maraboutId (pas userId) est la clé, et l'activation
+// passe par activate_marabout_subscription_via_payment(), séparée de la
+// fonction admin-manuel pour ne jamais affaiblir son contrôle d'accès.
+async function handleMaraboutSubscriptionSale(supabase: ReturnType<typeof createClient>, sale: ChariowSale) {
+  const maraboutId = sale.custom_metadata?.maraboutId;
+  if (typeof maraboutId !== 'string') {
+    console.log('chariow-pulse-webhook: marabout_subscription sans maraboutId, aucune action métier déclenchée', {
+      saleId: sale.id,
+    });
+    return;
+  }
+
+  const { data: plan, error: planError } = await supabase
+    .from('marabout_subscription_plan')
+    .select('price, currency')
+    .eq('id', 'standard')
+    .maybeSingle();
+
+  if (planError || !plan) {
+    console.error('chariow-pulse-webhook: marabout_subscription_plan not configured, refusing to activate', { saleId: sale.id });
+    return;
+  }
+
+  const paidAmount = sale.amount?.value;
+  const paidCurrency = sale.amount?.currency;
+  if (paidAmount !== plan.price || paidCurrency !== plan.currency) {
+    console.error('chariow-pulse-webhook: amount/currency mismatch, refusing to activate marabout subscription', {
+      saleId: sale.id,
+      maraboutId,
+      expected: { price: plan.price, currency: plan.currency },
+      received: { amount: paidAmount, currency: paidCurrency },
+    });
+    return;
+  }
+
+  const { error } = await supabase.rpc('activate_marabout_subscription_via_payment', {
+    p_marabout_id: maraboutId,
+    p_provider: 'chariow',
+    p_provider_reference: sale.id,
+  });
+  if (error) {
+    console.error('chariow-pulse-webhook: activate_marabout_subscription_via_payment failed', {
+      saleId: sale.id,
+      maraboutId,
+      error,
+    });
+  }
+}
+
+async function runBusinessLogic(supabase: ReturnType<typeof createClient>, sale: ChariowSale) {
+  const userId = sale.custom_metadata?.userId;
+  const type = sale.custom_metadata?.type;
+
+  if (type === 'marabout_subscription') {
+    await handleMaraboutSubscriptionSale(supabase, sale);
+    return;
+  }
+
+  // Défaut 'credit_pack' pour compatibilité avec toute vente qui
+  // n'enverrait pas encore `type` explicitement.
+  if (typeof userId !== 'string') {
+    console.log('chariow-pulse-webhook: successful.sale sans custom_metadata reconnue, aucune action métier déclenchée', {
+      saleId: sale.id,
+    });
+    return;
+  }
+  await handleCreditPackSale(supabase, sale, userId);
 }
 
 Deno.serve(async (req) => {

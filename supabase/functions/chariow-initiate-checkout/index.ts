@@ -172,6 +172,7 @@ Deno.serve(async (req) => {
       // requête (même principe que "customerId" dans
       // pawapay-initiate-deposit).
       custom_metadata: {
+        type: 'credit_pack',
         internalReference,
         packId: pack.id,
         userId: user.id,

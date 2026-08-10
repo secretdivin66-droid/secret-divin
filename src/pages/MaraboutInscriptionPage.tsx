@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
-import { SPECIALITES, PAYS_LIST, LANGUES, ABONNEMENT_PRIX_FCFA, whatsappContactUrl } from '../utils/marabouts';
-import { WHATSAPP_NUMBER } from '../utils/mystique';
+import { SPECIALITES, PAYS_LIST, LANGUES, ABONNEMENT_PRIX_FCFA } from '../utils/marabouts';
 import { PhotoUpload } from '../components/PhotoUpload';
 import { notifyMaraboutRegistration } from '../lib/novu';
+import { MaraboutPaymentButton } from '../components/MaraboutPaymentButton';
 
 const AVANTAGES = [
   'Profil visible sur la plateforme',
@@ -231,23 +231,14 @@ export function MaraboutInscriptionPage() {
   }
 
   if (submitted) {
-    const paymentMessage =
-      'Bonjour, je viens de soumettre ma demande d\'inscription comme marabout sur Secret Divin. Je souhaite payer mon abonnement de 5 000 FCFA. Mon email : ' +
-      (user?.email ?? '');
     return (
       <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#0a0f2e' }}>
         <div className="carte rounded-lg text-center max-w-[500px]">
           <p className="text-white">
-            Ta demande a bien été envoyée. L'admin va valider ton profil et t'activera après confirmation du paiement de 5 000 FCFA.
-            Contacte-nous sur WhatsApp pour finaliser l'inscription.
+            Ta demande a bien été envoyée. L'admin va valider ton profil, et il sera visible dès que ton abonnement de{' '}
+            {ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR')} FCFA est payé.
           </p>
-          <button
-            onClick={() => window.open(whatsappContactUrl(WHATSAPP_NUMBER, paymentMessage), '_blank', 'noopener,noreferrer')}
-            className="rounded font-bold py-3 px-6 mt-5"
-            style={{ background: '#25D366', color: 'white' }}
-          >
-            Finaliser le paiement WhatsApp
-          </button>
+          <MaraboutPaymentButton label={`Payer ${ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR')} FCFA`} />
         </div>
       </div>
     );
