@@ -91,6 +91,11 @@ export function getCompatibilite(el1: string, el2: string) {
 
 export const TOOL_COSTS: Record<string, number> = {
   'poids-mystique': 0,
+  // Translittération FR->arabe (texte non-arabe détecté sur /poids-mystique,
+  // >200 caractères — voir PoidsMystiquePage.tsx et migration 0034). Le
+  // calcul direct sur texte arabe reste gratuit (clé 'poids-mystique'
+  // ci-dessus, inchangée).
+  'poids-mystique-traduction': 2,
   'tutoriels': 0,
   'carres-magiques': 2,
   'destin': 2,
