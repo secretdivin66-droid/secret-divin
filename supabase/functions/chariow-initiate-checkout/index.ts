@@ -223,7 +223,15 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'db_error' }, 500);
     }
 
-    if (!chariowResponseJson || chariowResponseJson.message !== 'success' || !step) {
+    // Un succès n'a PAS de "message":"success" au niveau racine (confirmé
+    // en live le 2026-08-10 — seules les erreurs ont un `message` racine,
+    // ex: "The first name field is required."). `step` présent dans
+    // `data` suffit à identifier une réponse exploitable ; l'ancienne
+    // condition sur `message === 'success'` rejetait à tort TOUTE requête
+    // réussie, jamais détecté avant parce que les tests précédents
+    // n'avaient vu que des réponses d'erreur (clé invalide, produit
+    // placeholder introuvable) qui, elles, passaient ce test par hasard.
+    if (!chariowResponseJson || !step) {
       console.error('chariow-initiate-checkout: unexpected Chariow response', {
         internalReference,
         response: chariowResponseJson,
