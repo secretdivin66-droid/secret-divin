@@ -104,6 +104,13 @@ export const TOOL_COSTS: Record<string, number> = {
   'formation': 2,
 };
 
+// Masqués temporairement de l'UI (grilles d'outils sur /dashboard et /) —
+// TOOLS/TOOL_COSTS restent volontairement intacts (routes /tutoriels et
+// /formation toujours fonctionnelles si on y accède directement, données
+// formation_modules/formation_progress non touchées) : réactiver = vider
+// ce tableau.
+export const HIDDEN_TOOL_IDS: string[] = ['tutoriels', 'formation'];
+
 export interface ToolInfo {
   id: string;
   name: string;

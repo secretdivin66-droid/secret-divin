@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-import { TOOL_COSTS, TOOLS } from '../utils/mystique';
+import { TOOL_COSTS, TOOLS, HIDDEN_TOOL_IDS } from '../utils/mystique';
 
 export function DashboardPage() {
   const { user, profile } = useAuth();
@@ -30,7 +30,7 @@ export function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {TOOLS.map((tool) => {
+        {TOOLS.filter((tool) => !HIDDEN_TOOL_IDS.includes(tool.id)).map((tool) => {
           const cost = TOOL_COSTS[tool.id];
           return (
             <Link key={tool.id} to={tool.route} className="carte rounded-lg hover:border-or/50 flex flex-col gap-3">

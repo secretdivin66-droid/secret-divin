@@ -676,35 +676,41 @@ export function ProfilPage() {
           )}
         </div>
 
-        <Separateur />
-
-        {/* SECTION 8 — MA PROGRESSION FORMATION */}
-        <div>
-          <h2 className="text-or font-bold mb-4">Ma Progression dans la Formation</h2>
-          <p className="text-white text-sm mb-2">{completedModules.length} / 9 modules</p>
-          <div className="w-full rounded-full overflow-hidden mb-4" style={{ height: 12, background: '#1a1a2e' }}>
-            <div className="h-full transition-all" style={{ width: `${(completedModules.length / 9) * 100}%`, background: '#f5c842' }} />
-          </div>
-
-          {completedModules.length > 0 ? (
-            <>
-              <p className="font-bold mb-3" style={{ color: '#a0aec0' }}>Modules complétés :</p>
-              <div className="flex flex-col gap-2 mb-4">
-                {completedModules.map((m) => (
-                  <span key={m.module_id} className="px-3 py-2 rounded-full text-sm font-bold w-fit" style={{ background: '#1b3a1f', color: '#4caf50' }}>
-                    Module {m.module_id} — Score : {m.best_score}/100
-                  </span>
-                ))}
+        {/* SECTION 8 — MA PROGRESSION FORMATION — masquée temporairement
+            (Formation retirée de l'UI, voir HIDDEN_TOOL_IDS dans
+            utils/mystique.ts) ; formationModules/la requête formation_modules
+            restent intacts, juste non rendus. */}
+        {false && (
+          <>
+            <Separateur />
+            <div>
+              <h2 className="text-or font-bold mb-4">Ma Progression dans la Formation</h2>
+              <p className="text-white text-sm mb-2">{completedModules.length} / 9 modules</p>
+              <div className="w-full rounded-full overflow-hidden mb-4" style={{ height: 12, background: '#1a1a2e' }}>
+                <div className="h-full transition-all" style={{ width: `${(completedModules.length / 9) * 100}%`, background: '#f5c842' }} />
               </div>
-              <Link to="/formation" className="btn-principal rounded inline-block">Continuer ma formation</Link>
-            </>
-          ) : (
-            <>
-              <p className="text-white mb-4">Tu n'as pas encore commencé la formation.</p>
-              <Link to="/formation" className="btn-principal rounded inline-block">Commencer la formation</Link>
-            </>
-          )}
-        </div>
+
+              {completedModules.length > 0 ? (
+                <>
+                  <p className="font-bold mb-3" style={{ color: '#a0aec0' }}>Modules complétés :</p>
+                  <div className="flex flex-col gap-2 mb-4">
+                    {completedModules.map((m) => (
+                      <span key={m.module_id} className="px-3 py-2 rounded-full text-sm font-bold w-fit" style={{ background: '#1b3a1f', color: '#4caf50' }}>
+                        Module {m.module_id} — Score : {m.best_score}/100
+                      </span>
+                    ))}
+                  </div>
+                  <Link to="/formation" className="btn-principal rounded inline-block">Continuer ma formation</Link>
+                </>
+              ) : (
+                <>
+                  <p className="text-white mb-4">Tu n'as pas encore commencé la formation.</p>
+                  <Link to="/formation" className="btn-principal rounded inline-block">Commencer la formation</Link>
+                </>
+              )}
+            </div>
+          </>
+        )}
 
         <Separateur />
 

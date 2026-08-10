@@ -127,13 +127,15 @@ export function FonctionnalitesPage() {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-center font-bold text-or text-[2rem]">Commence gratuitement, va aussi loin que tu veux</h1>
         <p className="text-center italic mt-3" style={{ color: '#a0aec0' }}>
-          12 outils de guidance spirituelle — du calcul gratuit à la lecture complète de ton destin
+          10 outils de guidance spirituelle — du calcul gratuit à la lecture complète de ton destin
         </p>
 
         <Separateur />
 
         <div className="flex flex-col gap-5">
-          {FEATURES.map((feature) => (
+          {/* Tutoriels/Formation masqués temporairement — voir HIDDEN_TOOL_IDS
+              dans utils/mystique.ts, FEATURES lui-même reste intact */}
+          {FEATURES.filter((feature) => !['Tutoriels', 'Formation'].includes(feature.title)).map((feature) => (
             <div key={feature.title} className="reveal carte rounded-lg">
               <span
                 className="inline-block px-3 py-1 rounded-full text-xs font-bold mb-4"

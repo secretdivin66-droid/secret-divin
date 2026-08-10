@@ -15,12 +15,8 @@ export function Footer() {
             <li><Link to="/credits" className="hover:text-or transition">Tarifs</Link></li>
             <li><Link to="/pricing" className="hover:text-or transition">Abonnements</Link></li>
             <li><Link to="/marabouts" className="hover:text-or transition">Marabouts</Link></li>
-            <li>
-              <Link to="/formation" className="hover:text-or transition block">
-                <span className="arabic block text-xs" style={{ color: '#f5c842' }}>التكوين</span>
-                Formation
-              </Link>
-            </li>
+            {/* Lien Formation masqué temporairement — voir HIDDEN_TOOL_IDS
+                dans utils/mystique.ts */}
           </ul>
         </div>
         <div>

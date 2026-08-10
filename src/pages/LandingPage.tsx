@@ -1,12 +1,12 @@
 import { Link } from 'react-router-dom';
-import { TOOLS, TOOL_COSTS } from '../utils/mystique';
+import { TOOLS, TOOL_COSTS, HIDDEN_TOOL_IDS } from '../utils/mystique';
 import { useCreditPacks } from '../hooks/useCreditPacks';
 import { useRevealOnScroll } from '../hooks/useRevealOnScroll';
 import { useCanonicalUrl } from '../hooks/useCanonicalUrl';
 
 const STATS = [
-  { value: '12', label: 'Outils spirituels' },
-  { value: '2', label: 'Outils 100% gratuits' },
+  { value: '10', label: 'Outils spirituels' },
+  { value: '1', label: 'Outil 100% gratuit' },
   { value: '100%', label: 'Basé sur les sciences islamiques traditionnelles' },
 ];
 
@@ -102,7 +102,7 @@ export function LandingPage() {
           <span className="text-or">en un seul endroit</span>
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {TOOLS.map((tool) => {
+          {TOOLS.filter((tool) => !HIDDEN_TOOL_IDS.includes(tool.id)).map((tool) => {
             const cost = TOOL_COSTS[tool.id];
             const free = cost === 0;
             return (

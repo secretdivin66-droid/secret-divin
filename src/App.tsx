@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { PrivateRoute } from './components/PrivateRoute';
 import { AdminRoute } from './components/AdminRoute';
@@ -75,8 +75,13 @@ function App() {
         <Route path="/plantes" element={<PrivateRoute><PlantesPage /></PrivateRoute>} />
         <Route path="/compatibilite" element={<PrivateRoute><CompatibilitePage /></PrivateRoute>} />
         <Route path="/attraper" element={<PrivateRoute><AttraperPage /></PrivateRoute>} />
-        <Route path="/tutoriels" element={<PrivateRoute><TutorielsPage /></PrivateRoute>} />
-        <Route path="/formation" element={<PrivateRoute><FormationPage /></PrivateRoute>} />
+        {/* Tutoriels/Formation masqués temporairement de l'UI : accès direct
+            à l'URL redirige vers /dashboard plutôt que d'afficher la page.
+            TutorielsPage/FormationPage restent importés et fonctionnels —
+            réactiver = remettre <PrivateRoute><TutorielsPage /></PrivateRoute>
+            (idem FormationPage) sur ces 2 lignes. */}
+        <Route path="/tutoriels" element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />
+        <Route path="/formation" element={<PrivateRoute><Navigate to="/dashboard" replace /></PrivateRoute>} />
         <Route path="/profil" element={<PrivateRoute><ProfilPage /></PrivateRoute>} />
         <Route path="/billing" element={<PrivateRoute><BillingPage /></PrivateRoute>} />
         <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
