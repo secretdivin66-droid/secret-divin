@@ -28,7 +28,7 @@ export const PAYS_LIST = [
 
 export const LANGUES = ['Français', 'Arabe', 'Bambara', 'Wolof', 'Peul', 'Soussou', 'Malinké', 'Anglais', 'Autre'];
 
-export const ABONNEMENT_PRIX_FCFA = 5000;
+export const ABONNEMENT_PRIX_FCFA = 5900;
 
 export interface MaraboutAvis {
   id: string;

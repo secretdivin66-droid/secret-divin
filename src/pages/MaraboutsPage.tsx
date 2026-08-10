@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { SPECIALITES, PAYS_LIST, LANGUES, averageNote, whatsappContactUrl } from '../utils/marabouts';
+import { SPECIALITES, PAYS_LIST, LANGUES, ABONNEMENT_PRIX_FCFA, averageNote, whatsappContactUrl } from '../utils/marabouts';
 import type { Marabout } from '../utils/marabouts';
 import { useCanonicalUrl } from '../hooks/useCanonicalUrl';
 
@@ -171,7 +171,7 @@ export function MaraboutsPage() {
       <div className="mt-8 py-8 px-4 text-center" style={{ background: '#0d1545', borderTop: '1px solid rgba(245,200,66,0.3)' }}>
         <p className="text-or font-bold text-xl">Tu es marabout professionnel ?</p>
         <p className="mt-2" style={{ color: '#a0aec0' }}>
-          Rejoins Secret Divin et trouve de nouveaux clients. 5 000 FCFA/mois pour un profil vérifié, visible dans l'annuaire.
+          Rejoins Secret Divin et trouve de nouveaux clients. {ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR')} FCFA/mois pour un profil vérifié, visible dans l'annuaire.
         </p>
         <Link to="/marabouts/inscrire" className="btn-principal rounded mt-5 inline-block">
           Créer mon profil marabout
