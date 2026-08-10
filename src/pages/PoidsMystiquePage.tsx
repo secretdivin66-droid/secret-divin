@@ -35,17 +35,22 @@ function isArabicText(text: string): boolean {
   return arabicChars > latinChars;
 }
 
-// Décomposition affichée dans le Bloc 2 : ne garde que les caractères
-// présents dans la table ABJAD (mêmes caractères que ceux comptés par
-// calculateWeight) — espaces, ponctuation, harakat et lettres latines
-// éventuelles sont ignorés ici aussi plutôt que d'afficher "= undefined".
-function buildBreakdown(text: string): LetterBreakdown[] {
-  const breakdown: LetterBreakdown[] = [];
+// Bloc 2 (affichage) : chaque lettre DIFFÉRENTE une seule fois, dans
+// l'ordre de sa première apparition, même si elle revient plusieurs fois
+// dans le texte — calculateWeight() (utilisé pour le total du Bloc 3)
+// n'est pas concerné par cette simplification, il continue de compter
+// TOUTES les occurrences comme avant, inchangé.
+function getUniqueLetters(text: string): LetterBreakdown[] {
+  const seen = new Set<string>();
+  const result: LetterBreakdown[] = [];
   for (const letter of text) {
     const value = ABJAD[letter];
-    if (value !== undefined) breakdown.push({ letter, value });
+    if (value !== undefined && !seen.has(letter)) {
+      seen.add(letter);
+      result.push({ letter, value });
+    }
   }
-  return breakdown;
+  return result;
 }
 
 // Même schéma que les autres pages d'outils (Destin, Jours...) : appel via
@@ -54,7 +59,7 @@ function buildBreakdown(text: string): LetterBreakdown[] {
 async function callGeminiRaw(prompt: string): Promise<{ arabic: string }> {
   const json = await callGeminiProxy('gemini-3.5-flash', {
     contents: [{ parts: [{ text: prompt }] }],
-    generationConfig: { temperature: 0.1, maxOutputTokens: 300 },
+    generationConfig: { temperature: 0.3, maxOutputTokens: 400 },
   });
   const text = json?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error('empty');
@@ -73,12 +78,16 @@ async function callGeminiWithRetry(prompt: string): Promise<{ arabic: string }> 
   }
 }
 
-function buildTransliterationPrompt(text: string): string {
-  return `Tu es expert en translittération arabe des noms et textes ouest-africains selon l'orthographe islamique traditionnelle.
-Translittère ce texte en arabe SANS harakat (sans signes diacritiques).
-Texte : ${text}
+// Vraie traduction du SENS (pas une transcription phonétique des sons) —
+// le prompt le précise explicitement pour éviter que Gemini ne se
+// contente de retranscrire les sons du français en lettres arabes.
+function buildTranslationPrompt(text: string): string {
+  return `Tu es un traducteur professionnel français-arabe (ou langue source détectée vers arabe).
+Traduis le SENS de ce texte en arabe classique, comme le ferait un traducteur humain — ce n'est PAS une transcription phonétique des sons, mais une vraie traduction du sens des mots.
+N'ajoute AUCUN harakat (signes diacritiques).
+Texte à traduire : ${text}
 Retourne UNIQUEMENT du JSON valide sans markdown :
-{ "arabic": "النص المكتوب هنا" }`;
+{ "arabic": "النص المترجم هنا" }`;
 }
 
 function Separateur() {
@@ -135,7 +144,7 @@ export function PoidsMystiquePage() {
     if (isArabicText(trimmed)) {
       // CAS 1 — arabe détecté : calcul instantané, gratuit, aucun appel API.
       const totalWeight = calculateWeight(trimmed);
-      const breakdown = buildBreakdown(trimmed);
+      const breakdown = getUniqueLetters(trimmed);
       const newResult: PMResult = {
         inputText: trimmed,
         arabicText: trimmed,
@@ -168,10 +177,10 @@ export function PoidsMystiquePage() {
 
     setTranslating(true);
     try {
-      const { arabic } = await callGeminiWithRetry(buildTransliterationPrompt(trimmed));
+      const { arabic } = await callGeminiWithRetry(buildTranslationPrompt(trimmed));
       const arabicText = arabic.trim();
       const totalWeight = calculateWeight(arabicText);
-      const breakdown = buildBreakdown(arabicText);
+      const breakdown = getUniqueLetters(arabicText);
       const charCount = trimmed.length;
 
       // Déduction SEULEMENT après succès de la traduction (jamais avant) :
@@ -333,6 +342,9 @@ export function PoidsMystiquePage() {
                   </span>
                 ))}
               </div>
+              <p className="text-xs italic mt-4" style={{ color: '#a0aec0' }}>
+                Chaque lettre est comptée une seule fois ici. Le calcul du total tient compte de toutes les répétitions.
+              </p>
             </div>
 
             <Separateur />
