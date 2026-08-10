@@ -1,5 +1,6 @@
 import { LegalLayout } from '../components/LegalLayout';
 import { COMPANY } from '../utils/legalInfo';
+import { ABONNEMENT_PRIX_FCFA } from '../utils/marabouts';
 
 export function RemboursementPage() {
   return (
@@ -59,7 +60,7 @@ export function RemboursementPage() {
           heading: '5. ABONNEMENT MARABOUT',
           content: (
             <p>
-              L'abonnement mensuel de 5 000 FCFA payé par les marabouts pour être référencés sur la plateforme n'est
+              L'abonnement mensuel de {ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR')} FCFA payé par les marabouts pour être référencés sur la plateforme n'est
               pas remboursable une fois le profil validé et publié, sauf erreur de facturation de notre part.
             </p>
           ),
