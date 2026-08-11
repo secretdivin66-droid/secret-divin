@@ -1081,7 +1081,7 @@ export function DestinPage() {
                     </div>
 
                     <div>
-                      <p className="text-white"><span className="text-or font-bold">Étape 4 — </span>Reproduis le carré magique ci-dessus (en chiffres français).</p>
+                      <p className="text-white"><span className="text-or font-bold">Étape 4 — </span>Reproduis le carré ci-dessus.</p>
                       <div className="flex mt-2">
                         <span className="px-3 py-1 rounded-full text-xs font-bold bg-or text-white">{squareReps} fois</span>
                       </div>
