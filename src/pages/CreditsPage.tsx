@@ -2,8 +2,17 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useCreditPacks, type CreditPack } from '../hooks/useCreditPacks';
-import { initiateCreditPackCheckout } from '../lib/payments/chariowCreditsCheckout';
+import { initiateCreditPackCheckout as initiateChariowCheckout } from '../lib/payments/chariowCreditsCheckout';
+import { initiateCreditPackCheckout as initiateFedaPayCheckout } from '../lib/payments/fedapayCreditsCheckout';
 import { ChariowContactModal, type ChariowContactFields } from '../components/ChariowContactModal';
+
+// Repli silencieux vers FedaPay uniquement quand Chariow n'est structurellement
+// pas en mesure de traiter ce pack (pas configuré côté Chariow, ou réponse
+// inattendue) — jamais sur une erreur utilisateur (infos de contact
+// manquantes, profil incomplet) qui échouerait de la même façon sur les deux
+// prestataires. Chariow n'a jamais produit de checkoutUrl dans ces cas, donc
+// aucun risque de double paiement en retentant via FedaPay.
+const CHARIOW_FALLBACK_ERROR_CODES = new Set(['pack_not_configured_for_chariow', 'unexpected_response']);
 import { useCanonicalUrl } from '../hooks/useCanonicalUrl';
 
 function Separateur() {
@@ -64,7 +73,12 @@ function BuyButton({ pack }: { pack: CreditPack }) {
   async function handleConfirm(fields: ChariowContactFields) {
     setErrorMessage(null);
     setLoading(true);
-    const result = await initiateCreditPackCheckout({ packId: pack.id, ...fields });
+    let result = await initiateChariowCheckout({ packId: pack.id, ...fields });
+
+    if (result.status === 'error' && result.errorCode && CHARIOW_FALLBACK_ERROR_CODES.has(result.errorCode)) {
+      result = await initiateFedaPayCheckout({ packId: pack.id, ...fields });
+    }
+
     setLoading(false);
 
     if (result.status === 'redirect') {

@@ -12,7 +12,7 @@ export interface CreditCheckoutParams {
 
 export type CreditCheckoutResult =
   | { status: 'redirect'; redirectUrl: string }
-  | { status: 'unavailable' | 'error'; message: string };
+  | { status: 'unavailable' | 'error'; message: string; errorCode?: string };
 
 interface ChariowFunctionResponse {
   step?: 'payment' | 'completed' | 'already_purchased';
@@ -58,14 +58,14 @@ export async function initiateCreditPackCheckout(params: CreditCheckoutParams): 
       }),
     });
   } catch {
-    return { status: 'error', message: 'Impossible de contacter le serveur de paiement, réessaie plus tard.' };
+    return { status: 'error', message: 'Impossible de contacter le serveur de paiement, réessaie plus tard.', errorCode: 'network_error' };
   }
 
   const json: ChariowFunctionResponse = await response.json().catch(() => ({}));
 
   if (!response.ok) {
     const message = (json.error && ERROR_MESSAGES[json.error]) ?? 'Le paiement Chariow a échoué, réessaie plus tard.';
-    return { status: 'error', message };
+    return { status: 'error', message, errorCode: json.error };
   }
 
   if (json.step === 'payment' && json.checkoutUrl) {
@@ -76,5 +76,9 @@ export async function initiateCreditPackCheckout(params: CreditCheckoutParams): 
     return { status: 'unavailable', message: json.message ?? 'Cet achat a déjà été finalisé.' };
   }
 
-  return { status: 'error', message: 'Réponse inattendue du serveur de paiement.' };
+  // Réponse 200 mais forme inattendue (ni step "payment" avec URL, ni
+  // "completed"/"already_purchased") — traité comme le même genre
+  // d'indisponibilité que "pack_not_configured_for_chariow" côté appelant
+  // (voir CreditsPage.tsx), pas une erreur utilisateur.
+  return { status: 'error', message: 'Réponse inattendue du serveur de paiement.', errorCode: 'unexpected_response' };
 }
