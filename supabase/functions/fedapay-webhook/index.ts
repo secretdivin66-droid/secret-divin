@@ -124,6 +124,7 @@ async function verifyFedaPaySignature(
 interface FedaPayCustomMetadata {
   userId?: string;
   packId?: string;
+  planId?: string;
   type?: string;
   maraboutId?: string;
   internalReference?: string;
@@ -266,6 +267,63 @@ async function handleMaraboutSubscriptionTransaction(supabase: ReturnType<typeof
   }
 }
 
+// Abonnement Free/Premium/Pro (`plans`, voir grant_subscription() dans
+// schema.sql) — 3e domaine de paiement FedaPay, sans équivalent Chariow
+// actif (voir la note en tête de fedapay-subscription-checkout : Chariow a
+// été réorienté vers les packs de crédits le 2026-08-10, ce domaine n'avait
+// jusqu'ici aucun moyen de paiement réel). Contrairement au pack
+// 'unlimited' des crédits (qui route vers grant_subscription('pro') en
+// dur), planId vient ici directement du custom_metadata — n'importe quel
+// plan payant (premium/pro) peut être acheté ainsi.
+async function handleSubscriptionTransaction(
+  supabase: ReturnType<typeof createClient>,
+  transaction: FedaPayTransaction,
+  userId: string,
+) {
+  const planId = transaction.custom_metadata?.planId;
+  if (typeof planId !== 'string') {
+    console.log('fedapay-webhook: subscription sans planId, aucune action métier déclenchée', { transactionId: transaction.id });
+    return;
+  }
+
+  // Défense en profondeur, même raisonnement que
+  // handleCreditPackTransaction/handleMaraboutSubscriptionTransaction :
+  // ne jamais accorder un abonnement sans revérifier que le montant
+  // RÉELLEMENT rapporté par FedaPay correspond au prix du plan (table
+  // `plans`, seule source de vérité).
+  const { data: plan, error: planError } = await supabase
+    .from('plans')
+    .select('price, currency')
+    .eq('id', planId)
+    .maybeSingle();
+
+  if (planError || !plan) {
+    console.error('fedapay-webhook: unknown planId, refusing to grant anything', { transactionId: transaction.id, planId });
+    return;
+  }
+
+  if (transaction.amount !== plan.price || transaction.currency?.iso !== plan.currency) {
+    console.error('fedapay-webhook: amount/currency mismatch, refusing to grant subscription', {
+      transactionId: transaction.id,
+      userId,
+      planId,
+      expected: { price: plan.price, currency: plan.currency },
+      received: { amount: transaction.amount, currency: transaction.currency?.iso },
+    });
+    return;
+  }
+
+  const { error } = await supabase.rpc('grant_subscription', {
+    p_user_id: userId,
+    p_plan_id: planId,
+    p_provider: 'fedapay',
+    p_provider_reference: String(transaction.id),
+  });
+  if (error) {
+    console.error('fedapay-webhook: grant_subscription failed', { transactionId: transaction.id, userId, planId, error });
+  }
+}
+
 // Corrélation avec la ligne créée par fedapay-initiate-checkout (deposit_id
 // = internalReference injecté dans custom_metadata au checkout) — même
 // pattern que chariow-pulse-webhook, pour que payment_transactions reste la
@@ -310,6 +368,18 @@ async function runBusinessLogic(supabase: ReturnType<typeof createClient>, trans
     return;
   }
 
+  if (type === 'subscription') {
+    if (typeof userId !== 'string') {
+      console.log('fedapay-webhook: subscription sans userId, aucune action métier déclenchée', { transactionId: transaction.id });
+      return;
+    }
+    await handleSubscriptionTransaction(supabase, transaction, userId);
+    return;
+  }
+
+  // Défaut 'credit_pack' pour compatibilité avec toute vente qui
+  // n'enverrait pas encore `type` explicitement (même raisonnement que
+  // chariow-pulse-webhook).
   if (typeof userId !== 'string') {
     console.log('fedapay-webhook: transaction approuvée sans custom_metadata reconnue, aucune action métier déclenchée', {
       transactionId: transaction.id,

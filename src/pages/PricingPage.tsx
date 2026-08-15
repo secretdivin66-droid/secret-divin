@@ -92,7 +92,6 @@ export function PricingPage() {
                         planId={plan.id}
                         planName={plan.name}
                         userId={user?.id ?? null}
-                        userEmail={user?.email ?? null}
                         className="btn-principal rounded w-full py-2 inline-block"
                       />
                     )}

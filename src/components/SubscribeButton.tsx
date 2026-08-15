@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { paymentProvider } from '../lib/payments';
+import { initiateSubscriptionCheckout } from '../lib/payments/fedapaySubscriptionCheckout';
+import { ChariowContactModal, type ChariowContactFields } from './ChariowContactModal';
 import type { PlanId } from '../hooks/useSubscription';
 import { WHATSAPP_NUMBER } from '../utils/mystique';
 
@@ -10,35 +11,34 @@ interface Props {
   planId: PlanId;
   planName: string;
   userId: string | null;
-  userEmail: string | null;
   className?: string;
   children?: React.ReactNode;
 }
 
-// Bouton "S'abonner" partagé entre PricingPage et BillingPage : appelle la
-// couche d'abstraction de paiement (src/lib/payments) plutôt que d'écrire
-// en base directement. Tant qu'aucun fournisseur réel n'est branché,
-// paymentProvider.initiateSubscription() renvoie toujours 'unavailable' et
-// ce composant se contente d'afficher le message — aucune ligne n'est
-// créée dans subscriptions/billing_events pour un paiement qui n'a jamais
-// eu lieu.
-export function SubscribeButton({ planId, planName, userId, userEmail, className, children }: Props) {
+// Bouton "S'abonner" partagé entre PricingPage et BillingPage. FedaPay est
+// le seul moyen de paiement réel branché pour ce domaine (Free/Premium/Pro)
+// — Chariow a été réorienté vers les packs de crédits le 2026-08-10 et n'a
+// jamais été rebranché ici, donc pas de repli à faire, juste l'appel
+// direct à fedapaySubscriptionCheckout.ts (même modale de contact que
+// CreditsPage/MaraboutPaymentButton). Si l'appel échoue, WhatsApp reste
+// affiché comme solution de repli manuelle.
+export function SubscribeButton({ planId, planName, userId, className, children }: Props) {
   const [loading, setLoading] = useState(false);
+  const [showContactForm, setShowContactForm] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
-  async function handleClick() {
-    if (!userId) return;
-
+  async function handleConfirm(fields: ChariowContactFields) {
+    setNotice(null);
     setLoading(true);
-    const result = await paymentProvider.initiateSubscription({ planId, userId, userEmail: userEmail ?? '' });
+    const result = await initiateSubscriptionCheckout({ planId, ...fields });
     setLoading(false);
 
-    if (result.status === 'redirect' && result.redirectUrl) {
+    if (result.status === 'redirect') {
       window.location.href = result.redirectUrl;
       return;
     }
-
-    setNotice(result.message ?? 'Le paiement en ligne arrive bientôt.');
+    setShowContactForm(false);
+    setNotice(result.message);
   }
 
   if (!userId) {
@@ -51,9 +51,18 @@ export function SubscribeButton({ planId, planName, userId, userEmail, className
 
   return (
     <>
-      <button onClick={handleClick} disabled={loading} className={className}>
+      <button onClick={() => setShowContactForm(true)} disabled={loading} className={className}>
         {loading ? 'Chargement...' : (children ?? `S'abonner à ${planName}`)}
       </button>
+
+      {showContactForm && (
+        <ChariowContactModal
+          loading={loading}
+          errorMessage={null}
+          onSubmit={handleConfirm}
+          onCancel={() => setShowContactForm(false)}
+        />
+      )}
 
       {notice && (
         <div
