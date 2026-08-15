@@ -97,6 +97,21 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'not_authenticated' }, 401);
     }
 
+    // Suspension temporaire des 5 packs crédits (Gemini API prod pas
+    // encore configuré) — décidée par l'utilisateur, ne concerne QUE cette
+    // fonction (packs crédits) ; chariow-marabout-checkout est une
+    // fonction séparée, jamais affectée. Fail-SAFE volontairement : seule
+    // la valeur exacte "true" active — absent, "false", ou toute valeur
+    // mal définie désactive par défaut (on préfère bloquer un achat par
+    // erreur de config plutôt qu'accepter un paiement qu'on ne peut pas
+    // honorer derrière).
+    if (Deno.env.get('CREDIT_PACKS_ENABLED') !== 'true') {
+      return jsonResponse({
+        error: 'credit_packs_disabled',
+        message: 'Rechargement temporairement indisponible — Nous améliorons notre système. Merci de réessayer dans quelques instants 🙏',
+      }, 503);
+    }
+
     const body: InitiateCheckoutBody = await req.json();
     const { packId, redirectUrl, firstName, lastName, phone } = body;
 

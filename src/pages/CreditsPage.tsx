@@ -15,6 +15,15 @@ import { ChariowContactModal, type ChariowContactFields } from '../components/Ch
 const CHARIOW_FALLBACK_ERROR_CODES = new Set(['pack_not_configured_for_chariow', 'unexpected_response']);
 import { useCanonicalUrl } from '../hooks/useCanonicalUrl';
 
+// Suspension temporaire des 5 packs crédits (Gemini API prod pas encore
+// configuré) — ne concerne QUE cette page, pas l'Abonnement Marabout ni
+// les abonnements Plans. Fail-safe volontairement : seule la valeur
+// exacte "true" active, absent/"false"/mal défini désactive par défaut
+// (même raisonnement que côté backend, voir chariow-initiate-checkout/
+// fedapay-initiate-checkout).
+const CREDIT_PACKS_ENABLED = import.meta.env.VITE_CREDIT_PACKS_ENABLED === 'true';
+const CREDIT_PACKS_DISABLED_MESSAGE = 'Rechargement temporairement indisponible — Nous améliorons notre système. Merci de réessayer dans quelques instants 🙏';
+
 function Separateur() {
   return (
     <div className="separateur">
@@ -70,6 +79,14 @@ function BuyButton({ pack }: { pack: CreditPack }) {
 
   const ctaLabel = pack.credits ? `Recharger ${pack.credits} crédits` : "Activer l'accès illimité";
 
+  function handleClick() {
+    if (!CREDIT_PACKS_ENABLED) {
+      setErrorMessage(CREDIT_PACKS_DISABLED_MESSAGE);
+      return;
+    }
+    setShowContactForm(true);
+  }
+
   async function handleConfirm(fields: ChariowContactFields) {
     setErrorMessage(null);
     setLoading(true);
@@ -99,7 +116,7 @@ function BuyButton({ pack }: { pack: CreditPack }) {
   return (
     <div className="w-full mt-5">
       <button
-        onClick={() => setShowContactForm(true)}
+        onClick={handleClick}
         disabled={loading}
         className="w-full rounded font-bold py-3"
         style={{ background: '#f5c842', color: '#0a0f2e' }}
@@ -114,6 +131,22 @@ function BuyButton({ pack }: { pack: CreditPack }) {
           onSubmit={handleConfirm}
           onCancel={() => setShowContactForm(false)}
         />
+      )}
+
+      {!CREDIT_PACKS_ENABLED && errorMessage && !showContactForm && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
+          onClick={() => setErrorMessage(null)}
+        >
+          <div
+            className="carte rounded-lg text-center"
+            style={{ maxWidth: 400, width: '100%' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-white mb-5">{errorMessage}</p>
+            <button onClick={() => setErrorMessage(null)} className="btn-principal rounded w-full">Fermer</button>
+          </div>
+        </div>
       )}
     </div>
   );

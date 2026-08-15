@@ -113,6 +113,19 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'not_authenticated' }, 401);
     }
 
+    // Suspension temporaire des 5 packs crédits (Gemini API prod pas
+    // encore configuré) — voir chariow-initiate-checkout pour le même
+    // patch, même secret partagé, même raisonnement fail-safe (seule la
+    // valeur exacte "true" active). Ne concerne QUE cette fonction ;
+    // fedapay-marabout-checkout/fedapay-subscription-checkout sont des
+    // fonctions séparées, jamais affectées.
+    if (Deno.env.get('CREDIT_PACKS_ENABLED') !== 'true') {
+      return jsonResponse({
+        error: 'credit_packs_disabled',
+        message: 'Rechargement temporairement indisponible — Nous améliorons notre système. Merci de réessayer dans quelques instants 🙏',
+      }, 503);
+    }
+
     const body: InitiateCheckoutBody = await req.json();
     const { packId, callbackUrl, firstName, lastName, phone } = body;
 
