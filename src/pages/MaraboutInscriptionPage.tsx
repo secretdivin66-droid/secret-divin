@@ -53,7 +53,6 @@ export function MaraboutInscriptionPage() {
 
   const [user, setUser] = useState<User | null>(null);
   const [checking, setChecking] = useState(true);
-  const [alreadyPending, setAlreadyPending] = useState(false);
 
   const [nomComplet, setNomComplet] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
@@ -103,12 +102,17 @@ export function MaraboutInscriptionPage() {
         });
       }
 
-      if (existing?.is_verified) {
+      // Un profil existant (vérifié ou non) est toujours redirigé vers le
+      // dashboard — celui-ci affiche déjà correctement le bandeau "en
+      // attente de validation" ET le formulaire de modification quel que
+      // soit is_verified (voir MaraboutDashboardPage.tsx), donc dupliquer
+      // un sous-ensemble de cet état ici (l'ancien écran "alreadyPending")
+      // ne faisait que bloquer l'accès au formulaire de modification sans
+      // raison — un marabout en attente doit pouvoir modifier son profil
+      // en attendant la validation, pas juste attendre.
+      if (existing) {
         navigate('/marabout-dashboard');
         return;
-      }
-      if (existing) {
-        setAlreadyPending(true);
       }
       setChecking(false);
     }
@@ -219,18 +223,6 @@ export function MaraboutInscriptionPage() {
     );
   }
 
-  if (alreadyPending && !submitted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#0a0f2e' }}>
-        <div className="carte rounded-lg text-center max-w-[500px]">
-          <p className="text-white">
-            Ta demande d'inscription est en attente de validation par l'admin. Tu seras notifié par WhatsApp dès qu'elle sera traitée.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   if (submitted) {
     const paymentMessage =
       'Bonjour, je viens de soumettre ma demande d\'inscription comme marabout sur Secret Divin. Je souhaite payer mon abonnement de ' +
@@ -249,6 +241,12 @@ export function MaraboutInscriptionPage() {
             style={{ color: '#a0aec0' }}
           >
             Un souci avec le paiement en ligne ? Paie via WhatsApp à la place
+          </button>
+          <button
+            onClick={() => navigate('/marabout-dashboard')}
+            className="btn-secondaire rounded w-full mt-4"
+          >
+            Modifier mon profil
           </button>
         </div>
       </div>
