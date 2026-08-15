@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { initiateMaraboutSubscriptionCheckout } from '../lib/payments/chariowMaraboutCheckout';
+import { initiateMaraboutSubscriptionCheckout as initiateChariowCheckout } from '../lib/payments/chariowMaraboutCheckout';
+import { initiateMaraboutSubscriptionCheckout as initiateFedaPayCheckout } from '../lib/payments/fedapayMaraboutCheckout';
 import { ChariowContactModal, type ChariowContactFields } from './ChariowContactModal';
 
 interface Props {
@@ -8,10 +9,17 @@ interface Props {
   style?: React.CSSProperties;
 }
 
-// Bouton de paiement de l'abonnement marabout via Chariow — partagé entre
-// l'écran de confirmation d'inscription (MaraboutInscriptionPage) et les
-// deux boutons "payer"/"renouveler" du dashboard (MaraboutDashboardPage),
-// 3 usages identiques avant extraction.
+// Repli silencieux vers FedaPay — même logique que CreditsPage.tsx : ne se
+// déclenche que quand Chariow n'est structurellement pas en mesure de
+// traiter la requête, jamais sur une erreur utilisateur qui échouerait
+// identiquement sur les deux prestataires.
+const CHARIOW_FALLBACK_ERROR_CODES = new Set(['not_configured_for_chariow', 'unexpected_response']);
+
+// Bouton de paiement de l'abonnement marabout — partagé entre l'écran de
+// confirmation d'inscription (MaraboutInscriptionPage) et les deux
+// boutons "payer"/"renouveler" du dashboard (MaraboutDashboardPage),
+// 3 usages identiques avant extraction. Chariow en premier, FedaPay en
+// repli silencieux (voir fedapayMaraboutCheckout.ts).
 export function MaraboutPaymentButton({ label, className, style }: Props) {
   const [loading, setLoading] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
@@ -20,7 +28,12 @@ export function MaraboutPaymentButton({ label, className, style }: Props) {
   async function handleConfirm(fields: ChariowContactFields) {
     setErrorMessage(null);
     setLoading(true);
-    const result = await initiateMaraboutSubscriptionCheckout(fields);
+    let result = await initiateChariowCheckout(fields);
+
+    if (result.status === 'error' && result.errorCode && CHARIOW_FALLBACK_ERROR_CODES.has(result.errorCode)) {
+      result = await initiateFedaPayCheckout(fields);
+    }
+
     setLoading(false);
 
     if (result.status === 'redirect') {
