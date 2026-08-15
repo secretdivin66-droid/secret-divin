@@ -11,19 +11,20 @@
 // - signature = HMAC-SHA256(`${timestamp}.${corps_brut}`, secret), hex
 // - tolérance anti-rejeu : 300s (Webhook.DEFAULT_TOLERANCE dans le SDK)
 //
-// ⚠️ Point NON confirmable depuis la doc publique ni le SDK officiel : le
-// nom exact du champ d'événement et la présence de données de transaction
-// embarquées dans le corps du webhook. Les propres fixtures de test du
-// SDK se contredisent (la ressource Event utilise `type`, les fixtures
-// d'envoi de webhook utilisent `name`). Plutôt que parier sur une forme
-// de payload non confirmée, ce webhook ne lit du corps QUE l'id
-// d'événement (dédup) et l'id de transaction (object_id) — puis RAPPELLE
+// Forme réelle du corps CONFIRMÉE en live le 2026-08-15 (paiement sandbox
+// réel MTN Bénin, transaction #487893, voir le parsing plus bas) :
+// `{ name, object, entity: { id, status, amount, currency,
+// custom_metadata, ... }, account }` — contredit les fixtures du SDK
+// officiel (Event resource) citées dans une version précédente de ce
+// commentaire, qui laissaient croire à un id d'événement au niveau racine.
+// Il n'y en a pas : la dédup utilise une clé synthétique (transaction +
+// statut, voir plus bas). Le statut/montant/custom_metadata ne sont
+// volontairement PAS lus depuis `entity` directement : ce webhook RAPPELLE
 // l'API FedaPay (GET /v1/transactions/:id, authentifiée par
-// FEDAPAY_SECRET_KEY) pour obtenir le statut/montant/custom_metadata
-// réels, qui font foi. Même prudence que la leçon Chariow citée par
-// l'utilisateur (`message === 'success'` qui n'apparaît que dans les
-// erreurs) : ne jamais déduire un statut d'un champ non vérifié quand une
-// source faisant autorité est disponible à un appel de distance.
+// FEDAPAY_SECRET_KEY) pour les obtenir, même prudence que la leçon Chariow
+// citée par l'utilisateur (`message === 'success'` qui n'apparaît que dans
+// les erreurs) : ne jamais déduire un statut d'un champ non revérifié
+// quand une source faisant autorité est disponible à un appel de distance.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 declare const EdgeRuntime: { waitUntil: (promise: Promise<unknown>) => void } | undefined;
@@ -125,6 +126,7 @@ interface FedaPayCustomMetadata {
   packId?: string;
   type?: string;
   maraboutId?: string;
+  internalReference?: string;
 }
 
 interface FedaPayTransaction {
@@ -140,9 +142,13 @@ function fedaPayApiBase(secretKey: string): string {
 }
 
 // Seule source de vérité pour le statut/montant/metadata réels — jamais
-// déduits du corps du webhook (voir note en tête de fichier).
+// déduits du corps du webhook (voir note en tête de fichier). `?include=
+// currency` nécessaire : sans lui, GET /v1/transactions/:id ne renvoie que
+// `currency_id`, pas l'objet `currency.iso` imbriqué (confirmé en live —
+// `transaction.currency` était `undefined` sans ce paramètre, alors même
+// que le corps du webhook, lui, l'embarque déjà).
 async function fetchTransaction(transactionId: string | number, apiKey: string): Promise<FedaPayTransaction | null> {
-  const res = await fetch(`${fedaPayApiBase(apiKey)}/v1/transactions/${transactionId}`, {
+  const res = await fetch(`${fedaPayApiBase(apiKey)}/v1/transactions/${transactionId}?include=currency`, {
     headers: { Authorization: `Bearer ${apiKey}` },
   });
   if (!res.ok) {
@@ -181,13 +187,13 @@ async function handleCreditPackTransaction(
     return;
   }
 
-  if (transaction.amount !== pack.price) {
-    console.error('fedapay-webhook: amount mismatch, refusing to grant anything', {
+  if (transaction.amount !== pack.price || transaction.currency?.iso !== pack.currency) {
+    console.error('fedapay-webhook: amount/currency mismatch, refusing to grant anything', {
       transactionId: transaction.id,
       userId,
       packId,
-      expected: pack.price,
-      received: transaction.amount,
+      expected: { price: pack.price, currency: pack.currency },
+      received: { amount: transaction.amount, currency: transaction.currency?.iso },
     });
     return;
   }
@@ -236,12 +242,12 @@ async function handleMaraboutSubscriptionTransaction(supabase: ReturnType<typeof
     return;
   }
 
-  if (transaction.amount !== plan.price) {
-    console.error('fedapay-webhook: amount mismatch, refusing to activate marabout subscription', {
+  if (transaction.amount !== plan.price || transaction.currency?.iso !== plan.currency) {
+    console.error('fedapay-webhook: amount/currency mismatch, refusing to activate marabout subscription', {
       transactionId: transaction.id,
       maraboutId,
-      expected: plan.price,
-      received: transaction.amount,
+      expected: { price: plan.price, currency: plan.currency },
+      received: { amount: transaction.amount, currency: transaction.currency?.iso },
     });
     return;
   }
@@ -260,6 +266,31 @@ async function handleMaraboutSubscriptionTransaction(supabase: ReturnType<typeof
   }
 }
 
+// Corrélation avec la ligne créée par fedapay-initiate-checkout (deposit_id
+// = internalReference injecté dans custom_metadata au checkout) — même
+// pattern que chariow-pulse-webhook, pour que payment_transactions reste la
+// source d'audit à jour pour ce provider aussi, pas seulement Chariow.
+async function markPaymentTransactionCompleted(supabase: ReturnType<typeof createClient>, transaction: FedaPayTransaction) {
+  const internalReference = transaction.custom_metadata?.internalReference;
+  if (typeof internalReference !== 'string') {
+    console.log('fedapay-webhook: pas d\'internalReference, payment_transactions non mis à jour', { transactionId: transaction.id });
+    return;
+  }
+  const { error } = await supabase
+    .from('payment_transactions')
+    .update({
+      status: 'COMPLETED',
+      amount: transaction.amount ?? null,
+      currency: transaction.currency?.iso ?? null,
+      raw_payload: transaction,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('deposit_id', internalReference);
+  if (error) {
+    console.error('fedapay-webhook: payment_transactions update failed', { internalReference, transactionId: transaction.id, error });
+  }
+}
+
 async function runBusinessLogic(supabase: ReturnType<typeof createClient>, transaction: FedaPayTransaction) {
   if (!PAID_STATUSES.has(transaction.status ?? '')) {
     console.log('fedapay-webhook: transaction not in a paid status, no grant', {
@@ -268,6 +299,8 @@ async function runBusinessLogic(supabase: ReturnType<typeof createClient>, trans
     });
     return;
   }
+
+  await markPaymentTransactionCompleted(supabase, transaction);
 
   const type = transaction.custom_metadata?.type;
   const userId = transaction.custom_metadata?.userId;
@@ -319,17 +352,27 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'invalid_json' }, 400);
     }
 
-    // Voir note en tête de fichier : `name` et `type` sont tous deux
-    // possibles selon les fixtures du SDK officiel lui-même — on accepte
-    // les deux plutôt que de parier sur un seul.
-    const eventType = (payload.name ?? payload.type) as string | undefined;
-    const eventId = payload.id != null ? String(payload.id) : null;
-    const entity = payload.entity as { id?: string | number } | undefined;
-    const transactionId = (payload.object_id ?? entity?.id) as string | number | undefined;
+    // Forme RÉELLE confirmée en live le 2026-08-15 (paiement sandbox réel
+    // MTN Bénin, transaction #487893) — contredit les fixtures du SDK
+    // officiel citées dans la note en tête de fichier : le corps est
+    // `{ name, object, entity: { id, status, amount, currency,
+    // custom_metadata, ... }, account }`, SANS aucun champ d'id d'événement
+    // au niveau racine (ni `id`, ni `object_id`) — confirmé via les logs de
+    // la fonction (14 tentatives de livraison FedaPay, toutes en 400
+    // `missing_event_id` avant ce correctif, alors que la signature, elle,
+    // passait déjà). L'id de transaction vient de `entity.id`, jamais de
+    // `object_id` (absent). Pas d'id d'événement fourni par FedaPay → clé
+    // d'idempotence synthétique construite ici (transaction + statut),
+    // suffisante puisque les seules livraisons répétées observées étaient
+    // des retries identiques du même changement de statut.
+    const eventType = payload.name as string | undefined;
+    const entity = payload.entity as { id?: string | number; status?: string } | undefined;
+    const transactionId = entity?.id;
+    const eventId = transactionId != null ? `${transactionId}:${entity?.status ?? ''}` : null;
 
-    if (!eventId) {
-      console.error('fedapay-webhook: missing event id in payload', { payload });
-      return jsonResponse({ error: 'missing_event_id' }, 400);
+    if (!eventId || !transactionId) {
+      console.error('fedapay-webhook: missing transaction entity in payload', { payload });
+      return jsonResponse({ error: 'missing_transaction_entity' }, 400);
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
@@ -353,11 +396,6 @@ Deno.serve(async (req) => {
       }
       console.error('fedapay-webhook: dedup insert failed', { eventId, error: insertError });
       return jsonResponse({ error: 'db_error' }, 500);
-    }
-
-    if (!transactionId) {
-      console.error('fedapay-webhook: no transaction id in payload, cannot fetch transaction', { eventId, eventType });
-      return jsonResponse({ received: true }, 200);
     }
 
     // 200 dès que l'événement est dédupliqué et enregistré ; la logique
