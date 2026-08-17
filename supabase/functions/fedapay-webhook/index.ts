@@ -223,6 +223,47 @@ async function handleCreditPackTransaction(
   }
 }
 
+// Notifie le marabout que son abonnement est actif — même workflow Novu
+// que l'inscription (voir src/lib/novu.ts/novu-proxy), mais appelé
+// directement ici : un webhook n'a pas de session utilisateur pour
+// passer par novu-proxy (qui exige un JWT Supabase). NOVU_API_KEY est un
+// secret Supabase partagé par toutes les Edge Functions du projet, donc
+// disponible ici sans changement de config. Une notification manquée ne
+// doit jamais faire échouer l'activation elle-même (déjà actée en base à
+// ce stade) — erreurs avalées, juste loguées.
+async function notifyMaraboutActivated(supabase: ReturnType<typeof createClient>, maraboutId: string) {
+  try {
+    const { data: marabout } = await supabase
+      .from('marabouts')
+      .select('user_id, nom_complet')
+      .eq('id', maraboutId)
+      .maybeSingle();
+    if (!marabout) return;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('user_id', marabout.user_id)
+      .maybeSingle();
+    if (!profile?.email) return;
+
+    const novuKey = Deno.env.get('NOVU_API_KEY');
+    if (!novuKey) return;
+
+    await fetch('https://api.novu.co/v1/events/trigger', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `ApiKey ${novuKey}` },
+      body: JSON.stringify({
+        name: 'marabout-registration-and-activation',
+        to: { subscriberId: profile.email, email: profile.email },
+        payload: { name: marabout.nom_complet, event: 'activation' },
+      }),
+    });
+  } catch (err) {
+    console.error('fedapay-webhook: notifyMaraboutActivated failed', { maraboutId, error: err });
+  }
+}
+
 async function handleMaraboutSubscriptionTransaction(supabase: ReturnType<typeof createClient>, transaction: FedaPayTransaction) {
   const maraboutId = transaction.custom_metadata?.maraboutId;
   if (typeof maraboutId !== 'string') {
@@ -264,7 +305,9 @@ async function handleMaraboutSubscriptionTransaction(supabase: ReturnType<typeof
       maraboutId,
       error,
     });
+    return;
   }
+  await notifyMaraboutActivated(supabase, maraboutId);
 }
 
 // Abonnement Free/Premium/Pro (`plans`, voir grant_subscription() dans

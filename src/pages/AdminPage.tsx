@@ -35,11 +35,20 @@ export function AdminPage() {
     setMarabouts((data as Marabout[]) ?? []);
   }
 
+  // verify_marabout ne fait que la vérification de CONTENU (voir
+  // 0006_marabouts.sql) — abonnement_actif reste false tant que le
+  // paiement n'est pas confirmé. La notification "profil actif et
+  // visible" ne doit donc jamais partir ici (c'était le bug : elle
+  // partait à la validation du contenu, avant tout paiement) — elle part
+  // uniquement depuis handleActivateSubscription ci-dessous (paiement
+  // manuel admin) et depuis activate_marabout_subscription_via_payment
+  // côté webhook (chariow-pulse-webhook/fedapay-webhook, paiement
+  // automatique), les deux seuls endroits où abonnement_actif devient
+  // réellement true.
   async function handleValidateMarabout(m: Marabout) {
     setMaraboutActionLoading(m.id);
     try {
       await supabase.rpc('verify_marabout', { p_marabout_id: m.id });
-      void notifyMaraboutActivation(m.id);
       await loadMarabouts();
     } finally {
       setMaraboutActionLoading(null);
@@ -50,6 +59,7 @@ export function AdminPage() {
     setMaraboutActionLoading(m.id);
     try {
       await supabase.rpc('activate_marabout_subscription', { p_marabout_id: m.id });
+      void notifyMaraboutActivation(m.id);
       await loadMarabouts();
     } finally {
       setMaraboutActionLoading(null);
