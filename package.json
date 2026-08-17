@@ -16,7 +16,9 @@
     "@cloudinary/url-gen": "^1.22.0",
     "@supabase/supabase-js": "^2.45.4",
     "html2canvas": "^1.4.1",
+    "i18n-iso-countries": "^7.14.0",
     "jspdf": "^4.2.1",
+    "libphonenumber-js": "^1.13.11",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.2"
