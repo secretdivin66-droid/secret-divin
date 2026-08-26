@@ -199,6 +199,8 @@ export function ProfilPage() {
   const [pmData, setPmData] = useState<PMData | null>(null);
   const [pmLoading, setPmLoading] = useState(false);
 
+  const [isMarabout, setIsMarabout] = useState(false);
+
   const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
   const [showSignOutModal, setShowSignOutModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -219,7 +221,7 @@ export function ProfilPage() {
       if (!user) throw new Error('no-user');
       setAuthUser(user);
 
-      const [{ data: profileData }, { data: creditsData }, { data: subData }, { data: consultationsData }, { data: modulesData }] =
+      const [{ data: profileData }, { data: creditsData }, { data: subData }, { data: consultationsData }, { data: modulesData }, { data: maraboutData }] =
         await Promise.all([
           supabase.from('profiles').select('*').eq('user_id', user.id).maybeSingle(),
           supabase.from('user_credits').select('balance, total_purchased').eq('user_id', user.id).maybeSingle(),
@@ -232,6 +234,7 @@ export function ProfilPage() {
             .maybeSingle(),
           supabase.from('saved_rituals').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(10),
           supabase.from('formation_modules').select('*').eq('user_id', user.id),
+          supabase.from('marabouts').select('id').eq('user_id', user.id).maybeSingle(),
         ]);
 
       setProfile(profileData ?? null);
@@ -239,6 +242,7 @@ export function ProfilPage() {
       setSubscription(subData ?? null);
       setConsultations(consultationsData ?? []);
       setFormationModules(modulesData ?? []);
+      setIsMarabout(!!maraboutData);
 
       setDisplayName(profileData?.display_name ?? '');
       setFirstName(profileData?.first_name ?? '');
@@ -483,6 +487,12 @@ export function ProfilPage() {
           <p className="text-xs mt-3" style={{ color: '#a0aec0' }}>
             Membre depuis {formatDateShort(authUser?.created_at)}
           </p>
+
+          {isMarabout && (
+            <Link to="/marabout-dashboard" className="btn-secondaire rounded mt-4 inline-block">
+              Modifier mon profil marabout
+            </Link>
+          )}
         </div>
 
         <Separateur />
