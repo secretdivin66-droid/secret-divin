@@ -7,6 +7,7 @@ import { WHATSAPP_NUMBER } from '../utils/mystique';
 import type { Marabout } from '../utils/marabouts';
 import { PhotoUpload } from '../components/PhotoUpload';
 import { MaraboutPaymentButton } from '../components/MaraboutPaymentButton';
+import { notifyMaraboutRegistration } from '../lib/novu';
 
 function formatDate(dateString: string | null): string {
   if (!dateString) return '—';
@@ -119,10 +120,18 @@ export function MaraboutDashboardPage() {
   }
 
   async function handleUpdateProfile() {
-    if (!user) return;
+    if (!user || !marabout) return;
     setSaving(true);
     setSaveMessage(null);
     try {
+      // Premier enregistrement réussi depuis le paiement (voir migration
+      // 0037) : pose profile_completed_at, qui débloque la visibilité
+      // publique (policy public_read_marabouts) et déclenche l'email
+      // "inscription" Novu — jusqu'ici envoyé à la soumission du grand
+      // formulaire (avant le nouveau flux paiement-avant-profil), le
+      // moment équivalent est maintenant celui-ci.
+      const isFirstCompletion = !marabout.profile_completed_at;
+
       // Colonnes réelles : numero_whatsapp/specialite, pas whatsapp/
       // specialites (voir 0013_marabouts_add_missing_columns.sql pour
       // langues/tarifs_description/annees_experience/updated_at, qui
@@ -141,8 +150,12 @@ export function MaraboutDashboardPage() {
           annees_experience: parseInt(experience) || 0,
           photo_url: photoUrl || null,
           updated_at: new Date().toISOString(),
+          ...(isFirstCompletion ? { profile_completed_at: new Date().toISOString() } : {}),
         })
         .eq('user_id', user.id);
+      if (isFirstCompletion) {
+        void notifyMaraboutRegistration(marabout.id);
+      }
       setSaveMessage('Profil mis à jour avec succès');
       setTimeout(() => setSaveMessage(null), 3000);
       await load();
@@ -166,6 +179,36 @@ export function MaraboutDashboardPage() {
   const paymentMessage =
     'Bonjour, je souhaite payer/renouveler mon abonnement marabout sur Secret Divin pour ' +
     ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR') + ' FCFA. Mon email : ' + user.email + ' Mon profil : ' + marabout.nom_complet;
+
+  // Paiement AVANT remplissage du profil (voir migration 0037) : tant que
+  // rien n'a jamais été payé (et que le profil n'a jamais été complété
+  // auparavant — un abonnement expiré après un premier cycle ne doit PAS
+  // faire perdre l'accès au formulaire, seulement le renouvellement), le
+  // formulaire de profil reste totalement masqué.
+  if (!marabout.abonnement_actif && !marabout.profile_completed_at) {
+    return (
+      <div className="min-h-screen px-4 py-8 flex items-center justify-center" style={{ background: '#0a0f2e' }}>
+        <div className="carte rounded-lg text-center max-w-[500px]">
+          <h1 className="text-or font-bold text-[1.5rem] mb-4">Finalise ton inscription</h1>
+          <p className="text-white mb-5">
+            Paie ton abonnement marabout pour débloquer le formulaire et compléter ton profil.
+          </p>
+          <MaraboutPaymentButton
+            label={`Payer ${ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR')} FCFA`}
+            className="rounded font-bold py-3 px-6"
+            style={{ background: '#f5c842', color: '#0a0f2e' }}
+          />
+          <button
+            onClick={() => window.open(whatsappContactUrl(WHATSAPP_NUMBER, paymentMessage), '_blank', 'noopener,noreferrer')}
+            className="block mt-3 mx-auto text-sm underline"
+            style={{ color: '#a0aec0' }}
+          >
+            Ou paie via WhatsApp
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
@@ -193,7 +236,12 @@ export function MaraboutDashboardPage() {
             </button>
           </div>
         )}
-        {marabout.is_verified && marabout.abonnement_actif && (
+        {marabout.is_verified && marabout.abonnement_actif && !marabout.profile_completed_at && (
+          <div className="rounded-lg p-5 text-center mb-8" style={{ background: '#0d1545', border: '1px solid #f5c842' }}>
+            <p className="text-or font-bold">Paiement confirmé ! Complète ton profil ci-dessous pour devenir visible sur Secret Divin.</p>
+          </div>
+        )}
+        {marabout.is_verified && marabout.abonnement_actif && marabout.profile_completed_at && (
           <div className="rounded-lg p-5 text-center mb-8" style={{ background: '#1b3a1f', border: '1px solid #4caf50' }}>
             <p className="text-green-400">Profil actif et visible.</p>
             <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>Abonnement valide jusqu'au : {formatDate(marabout.abonnement_expire_le)}</p>
@@ -220,7 +268,7 @@ export function MaraboutDashboardPage() {
 
         {/* MODIFIER MON PROFIL */}
         <div className="carte rounded-lg flex flex-col gap-5">
-          <h2 className="text-or font-bold">Modifier mon profil</h2>
+          <h2 className="text-or font-bold">{marabout.profile_completed_at ? 'Modifier mon profil' : 'Complète ton profil'}</h2>
 
           {saveMessage && <p className="text-sm text-green-400">{saveMessage}</p>}
 
@@ -282,7 +330,7 @@ export function MaraboutDashboardPage() {
           </div>
 
           <button onClick={handleUpdateProfile} disabled={saving} className="btn-principal rounded disabled:opacity-50">
-            {saving ? 'Enregistrement...' : 'Mettre à jour mon profil'}
+            {saving ? 'Enregistrement...' : marabout.profile_completed_at ? 'Mettre à jour mon profil' : 'Terminer mon inscription'}
           </button>
         </div>
 

@@ -55,6 +55,7 @@ export interface Marabout {
   is_active: boolean;
   abonnement_actif: boolean;
   abonnement_expire_le: string | null;
+  profile_completed_at: string | null;
   vues: number;
   created_at: string;
   updated_at: string;

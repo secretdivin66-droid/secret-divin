@@ -2,10 +2,8 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
-import { SPECIALITES, PAYS_LIST, LANGUES, ABONNEMENT_PRIX_FCFA, whatsappContactUrl } from '../utils/marabouts';
+import { PAYS_LIST, ABONNEMENT_PRIX_FCFA, whatsappContactUrl } from '../utils/marabouts';
 import { WHATSAPP_NUMBER } from '../utils/mystique';
-import { PhotoUpload } from '../components/PhotoUpload';
-import { notifyMaraboutRegistration } from '../lib/novu';
 import { MaraboutPaymentButton } from '../components/MaraboutPaymentButton';
 
 const AVANTAGES = [
@@ -27,47 +25,18 @@ function Separateur() {
   );
 }
 
-function CheckboxGroup({
-  options,
-  selected,
-  onToggle,
-}: {
-  options: string[];
-  selected: string[];
-  onToggle: (value: string) => void;
-}) {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-      {options.map((opt) => (
-        <label key={opt} className="flex items-center gap-2 text-sm text-white">
-          <input type="checkbox" checked={selected.includes(opt)} onChange={() => onToggle(opt)} />
-          {opt}
-        </label>
-      ))}
-    </div>
-  );
-}
-
+// Paiement AVANT remplissage du profil (voir migration 0037) : cette page
+// ne collecte plus aucune information de profil, elle se contente de
+// s'assurer qu'une ligne `marabouts` brouillon existe (nécessaire aux
+// Edge Functions de paiement, qui résolvent le marabout via user_id — voir
+// chariow-marabout-checkout/fedapay-marabout-checkout) puis affiche le
+// paiement. Le vrai formulaire (nom, spécialités, tarifs...) vit sur
+// /marabout-dashboard, débloqué uniquement une fois abonnement_actif=true.
 export function MaraboutInscriptionPage() {
   const navigate = useNavigate();
 
   const [user, setUser] = useState<User | null>(null);
-  const [checking, setChecking] = useState(true);
-
-  const [nomComplet, setNomComplet] = useState('');
-  const [whatsapp, setWhatsapp] = useState('');
-  const [pays, setPays] = useState(PAYS_LIST[0]);
-  const [ville, setVille] = useState('');
-  const [experience, setExperience] = useState('0');
-  const [selectedSpecialites, setSelectedSpecialites] = useState<string[]>([]);
-  const [selectedLangues, setSelectedLangues] = useState<string[]>([]);
-  const [description, setDescription] = useState('');
-  const [tarifs, setTarifs] = useState('');
-  const [photoUrl, setPhotoUrl] = useState('');
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
-
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -82,140 +51,66 @@ export function MaraboutInscriptionPage() {
       }
       setUser(authUser);
 
-      console.log('[Supabase] SELECT marabouts — vérification profil existant', {
-        table: 'marabouts',
-        select: 'id, is_verified, abonnement_actif',
-        filter: { user_id: authUser.id },
-      });
       const { data: existing, error: existingError } = await supabase
         .from('marabouts')
-        .select('id, is_verified, abonnement_actif')
+        .select('id, abonnement_actif')
         .eq('user_id', authUser.id)
         .maybeSingle();
-      console.log('[Supabase] Réponse SELECT marabouts (vérification) :', { data: existing, error: existingError });
+
       if (existingError) {
-        console.error('[Supabase] Erreur SELECT marabouts (vérification) :', {
-          code: existingError.code,
-          message: existingError.message,
-          details: existingError.details,
-          hint: existingError.hint,
-        });
+        setError('Erreur de chargement. Réessaie dans quelques instants.');
+        setLoading(false);
+        return;
       }
 
-      // Un profil existant (vérifié ou non) est toujours redirigé vers le
-      // dashboard — celui-ci affiche déjà correctement le bandeau "en
-      // attente de validation" ET le formulaire de modification quel que
-      // soit is_verified (voir MaraboutDashboardPage.tsx), donc dupliquer
-      // un sous-ensemble de cet état ici (l'ancien écran "alreadyPending")
-      // ne faisait que bloquer l'accès au formulaire de modification sans
-      // raison — un marabout en attente doit pouvoir modifier son profil
-      // en attendant la validation, pas juste attendre.
-      if (existing) {
+      // Abonnement déjà payé : plus rien à faire ici, direction le
+      // dashboard (qui affichera soit le formulaire à compléter, soit
+      // le dashboard complet si déjà rempli — voir MaraboutDashboardPage).
+      if (existing?.abonnement_actif) {
         navigate('/marabout-dashboard');
         return;
       }
-      setChecking(false);
+
+      // Aucune ligne : premier passage sur cette page, on crée le
+      // brouillon. Champs vides — sans risque de fuite, la policy
+      // public_read_marabouts (migration 0037) exige profile_completed_at
+      // non nul pour qu'une fiche soit visible publiquement.
+      if (!existing) {
+        const { error: insertError } = await supabase.from('marabouts').insert({
+          user_id: authUser.id,
+          nom_complet: '',
+          description: '',
+          specialite: [],
+          pays: PAYS_LIST[0],
+          ville: '',
+          langues: [],
+          numero_whatsapp: '',
+          is_verified: false,
+          is_active: true,
+          abonnement_actif: false,
+        });
+        // 23505 = violation UNIQUE(user_id) : un brouillon existe déjà
+        // (double appel de cet effet en StrictMode, double-clic, ou un
+        // autre onglet a créé la ligne entre-temps) — ce n'est pas un
+        // échec réel, la ligne qu'on voulait existe bel et bien.
+        if (insertError && insertError.code !== '23505') {
+          console.error('[MaraboutInscriptionPage] création du brouillon échouée :', insertError);
+          setError('Erreur lors de la préparation de ton inscription. Réessaie dans quelques instants.');
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Sinon : une ligne existe déjà mais l'abonnement n'est pas encore
+      // actif (paiement démarré puis abandonné, ou webhook pas encore
+      // reçu) — on reste sur cette page pour permettre de reprendre le
+      // paiement, sans recréer de ligne (violerait UNIQUE(user_id)).
+      setLoading(false);
     }
     check();
   }, [navigate]);
 
-  function toggleSpecialite(value: string) {
-    setSelectedSpecialites((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
-  }
-
-  function toggleLangue(value: string) {
-    setSelectedLangues((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
-  }
-
-  const isDisabled =
-    !nomComplet.trim() ||
-    !whatsapp.trim() ||
-    !ville.trim() ||
-    !description.trim() ||
-    selectedSpecialites.length === 0 ||
-    selectedLangues.length === 0 ||
-    !acceptedTerms;
-
-  async function handleSubmit() {
-    if (isDisabled) return;
-    setSubmitting(true);
-    setError(null);
-    try {
-      // --- DIAGNOSTIC AUTH (frontend uniquement, aucune policy touchée) ---
-      // Vérification "live" au moment de la soumission, distincte du
-      // `user` en state (posé une seule fois au montage par l'effet plus
-      // haut) : si la session a expiré entre-temps, ce `user` de state
-      // resterait un objet obsolète alors que Supabase le rejetterait déjà.
-      const { data: sessionData } = await supabase.auth.getSession();
-      console.log('SESSION', sessionData.session);
-
-      const { data: userData } = await supabase.auth.getUser();
-      console.log('USER', userData.user);
-
-      if (!userData.user) {
-        console.error('[MaraboutInscriptionPage] Aucun utilisateur retourné par getUser() — session absente ou expirée côté Supabase, alors que la page a pu être atteinte avec un `user` de state non-null.');
-        setError('Utilisateur non connecté.');
-        setSubmitting(false);
-        return;
-      }
-
-      const authUserId = userData.user.id;
-      console.log('USER.ID utilisé pour user_id du payload :', authUserId);
-
-      // Colonnes réelles de la table marabouts (confirmées le 2026-07-20,
-      // complétées par 0013_marabouts_add_missing_columns.sql pour
-      // langues/tarifs_description/annees_experience) : whatsapp/
-      // specialite(s) restent nommées numero_whatsapp/specialite côté
-      // base, d'où les renommages ci-dessous.
-      const payload = {
-        user_id: authUserId,
-        nom_complet: nomComplet,
-        photo_url: photoUrl || null,
-        description,
-        specialite: selectedSpecialites ?? [],
-        pays,
-        ville,
-        langues: selectedLangues,
-        numero_whatsapp: whatsapp,
-        tarifs_description: tarifs || null,
-        annees_experience: parseInt(experience) || 0,
-        is_verified: false,
-        is_active: true,
-        abonnement_actif: false,
-      };
-      console.log(
-        'payload.user_id === userData.user.id ?',
-        payload.user_id === userData.user.id,
-      );
-      console.log('PAYLOAD complet envoyé à marabouts.insert() :', payload);
-
-      // Un seul client Supabase existe dans tout le projet (voir
-      // src/lib/supabaseClient.ts, seul appel à createClient()) et c'est
-      // ce même `supabase` importé en haut de ce fichier qui sert à la
-      // fois pour .auth.getSession()/.getUser() ci-dessus et pour
-      // .from('marabouts').insert() ci-dessous — donc pas de désynchro
-      // possible entre deux instances différentes du client.
-      const { data: insertData, error: insertError } = await supabase.from('marabouts').insert(payload).select();
-      console.log('INSERT marabouts — data :', insertData);
-      console.log('INSERT marabouts — error :', insertError);
-      console.log('INSERT marabouts — error (JSON) :', JSON.stringify(insertError, null, 2));
-      if (insertError) {
-        throw insertError;
-      }
-      const newMaraboutId = insertData?.[0]?.id;
-      if (newMaraboutId) {
-        void notifyMaraboutRegistration(newMaraboutId);
-      }
-      setSubmitted(true);
-    } catch (err) {
-      console.error('[MaraboutInscriptionPage] Échec de la soumission :', err);
-      setError('Erreur lors de la soumission. Réessaie dans quelques instants.');
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  if (checking) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#0a0f2e' }}>
         <p className="text-or">Chargement...</p>
@@ -223,35 +118,9 @@ export function MaraboutInscriptionPage() {
     );
   }
 
-  if (submitted) {
-    const paymentMessage =
-      'Bonjour, je viens de soumettre ma demande d\'inscription comme marabout sur Secret Divin. Je souhaite payer mon abonnement de ' +
-      ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR') + ' FCFA. Mon email : ' + (user?.email ?? '');
-    return (
-      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: '#0a0f2e' }}>
-        <div className="carte rounded-lg text-center max-w-[500px]">
-          <p className="text-white">
-            Ta demande a bien été envoyée. L'admin va valider ton profil, et il sera visible dès que ton abonnement de{' '}
-            {ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR')} FCFA est payé.
-          </p>
-          <MaraboutPaymentButton label={`Payer ${ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR')} FCFA`} />
-          <button
-            onClick={() => window.open(whatsappContactUrl(WHATSAPP_NUMBER, paymentMessage), '_blank', 'noopener,noreferrer')}
-            className="block mt-3 mx-auto text-sm underline"
-            style={{ color: '#a0aec0' }}
-          >
-            Un souci avec le paiement en ligne ? Paie via WhatsApp à la place
-          </button>
-          <button
-            onClick={() => navigate('/marabout-dashboard')}
-            className="btn-secondaire rounded w-full mt-4"
-          >
-            Modifier mon profil
-          </button>
-        </div>
-      </div>
-    );
-  }
+  const paymentMessage =
+    'Bonjour, je souhaite payer mon abonnement marabout sur Secret Divin pour ' +
+    ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR') + ' FCFA. Mon email : ' + (user?.email ?? '');
 
   return (
     <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
@@ -272,124 +141,32 @@ export function MaraboutInscriptionPage() {
             ))}
           </div>
           <p className="italic text-sm mt-5" style={{ color: '#a0aec0' }}>
-            Paiement mensuel via WhatsApp. Profil activé après validation de l'admin et confirmation du paiement.
+            Paiement en ligne sécurisé. Tu complètes ton profil (nom, spécialités, tarifs...) juste après, une fois le paiement confirmé.
           </p>
         </div>
 
         <Separateur />
 
-        <div className="carte rounded-lg flex flex-col gap-5">
+        <div className="carte rounded-lg text-center">
           {error && (
-            <div className="rounded-lg p-3" style={{ background: '#3a1b1b', border: '1px solid #e53935' }}>
+            <div className="rounded-lg p-3 mb-4" style={{ background: '#3a1b1b', border: '1px solid #e53935' }}>
               <p className="text-red-400 text-sm">{error}</p>
             </div>
           )}
-
-          <div>
-            <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Nom complet</label>
-            <input value={nomComplet} onChange={(e) => setNomComplet(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or" />
-          </div>
-
-          <div>
-            <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Numéro WhatsApp</label>
-            <input
-              value={whatsapp}
-              onChange={(e) => setWhatsapp(e.target.value.replace(/[^0-9]/g, ''))}
-              placeholder="Ex: 224624279200"
-              className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
-            />
-            {whatsapp && (
-              <a
-                href={`https://wa.me/${whatsapp}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: '#25D366', fontSize: '0.85rem' }}
-                className="block mt-1"
-              >
-                Tester le lien → wa.me/{whatsapp}
-              </a>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Pays</label>
-              <select value={pays} onChange={(e) => setPays(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or">
-                {PAYS_LIST.map((p) => <option key={p} value={p}>{p}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Ville</label>
-              <input value={ville} onChange={(e) => setVille(e.target.value)} className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or" />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Années d'expérience</label>
-            <input
-              type="number"
-              min={0}
-              max={60}
-              value={experience}
-              onChange={(e) => setExperience(e.target.value)}
-              className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>Tes spécialités</label>
-            <CheckboxGroup options={SPECIALITES} selected={selectedSpecialites} onToggle={toggleSpecialite} />
-          </div>
-
-          <div>
-            <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>Langues parlées</label>
-            <CheckboxGroup options={LANGUES} selected={selectedLangues} onToggle={toggleLangue} />
-          </div>
-
-          <div>
-            <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Description de tes services</label>
-            <textarea
-              rows={4}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or resize-y"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Tarifs indicatifs</label>
-            <textarea
-              rows={2}
-              value={tarifs}
-              onChange={(e) => setTarifs(e.target.value)}
-              className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or resize-y"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm mb-1 text-center" style={{ color: '#a0aec0' }}>Ta photo (optionnelle)</label>
-            <PhotoUpload
-              userId={user?.id ?? ''}
-              currentPhotoUrl={photoUrl}
-              onUploadSuccess={(url) => setPhotoUrl(url)}
-            />
-          </div>
-
-          <label className="flex items-start gap-2">
-            <input type="checkbox" checked={acceptedTerms} onChange={(e) => setAcceptedTerms(e.target.checked)} className="mt-1" />
-            <span className="text-sm text-white">
-              J'accepte les conditions d'utilisation de Secret Divin. Je certifie être un professionnel des sciences mystiques
-              islamiques. Je m'engage à respecter les clients et à fournir des services sérieux et éthiques. Secret Divin n'est
-              pas responsable des transactions entre marabouts et clients.
-            </span>
-          </label>
-
+          <p className="text-white mb-5">
+            Le paiement se fait maintenant, avant de remplir ton profil — c'est l'étape unique qui te donne accès au formulaire d'inscription.
+          </p>
+          <MaraboutPaymentButton
+            label={`Payer ${ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR')} FCFA et démarrer mon inscription`}
+            className="rounded font-bold py-3 px-6"
+            style={{ background: '#f5c842', color: '#0a0f2e' }}
+          />
           <button
-            onClick={handleSubmit}
-            disabled={isDisabled || submitting}
-            className="btn-principal w-full rounded disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => window.open(whatsappContactUrl(WHATSAPP_NUMBER, paymentMessage), '_blank', 'noopener,noreferrer')}
+            className="block mt-3 mx-auto text-sm underline"
+            style={{ color: '#a0aec0' }}
           >
-            {submitting ? 'Envoi...' : 'Soumettre ma demande'}
+            Un souci avec le paiement en ligne ? Paie via WhatsApp à la place
           </button>
         </div>
       </div>
