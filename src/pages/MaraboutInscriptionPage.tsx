@@ -2,18 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabaseClient';
-import { PAYS_LIST, ABONNEMENT_PRIX_FCFA, whatsappContactUrl } from '../utils/marabouts';
+import { PAYS_LIST, whatsappContactUrl } from '../utils/marabouts';
 import { WHATSAPP_NUMBER } from '../utils/mystique';
-import { MaraboutPaymentButton } from '../components/MaraboutPaymentButton';
-
-const AVANTAGES = [
-  'Profil visible sur la plateforme',
-  'Filtres par spécialité et pays',
-  'Bouton WhatsApp direct',
-  "Système d'avis clients",
-  'Dashboard personnel',
-  'Visibilité auprès de nouveaux clients potentiels',
-];
+import { MaraboutTierComparison } from '../components/MaraboutTierComparison';
 
 function Separateur() {
   return (
@@ -119,8 +110,7 @@ export function MaraboutInscriptionPage() {
   }
 
   const paymentMessage =
-    'Bonjour, je souhaite payer mon abonnement marabout sur Secret Divin pour ' +
-    ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR') + ' FCFA. Mon email : ' + (user?.email ?? '');
+    'Bonjour, je souhaite payer mon abonnement marabout sur Secret Divin (Standard ou VIP). Mon email : ' + (user?.email ?? '');
 
   return (
     <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
@@ -132,38 +122,24 @@ export function MaraboutInscriptionPage() {
 
         <Separateur />
 
-        <div className="rounded-lg p-8 max-w-[400px] mx-auto text-center" style={{ background: '#0d1545', border: '1px solid #f5c842' }}>
-          <p className="text-or font-bold">Abonnement Marabout</p>
-          <p className="text-or font-bold text-[2.5rem] mt-2">{ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR')} FCFA / mois</p>
-          <div className="flex flex-col gap-2 mt-5 text-left">
-            {AVANTAGES.map((a) => (
-              <p key={a} className="text-white text-sm">✅ {a}</p>
-            ))}
+        <p className="text-center mb-5" style={{ color: '#a0aec0' }}>
+          Choisis ta formule pour démarrer ton inscription. Tu complètes ton profil (nom, spécialités, tarifs...) juste après, une fois le paiement confirmé.
+        </p>
+
+        {error && (
+          <div className="rounded-lg p-3 mb-4 max-w-lg mx-auto" style={{ background: '#3a1b1b', border: '1px solid #e53935' }}>
+            <p className="text-red-400 text-sm">{error}</p>
           </div>
-          <p className="italic text-sm mt-5" style={{ color: '#a0aec0' }}>
-            Paiement en ligne sécurisé. Tu complètes ton profil (nom, spécialités, tarifs...) juste après, une fois le paiement confirmé.
-          </p>
-        </div>
+        )}
+
+        <MaraboutTierComparison />
 
         <Separateur />
 
         <div className="carte rounded-lg text-center">
-          {error && (
-            <div className="rounded-lg p-3 mb-4" style={{ background: '#3a1b1b', border: '1px solid #e53935' }}>
-              <p className="text-red-400 text-sm">{error}</p>
-            </div>
-          )}
-          <p className="text-white mb-5">
-            Le paiement se fait maintenant, avant de remplir ton profil — c'est l'étape unique qui te donne accès au formulaire d'inscription.
-          </p>
-          <MaraboutPaymentButton
-            label={`Payer ${ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR')} FCFA et démarrer mon inscription`}
-            className="rounded font-bold py-3 px-6"
-            style={{ background: '#f5c842', color: '#0a0f2e' }}
-          />
           <button
             onClick={() => window.open(whatsappContactUrl(WHATSAPP_NUMBER, paymentMessage), '_blank', 'noopener,noreferrer')}
-            className="block mt-3 mx-auto text-sm underline"
+            className="block mx-auto text-sm underline"
             style={{ color: '#a0aec0' }}
           >
             Un souci avec le paiement en ligne ? Paie via WhatsApp à la place

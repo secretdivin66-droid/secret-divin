@@ -7,6 +7,7 @@ export interface MaraboutCheckoutParams {
   lastName: string;
   phoneNumber: string;
   phoneCountryCode: string;
+  tier: 'standard' | 'vip';
 }
 
 export type MaraboutCheckoutResult =
@@ -24,6 +25,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   unsupported_country: "Ce pays n'est pas encore pris en charge pour ce moyen de paiement.",
   incomplete_profile: 'Un email est requis sur ton compte pour payer avec FedaPay.',
   no_marabout_profile: "Tu n'as pas encore de profil marabout — inscris-toi d'abord.",
+  invalid_tier: 'Formule invalide, réessaie.',
 };
 
 // Même schéma d'appel que fedapayCreditsCheckout.ts (fetch brut +
@@ -50,6 +52,7 @@ export async function initiateMaraboutSubscriptionCheckout(params: MaraboutCheck
         firstName: params.firstName,
         lastName: params.lastName,
         phone: { number: params.phoneNumber, countryCode: params.phoneCountryCode },
+        tier: params.tier,
       }),
     });
   } catch {

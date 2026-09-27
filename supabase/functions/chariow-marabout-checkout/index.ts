@@ -1,6 +1,7 @@
-// Initie un paiement Chariow pour l'abonnement marabout (5000 FCFA/mois,
-// jusqu'ici 100% manuel via WhatsApp + validation admin — voir
-// AdminPage.tsx/activate_marabout_subscription). Voir chariow-pulse-webhook
+// Initie un paiement Chariow pour l'abonnement marabout (Standard 9900
+// FCFA/an ou VIP 29000 FCFA/an, voir marabout_subscription_plan et
+// migration 0038 — le tier est choisi par le client dans le body et
+// revérifié au webhook, jamais fait confiance seul). Voir chariow-pulse-webhook
 // pour la confirmation finale de la vente (custom_metadata.type ===
 // 'marabout_subscription' route vers activate_marabout_subscription_via_payment,
 // distincte de la fonction admin manuelle — voir migration 0032).
@@ -42,6 +43,7 @@ interface InitiateCheckoutBody {
   firstName?: string;
   lastName?: string;
   phone?: { number?: string; countryCode?: string };
+  tier?: string;
 }
 
 interface ChariowCheckoutResponse {
@@ -84,7 +86,7 @@ Deno.serve(async (req) => {
     }
 
     const body: InitiateCheckoutBody = await req.json();
-    const { redirectUrl, firstName, lastName, phone } = body;
+    const { redirectUrl, firstName, lastName, phone, tier } = body;
 
     if (
       typeof firstName !== 'string' || !firstName.trim() ||
@@ -93,6 +95,10 @@ Deno.serve(async (req) => {
       typeof phone?.countryCode !== 'string' || !phone.countryCode.trim()
     ) {
       return jsonResponse({ error: 'missing_contact_info' }, 400);
+    }
+
+    if (tier !== 'standard' && tier !== 'vip') {
+      return jsonResponse({ error: 'invalid_tier' }, 400);
     }
 
     const apiKey = Deno.env.get('CHARIOW_API_KEY');
@@ -118,7 +124,7 @@ Deno.serve(async (req) => {
     const { data: plan, error: planError } = await adminClient
       .from('marabout_subscription_plan')
       .select('price, currency, chariow_product_id')
-      .eq('id', 'standard')
+      .eq('id', tier)
       .maybeSingle();
 
     if (planError || !plan) {
@@ -153,6 +159,7 @@ Deno.serve(async (req) => {
         internalReference,
         maraboutId: marabout.id,
         userId: user.id,
+        tier,
       },
       phone: { number: phone.number.trim(), country_code: phone.countryCode.trim() },
     };

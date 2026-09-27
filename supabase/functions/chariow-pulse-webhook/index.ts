@@ -71,6 +71,7 @@ interface ChariowSale {
     packId?: string;
     maraboutId?: string;
     userId?: string;
+    tier?: string;
   };
   completed_at?: string;
 }
@@ -193,10 +194,14 @@ async function notifyMaraboutActivated(supabase: ReturnType<typeof createClient>
   }
 }
 
-// Abonnement marabout (5000 FCFA/mois, voir migration 0032) — distinct des
-// packs de crédits : maraboutId (pas userId) est la clé, et l'activation
-// passe par activate_marabout_subscription_via_payment(), séparée de la
-// fonction admin-manuel pour ne jamais affaiblir son contrôle d'accès.
+// Abonnement marabout (Standard 9900 FCFA/an ou VIP 29000 FCFA/an, voir
+// migration 0038) — distinct des packs de crédits : maraboutId (pas
+// userId) est la clé, et l'activation passe par
+// activate_marabout_subscription_via_payment(), séparée de la fonction
+// admin-manuel pour ne jamais affaiblir son contrôle d'accès. Le tier
+// vient de custom_metadata (posé par chariow-marabout-checkout), avec un
+// repli 'standard' pour compatibilité avec un paiement déjà en vol au
+// moment du déploiement de ce champ.
 async function handleMaraboutSubscriptionSale(supabase: ReturnType<typeof createClient>, sale: ChariowSale) {
   const maraboutId = sale.custom_metadata?.maraboutId;
   if (typeof maraboutId !== 'string') {
@@ -205,15 +210,16 @@ async function handleMaraboutSubscriptionSale(supabase: ReturnType<typeof create
     });
     return;
   }
+  const tier = sale.custom_metadata?.tier === 'vip' ? 'vip' : 'standard';
 
   const { data: plan, error: planError } = await supabase
     .from('marabout_subscription_plan')
     .select('price, currency')
-    .eq('id', 'standard')
+    .eq('id', tier)
     .maybeSingle();
 
   if (planError || !plan) {
-    console.error('chariow-pulse-webhook: marabout_subscription_plan not configured, refusing to activate', { saleId: sale.id });
+    console.error('chariow-pulse-webhook: marabout_subscription_plan not configured', { saleId: sale.id, tier });
     return;
   }
 
@@ -223,6 +229,7 @@ async function handleMaraboutSubscriptionSale(supabase: ReturnType<typeof create
     console.error('chariow-pulse-webhook: amount/currency mismatch, refusing to activate marabout subscription', {
       saleId: sale.id,
       maraboutId,
+      tier,
       expected: { price: plan.price, currency: plan.currency },
       received: { amount: paidAmount, currency: paidCurrency },
     });
@@ -233,6 +240,7 @@ async function handleMaraboutSubscriptionSale(supabase: ReturnType<typeof create
     p_marabout_id: maraboutId,
     p_provider: 'chariow',
     p_provider_reference: sale.id,
+    p_tier: tier,
   });
   if (error) {
     console.error('chariow-pulse-webhook: activate_marabout_subscription_via_payment failed', {

@@ -1,9 +1,10 @@
-// Initie un paiement FedaPay pour l'abonnement marabout (voir
-// marabout_subscription_plan/activate_marabout_subscription_via_payment,
-// migration 0032) — même modèle que fedapay-initiate-checkout (packs de
-// crédits), adapté à un montant fixe unique au lieu d'un packId choisi par
-// le client. Voir fedapay-webhook (handleMaraboutSubscriptionTransaction)
-// pour la confirmation finale et l'activation.
+// Initie un paiement FedaPay pour l'abonnement marabout (Standard 9900
+// FCFA/an ou VIP 29000 FCFA/an, voir marabout_subscription_plan/
+// activate_marabout_subscription_via_payment, migration 0038) — même
+// modèle que fedapay-initiate-checkout (packs de crédits), adapté à un
+// tier choisi par le client (revérifié au webhook) au lieu d'un packId.
+// Voir fedapay-webhook (handleMaraboutSubscriptionTransaction) pour la
+// confirmation finale et l'activation.
 //
 // Sécurité identique à chariow-marabout-checkout :
 // - JWT Supabase requis, jamais appelable anonymement.
@@ -53,6 +54,7 @@ interface InitiateCheckoutBody {
   firstName?: string;
   lastName?: string;
   phone?: { number?: string; countryCode?: string };
+  tier?: string;
 }
 
 interface FedaPayTransactionCreateResponse {
@@ -97,7 +99,7 @@ Deno.serve(async (req) => {
     }
 
     const body: InitiateCheckoutBody = await req.json();
-    const { callbackUrl, firstName, lastName, phone } = body;
+    const { callbackUrl, firstName, lastName, phone, tier } = body;
 
     if (
       typeof firstName !== 'string' || !firstName.trim() ||
@@ -106,6 +108,10 @@ Deno.serve(async (req) => {
       typeof phone?.countryCode !== 'string' || !phone.countryCode.trim()
     ) {
       return jsonResponse({ error: 'missing_contact_info' }, 400);
+    }
+
+    if (tier !== 'standard' && tier !== 'vip') {
+      return jsonResponse({ error: 'invalid_tier' }, 400);
     }
 
     const callingCode = COUNTRY_CALLING_CODES[phone.countryCode.trim().toUpperCase()];
@@ -136,7 +142,7 @@ Deno.serve(async (req) => {
     const { data: plan, error: planError } = await adminClient
       .from('marabout_subscription_plan')
       .select('price, currency')
-      .eq('id', 'standard')
+      .eq('id', tier)
       .maybeSingle();
 
     if (planError || !plan) {
@@ -178,6 +184,7 @@ Deno.serve(async (req) => {
         type: 'marabout_subscription',
         internalReference,
         maraboutId: marabout.id,
+        tier,
       },
     };
 

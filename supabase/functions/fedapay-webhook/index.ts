@@ -128,6 +128,7 @@ interface FedaPayCustomMetadata {
   type?: string;
   maraboutId?: string;
   internalReference?: string;
+  tier?: string;
 }
 
 interface FedaPayTransaction {
@@ -272,15 +273,16 @@ async function handleMaraboutSubscriptionTransaction(supabase: ReturnType<typeof
     });
     return;
   }
+  const tier = transaction.custom_metadata?.tier === 'vip' ? 'vip' : 'standard';
 
   const { data: plan, error: planError } = await supabase
     .from('marabout_subscription_plan')
     .select('price, currency')
-    .eq('id', 'standard')
+    .eq('id', tier)
     .maybeSingle();
 
   if (planError || !plan) {
-    console.error('fedapay-webhook: marabout_subscription_plan not configured, refusing to activate', { transactionId: transaction.id });
+    console.error('fedapay-webhook: marabout_subscription_plan not configured', { transactionId: transaction.id, tier });
     return;
   }
 
@@ -288,6 +290,7 @@ async function handleMaraboutSubscriptionTransaction(supabase: ReturnType<typeof
     console.error('fedapay-webhook: amount/currency mismatch, refusing to activate marabout subscription', {
       transactionId: transaction.id,
       maraboutId,
+      tier,
       expected: { price: plan.price, currency: plan.currency },
       received: { amount: transaction.amount, currency: transaction.currency?.iso },
     });
@@ -298,6 +301,7 @@ async function handleMaraboutSubscriptionTransaction(supabase: ReturnType<typeof
     p_marabout_id: maraboutId,
     p_provider: 'fedapay',
     p_provider_reference: String(transaction.id),
+    p_tier: tier,
   });
   if (error) {
     console.error('fedapay-webhook: activate_marabout_subscription_via_payment failed', {

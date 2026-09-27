@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { SPECIALITES, PAYS_LIST, LANGUES, ABONNEMENT_PRIX_FCFA, averageNote, whatsappContactUrl } from '../utils/marabouts';
+import { SPECIALITES, PAYS_LIST, LANGUES, averageNote, whatsappContactUrl } from '../utils/marabouts';
 import type { Marabout } from '../utils/marabouts';
 import { useCanonicalUrl } from '../hooks/useCanonicalUrl';
 
@@ -32,6 +32,9 @@ export function MaraboutsPage() {
       .eq('is_verified', true)
       .eq('is_active', true)
       .eq('abonnement_actif', true)
+      // VIP avant Standard (tri alphabétique inversé suffit avec ces 2
+      // valeurs), puis les plus récents d'abord au sein d'une même formule.
+      .order('subscription_tier', { ascending: false })
       .order('created_at', { ascending: false })
       .then(({ data }) => {
         setMarabouts((data as Marabout[]) ?? []);
@@ -125,7 +128,17 @@ export function MaraboutsPage() {
                       m.nom_complet.charAt(0).toUpperCase()
                     )}
                   </div>
-                  <p className="text-white font-bold mt-3">{m.nom_complet}</p>
+                  <p className="text-white font-bold mt-3">
+                    {m.nom_complet}
+                    {m.subscription_tier === 'vip' && (
+                      <span
+                        className="ml-2 inline-block px-2 py-0.5 rounded-full text-xs font-bold align-middle"
+                        style={{ background: '#2563eb', color: 'white' }}
+                      >
+                        VIP
+                      </span>
+                    )}
+                  </p>
                   <p className="text-sm" style={{ color: '#a0aec0' }}>{m.ville}, {m.pays}</p>
                   {note && <p className="text-or font-bold mt-1">★ {note} / 5</p>}
                 </div>
@@ -171,7 +184,7 @@ export function MaraboutsPage() {
       <div className="mt-8 py-8 px-4 text-center" style={{ background: '#0d1545', borderTop: '1px solid rgba(245,200,66,0.3)' }}>
         <p className="text-or font-bold text-xl">Tu es marabout professionnel ?</p>
         <p className="mt-2" style={{ color: '#a0aec0' }}>
-          Rejoins Secret Divin et trouve de nouveaux clients. {ABONNEMENT_PRIX_FCFA.toLocaleString('fr-FR')} FCFA/mois pour un profil vérifié, visible dans l'annuaire.
+          Rejoins Secret Divin et trouve de nouveaux clients. Deux formules annuelles disponibles, Standard et VIP, pour un profil vérifié, visible dans l'annuaire.
         </p>
         <Link to="/marabouts/inscrire" className="btn-principal rounded mt-5 inline-block">
           Créer mon profil marabout

@@ -30,7 +30,40 @@ export const PAYS_LIST = ['Guinée', ...ALL_COUNTRY_NAMES.filter((p) => p !== 'G
 
 export const LANGUES = ['Français', 'Arabe', 'Bambara', 'Wolof', 'Peul', 'Soussou', 'Malinké', 'Anglais', 'Autre'];
 
-export const ABONNEMENT_PRIX_FCFA = 5900;
+// Formules annuelles (migration 0038, remplace l'ancien abonnement mensuel
+// unique à 5900 FCFA). Source unique du prix affiché côté frontend — même
+// principe que `plans`/`credit_packs`, évite de reproduire la duplication
+// à 4 endroits déjà rencontrée avec l'ancien prix (voir migration 0033).
+export const MARABOUT_TIERS = [
+  {
+    id: 'standard' as const,
+    label: 'Standard',
+    priceFcfa: 9900,
+    features: ['Profil visible sur l\'annuaire public'],
+  },
+  {
+    id: 'vip' as const,
+    label: 'VIP',
+    priceFcfa: 29000,
+    features: [
+      'Profil visible sur l\'annuaire public',
+      'Badge VIP bleu sur le profil et dans l\'annuaire',
+      'Profil mis en avant (priorité sur les profils Standard)',
+      'Reçoit des demandes de consultation sur des secrets/travaux spécifiques',
+      'Accès direct au fondateur par WhatsApp depuis son espace membre',
+    ],
+  },
+];
+
+export type MaraboutTierId = (typeof MARABOUT_TIERS)[number]['id'];
+
+export function maraboutTierLabel(tierId: string): string {
+  return MARABOUT_TIERS.find((t) => t.id === tierId)?.label ?? tierId;
+}
+
+export function maraboutTierPrice(tierId: string): number {
+  return MARABOUT_TIERS.find((t) => t.id === tierId)?.priceFcfa ?? 0;
+}
 
 export interface MaraboutAvis {
   id: string;
@@ -57,6 +90,7 @@ export interface Marabout {
   is_active: boolean;
   abonnement_actif: boolean;
   abonnement_expire_le: string | null;
+  subscription_tier: MaraboutTierId;
   profile_completed_at: string | null;
   vues: number;
   created_at: string;

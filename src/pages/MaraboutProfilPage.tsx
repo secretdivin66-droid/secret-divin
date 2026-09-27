@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabaseClient';
-import { averageNote, whatsappContactUrl } from '../utils/marabouts';
+import { SPECIALITES, averageNote, whatsappContactUrl } from '../utils/marabouts';
 import type { Marabout } from '../utils/marabouts';
 
 function formatDate(dateString: string): string {
@@ -34,6 +34,9 @@ export function MaraboutProfilPage() {
   const [commentaire, setCommentaire] = useState('');
   const [avisMessage, setAvisMessage] = useState<string | null>(null);
   const [submittingAvis, setSubmittingAvis] = useState(false);
+
+  const [consultationSpecialite, setConsultationSpecialite] = useState(SPECIALITES[0]);
+  const [consultationDetail, setConsultationDetail] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -139,7 +142,17 @@ export function MaraboutProfilPage() {
               marabout.nom_complet.charAt(0).toUpperCase()
             )}
           </div>
-          <p className="text-or font-bold text-[2rem] mt-4">{marabout.nom_complet}</p>
+          <p className="text-or font-bold text-[2rem] mt-4">
+            {marabout.nom_complet}
+            {marabout.subscription_tier === 'vip' && (
+              <span
+                className="ml-2 inline-block px-3 py-1 rounded-full text-sm font-bold align-middle"
+                style={{ background: '#2563eb', color: 'white' }}
+              >
+                VIP
+              </span>
+            )}
+          </p>
           <p className="text-white mt-1">{marabout.ville}, {marabout.pays}</p>
           {note && <p className="text-or font-bold mt-2">★ {note} / 5 ({avisList.length} avis)</p>}
           <p className="text-sm mt-2" style={{ color: '#a0aec0' }}>{marabout.vues} profil(s) consulté(s)</p>
@@ -172,6 +185,54 @@ export function MaraboutProfilPage() {
             </span>
           ))}
         </div>
+
+        {marabout.subscription_tier === 'vip' && (
+          <>
+            <Separateur />
+            <div className="carte rounded-lg">
+              <h2 className="text-or font-bold mb-3">Demander une consultation</h2>
+              <p className="text-sm mb-4" style={{ color: '#a0aec0' }}>
+                {marabout.nom_complet} accepte les demandes de consultation sur un secret ou un travail spécifique. Décris ta situation, tu seras mis en relation par WhatsApp.
+              </p>
+              <div className="mb-3">
+                <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Type de secret / travail</label>
+                <select
+                  value={consultationSpecialite}
+                  onChange={(e) => setConsultationSpecialite(e.target.value)}
+                  className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
+                >
+                  {SPECIALITES.map((s) => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>Décris ta demande</label>
+                <textarea
+                  value={consultationDetail}
+                  onChange={(e) => setConsultationDetail(e.target.value)}
+                  rows={3}
+                  placeholder="Explique ta situation en quelques mots..."
+                  className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or resize-y"
+                />
+              </div>
+              <button
+                onClick={() =>
+                  window.open(
+                    whatsappContactUrl(
+                      marabout.numero_whatsapp,
+                      `Bonjour, je vous contacte depuis Secret Divin pour une consultation VIP.\nType de secret/travail : ${consultationSpecialite}\nMa demande : ${consultationDetail || '—'}`
+                    ),
+                    '_blank',
+                    'noopener,noreferrer'
+                  )
+                }
+                className="rounded font-bold py-3 w-full"
+                style={{ background: '#25D366', color: 'white' }}
+              >
+                Envoyer ma demande via WhatsApp
+              </button>
+            </div>
+          </>
+        )}
 
         <Separateur />
 

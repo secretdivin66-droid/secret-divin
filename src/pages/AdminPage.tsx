@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { ABONNEMENT_PRIX_FCFA } from '../utils/marabouts';
+import { maraboutTierPrice, maraboutTierLabel } from '../utils/marabouts';
 import type { Marabout } from '../utils/marabouts';
 import { BlogAdminPanel } from '../components/BlogAdminPanel';
 import { notifyMaraboutActivation } from '../lib/novu';
@@ -55,10 +55,10 @@ export function AdminPage() {
     }
   }
 
-  async function handleActivateSubscription(m: Marabout) {
+  async function handleActivateSubscription(m: Marabout, tier: 'standard' | 'vip') {
     setMaraboutActionLoading(m.id);
     try {
-      await supabase.rpc('activate_marabout_subscription', { p_marabout_id: m.id });
+      await supabase.rpc('activate_marabout_subscription', { p_marabout_id: m.id, p_tier: tier });
       void notifyMaraboutActivation(m.id);
       await loadMarabouts();
     } finally {
@@ -125,7 +125,10 @@ export function AdminPage() {
               <div className="carte rounded-lg text-center">
                 <p className="text-or font-bold text-2xl">{marabouts.filter((m) => m.abonnement_actif).length}</p>
                 <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>
-                  abonnements actifs — {marabouts.filter((m) => m.abonnement_actif).length * ABONNEMENT_PRIX_FCFA} FCFA/mois
+                  abonnements actifs — {marabouts
+                    .filter((m) => m.abonnement_actif)
+                    .reduce((sum, m) => sum + maraboutTierPrice(m.subscription_tier), 0)
+                    .toLocaleString('fr-FR')} FCFA/an
                 </p>
               </div>
             </div>
@@ -163,7 +166,7 @@ export function AdminPage() {
                         <span>
                           {m.abonnement_actif ? (
                             <span className="px-2 py-1 rounded-full text-xs font-bold" style={{ background: '#1b3a1f', color: '#4caf50' }}>
-                              Actif — {formatDate(m.abonnement_expire_le)}
+                              {maraboutTierLabel(m.subscription_tier)} — {formatDate(m.abonnement_expire_le)}
                             </span>
                           ) : (
                             <span className="px-2 py-1 rounded-full text-xs font-bold" style={{ background: '#333', color: '#999' }}>Inactif</span>
@@ -177,9 +180,14 @@ export function AdminPage() {
                             </button>
                           )}
                           {m.is_verified && !m.abonnement_actif && (
-                            <button onClick={() => handleActivateSubscription(m)} disabled={busy} className="text-or text-left hover:underline disabled:opacity-50">
-                              Activer abonnement
-                            </button>
+                            <>
+                              <button onClick={() => handleActivateSubscription(m, 'standard')} disabled={busy} className="text-or text-left hover:underline disabled:opacity-50">
+                                Activer Standard
+                              </button>
+                              <button onClick={() => handleActivateSubscription(m, 'vip')} disabled={busy} className="text-left hover:underline disabled:opacity-50" style={{ color: '#2563eb' }}>
+                                Activer VIP
+                              </button>
+                            </>
                           )}
                           <button onClick={() => handleToggleMaraboutActive(m)} disabled={busy} className="text-left hover:underline disabled:opacity-50" style={{ color: m.is_active ? '#e53935' : '#4caf50' }}>
                             {m.is_active ? 'Désactiver' : 'Réactiver'}

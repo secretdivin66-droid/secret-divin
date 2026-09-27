@@ -5,6 +5,7 @@ import { ChariowContactModal, type ChariowContactFields } from './ChariowContact
 
 interface Props {
   label: string;
+  tier: 'standard' | 'vip';
   className?: string;
   style?: React.CSSProperties;
 }
@@ -20,7 +21,7 @@ const CHARIOW_FALLBACK_ERROR_CODES = new Set(['not_configured_for_chariow', 'une
 // boutons "payer"/"renouveler" du dashboard (MaraboutDashboardPage),
 // 3 usages identiques avant extraction. Chariow en premier, FedaPay en
 // repli silencieux (voir fedapayMaraboutCheckout.ts).
-export function MaraboutPaymentButton({ label, className, style }: Props) {
+export function MaraboutPaymentButton({ label, tier, className, style }: Props) {
   const [loading, setLoading] = useState(false);
   const [showContactForm, setShowContactForm] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -28,10 +29,10 @@ export function MaraboutPaymentButton({ label, className, style }: Props) {
   async function handleConfirm(fields: ChariowContactFields) {
     setErrorMessage(null);
     setLoading(true);
-    let result = await initiateChariowCheckout(fields);
+    let result = await initiateChariowCheckout({ ...fields, tier });
 
     if (result.status === 'error' && result.errorCode && CHARIOW_FALLBACK_ERROR_CODES.has(result.errorCode)) {
-      result = await initiateFedaPayCheckout(fields);
+      result = await initiateFedaPayCheckout({ ...fields, tier });
     }
 
     setLoading(false);
