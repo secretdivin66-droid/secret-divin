@@ -38,7 +38,7 @@ export const MARABOUT_TIERS = [
   {
     id: 'standard' as const,
     label: 'Standard',
-    priceFcfa: 9900,
+    priceFcfa: 12000,
     features: ['Profil visible sur l\'annuaire public'],
   },
   {
