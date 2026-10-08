@@ -77,7 +77,6 @@ interface AttraperData {
     important: string;
   };
   plants: { nomFrancais: string; nomBambara: string; nomScientifique: string; lienWikipedia: string; partie: string; preparation: string }[];
-  perfume: { name: string; description: string; availability: string; usage: string };
   sacrifice: {
     isRecommended: boolean;
     reason: string;
@@ -217,12 +216,6 @@ Retourne UNIQUEMENT du JSON valide :
     { "nomFrancais": "nom français", "nomBambara": "nom bambara", "nomScientifique": "nom scientifique exact", "lienWikipedia": "https://fr.wikipedia.org/wiki/...", "partie": "feuilles/écorce/racines", "preparation": "Comment préparer et utiliser avec le bain rituel." },
     { "nomFrancais": "deuxième plante", "nomBambara": "nom bambara", "nomScientifique": "nom scientifique exact", "lienWikipedia": "https://fr.wikipedia.org/wiki/...", "partie": "partie utilisée", "preparation": "Instructions de préparation." }
   ],
-  "perfume": {
-    "name": "nom du parfum",
-    "description": "Pourquoi ce parfum pour cet objectif.",
-    "availability": "Où trouver en Afrique de l'Ouest.",
-    "usage": "Comment utiliser ce parfum dans le rituel."
-  },
   "sacrifice": {
     "isRecommended": true,
     "reason": "Pourquoi ce sacrifice accompagne ce rituel.",
@@ -797,13 +790,6 @@ export function AttraperPage() {
                       </button>
                     </div>
                   ))}
-                </div>
-
-                <div className="carte rounded-lg text-center mt-5" style={{ border: '1px solid #f5c842' }}>
-                  <p className="text-or font-bold">{result.data.perfume.name}</p>
-                  <p className="text-white mt-2">{result.data.perfume.description}</p>
-                  <p className="text-white mt-2 text-sm">Utilisation : {result.data.perfume.usage}</p>
-                  <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>Disponibilité : {result.data.perfume.availability}</p>
                 </div>
               </div>
 

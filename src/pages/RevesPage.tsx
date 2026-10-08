@@ -39,15 +39,6 @@ interface RevesData {
     repetitions: number;
     reason: string;
   };
-  plant: {
-    nomFrancais: string;
-    nomBambara: string;
-    nomScientifique: string;
-    lienWikipedia: string;
-    partie: string;
-    preparation: string;
-    reason: string;
-  };
   sacrifice: {
     isNeeded: boolean;
     type: string;
@@ -143,15 +134,6 @@ Retourne UNIQUEMENT du JSON valide :
     "meaning": "signification",
     "repetitions": 99,
     "reason": "Pourquoi ce nom divin pour ce rêve spécifique."
-  },
-  "plant": {
-    "nomFrancais": "nom français",
-    "nomBambara": "nom bambara",
-    "nomScientifique": "nom scientifique exact",
-    "lienWikipedia": "https://fr.wikipedia.org/wiki/...",
-    "partie": "feuilles/écorce/racines",
-    "preparation": "comment préparer et utiliser cette plante après ce rêve",
-    "reason": "Pourquoi cette plante pour ce rêve."
   },
   "sacrifice": {
     "isNeeded": true,
@@ -553,26 +535,6 @@ export function RevesPage() {
                 <div className="mt-4 flex justify-center">
                   <AudioButton text={result.divineName.withYa} label="Écouter le nom divin" />
                 </div>
-              </div>
-
-              <Separateur />
-
-              {/* BLOC 7 — Plante Spirituelle */}
-              <div className="rounded-lg text-center p-6" style={{ background: '#0d2b1a', border: '1px solid #f5c842' }}>
-                <BlocTitle>Plante Spirituelle</BlocTitle>
-                <p className="text-white font-bold">
-                  {result.plant.nomFrancais} / {result.plant.nomBambara} /{' '}
-                  <span className="italic">{result.plant.nomScientifique}</span>
-                </p>
-                <p className="mt-2 text-white">Partie utilisée : {result.plant.partie}</p>
-                <p className="text-white">Préparation : {result.plant.preparation}</p>
-                <p className="text-or italic mt-2">{result.plant.reason}</p>
-                <button
-                  onClick={() => window.open(result.plant.lienWikipedia, '_blank', 'noopener,noreferrer')}
-                  className="btn-secondaire rounded mt-4"
-                >
-                  En savoir plus
-                </button>
               </div>
 
               <Separateur />

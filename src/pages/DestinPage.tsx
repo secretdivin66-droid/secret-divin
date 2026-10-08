@@ -73,16 +73,7 @@ interface DestinData {
     hours: string;
     explanation: string;
   };
-  favorableColors: {
-    colors: { name: string; hex: string; meaning: string }[];
-    advice: string;
-  };
   number: { value: number; meaning: string };
-  perfume: {
-    name: string;
-    description: string;
-    availability: string;
-  };
   plant: {
     nomFrancais: string;
     nomBambara: string;
@@ -331,19 +322,7 @@ Retourne UNIQUEMENT du JSON valide :
     "hours": "6h-10h / 14h-18h",
     "explanation": "1 phrase sur pourquoi ces jours et heures."
   },
-  "favorableColors": {
-    "colors": [
-      { "name": "Or", "hex": "#f5c842", "meaning": "Richesse spirituelle" },
-      { "name": "Blanc", "hex": "#ffffff", "meaning": "Pureté et paix" }
-    ],
-    "advice": "1 phrase sur comment utiliser ces couleurs."
-  },
   "number": { "value": 7, "meaning": "1 phrase sur la signification de ce nombre." },
-  "perfume": {
-    "name": "nom du parfum",
-    "description": "1 phrase sur ce parfum et son usage spirituel.",
-    "availability": "où trouver"
-  },
   "plant": {
     "nomFrancais": "nom français",
     "nomBambara": "nom bambara",
@@ -914,47 +893,11 @@ export function DestinPage() {
 
               <Separateur />
 
-              {/* BLOC 10 — Couleurs Favorables */}
-              <div className="carte rounded-lg text-center">
-                <BlocTitle>Couleurs Favorables</BlocTitle>
-                <div className="flex flex-wrap justify-center gap-4">
-                  {result.data.favorableColors.colors.map((c, i) => (
-                    <div key={i} className="flex flex-col items-center gap-2">
-                      <div
-                        className="w-10 h-10 rounded-full"
-                        style={{ background: c.hex, border: '1px solid rgba(255,255,255,0.3)' }}
-                      />
-                      <p className="text-white text-sm font-bold">{c.name}</p>
-                      <p className="text-xs" style={{ color: '#a0aec0' }}>
-                        {c.meaning}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                <p className="mt-4" style={{ color: '#a0aec0' }}>
-                  {result.data.favorableColors.advice}
-                </p>
-              </div>
-
-              <Separateur />
-
               {/* BLOC 11 — Nombre Mystique */}
               <div className="carte rounded-lg text-center">
                 <BlocTitle>Nombre Mystique</BlocTitle>
                 <p className="text-or font-bold text-[4rem]">{result.data.number.value}</p>
                 <p className="mt-2 text-white">{result.data.number.meaning}</p>
-              </div>
-
-              <Separateur />
-
-              {/* BLOC 12 — Parfum */}
-              <div className="carte rounded-lg text-center">
-                <BlocTitle>Parfum</BlocTitle>
-                <p className="text-or font-bold">{result.data.perfume.name}</p>
-                <p className="mt-2 text-white">{result.data.perfume.description}</p>
-                <p className="mt-1" style={{ color: '#a0aec0' }}>
-                  {result.data.perfume.availability}
-                </p>
               </div>
 
               <Separateur />
