@@ -102,6 +102,8 @@ CALCUL DU THÈME :
 3. Assigne une figure à chaque maison M1 à M16.
 4. Identifie la figure dominante.
 
+LIMITE DE LONGUEUR : la somme de tous les textes du JSON (toutes les valeurs confondues) ne doit jamais dépasser 450 mots au total. Reste concis sur chaque champ tout en gardant de la profondeur.
+
 Retourne UNIQUEMENT du JSON valide :
 
 {
@@ -132,15 +134,15 @@ Retourne UNIQUEMENT du JSON valide :
     ]
   },
   "interpretation": {
-    "overall": "4-5 phrases d'interprétation globale. Utilise tu.",
-    "keyMessage": "Le message principal en 2-3 phrases directes.",
+    "overall": "1-2 phrases d'interprétation globale. Utilise tu.",
+    "keyMessage": "Le message principal en 1 phrase directes.",
     "warning": "Avertissement si figures défavorables. Sinon null.",
-    "goodNews": "La bonne nouvelle. 1-2 phrases.",
+    "goodNews": "La bonne nouvelle. 1 phrase.",
     "sections": [
-      { "title": "Ce que révèle ton thème", "content": "3-4 phrases." },
-      { "title": "Les maisons importantes pour toi", "content": "3-4 phrases." },
-      { "title": "Ce que tu dois savoir", "content": "2-3 phrases." },
-      { "title": "La figure dominante", "content": "2-3 phrases sur la figure dominante." }
+      { "title": "Ce que révèle ton thème", "content": "1-2 phrases." },
+      { "title": "Les maisons importantes pour toi", "content": "1-2 phrases." },
+      { "title": "Ce que tu dois savoir", "content": "1 phrase." },
+      { "title": "La figure dominante", "content": "1 phrase sur la figure dominante." }
     ]
   },
   "sacrifices": {
@@ -155,7 +157,7 @@ Retourne UNIQUEMENT du JSON valide :
     ],
     "instructions": "instructions complètes du sacrifice"
   },
-  "conclusion": "Message final chaleureux. 2-3 phrases. Termine par BarakAllahu fik."
+  "conclusion": "Message final chaleureux. 1 phrase. Termine par BarakAllahu fik."
 }`;
 }
 
@@ -226,7 +228,7 @@ export function GeomanciePage() {
       const prompt = buildGeomanciePrompt(questionText);
       const data: GeomancieData = await callGeminiWithRetry('gemini-3.5-flash', prompt, {
         temperature: 0.7,
-        maxOutputTokens: 3000,
+        maxOutputTokens: 1800,
       });
 
       if (!isAdmin) {

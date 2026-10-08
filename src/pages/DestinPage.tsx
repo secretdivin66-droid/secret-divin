@@ -270,6 +270,9 @@ PM % 3 = ${remainder3} → destinataire imposé : ${recipientFromR3(remainder3)}
 Les offrandes générées dans "sacrifice.offerings" doivent appartenir à cette catégorie, et "sacrifice.recipient" doit correspondre à ce destinataire.
 
 Génère les 17 points mystiques.
+
+LIMITE DE LONGUEUR : la somme de tous les textes du JSON (toutes les valeurs confondues) ne doit jamais dépasser 450 mots au total. Reste concis sur chaque champ tout en gardant de la profondeur.
+
 Retourne UNIQUEMENT du JSON valide :
 
 {
@@ -278,7 +281,7 @@ Retourne UNIQUEMENT du JSON valide :
     "element": "Feu/Terre/Air/Eau",
     "elementArabic": "النار/...",
     "elementColor": "#e53935/...",
-    "explanation": "3 phrases sur ce que révèle ce PM pour toi."
+    "explanation": "1 phrase sur ce que révèle ce PM pour toi."
   },
   "dominantStar": {
     "number": 1,
@@ -286,7 +289,7 @@ Retourne UNIQUEMENT du JSON valide :
     "nameArabic": "الاسم",
     "planet": "Saturne/Jupiter...",
     "planetArabic": "زحل/...",
-    "description": "3 phrases sur l'influence de cette étoile."
+    "description": "1 phrase sur l'influence de cette étoile."
   },
   "divineName": {
     "arabic": "nom SANS ال",
@@ -294,7 +297,7 @@ Retourne UNIQUEMENT du JSON valide :
     "transliteration": "Ya ...",
     "meaning": "signification",
     "repetitions": 99,
-    "reason": "2 phrases sur pourquoi ce nom divin pour toi."
+    "reason": "1 phrase sur pourquoi ce nom divin pour toi."
   },
   "verse": {
     "arabic": "verset SANS harakat",
@@ -308,25 +311,25 @@ Retourne UNIQUEMENT du JSON valide :
     "animal": "nom animal",
     "animalArabic": "الاسم",
     "qualities": ["qualité 1","qualité 2","qualité 3"],
-    "description": "2 phrases sur ce que ton totem révèle."
+    "description": "1 phrase sur ce que ton totem révèle."
   },
   "character": {
     "mainTrait": "trait principal",
-    "description": "3 phrases sur ta personnalité profonde.",
+    "description": "1 phrase sur ta personnalité profonde.",
     "strengths": ["force 1","force 2","force 3","force 4"],
     "weaknesses": ["faiblesse 1","faiblesse 2","faiblesse 3"]
   },
   "destiny": {
     "lifePath": "chemin de vie",
-    "mission": "2-3 phrases sur ta mission ici-bas.",
-    "period1": { "age": "0-20 ans", "description": "2 phrases." },
-    "period2": { "age": "20-40 ans", "description": "2 phrases." },
-    "period3": { "age": "40 ans et plus", "description": "2 phrases." }
+    "mission": "1 phrase sur ta mission ici-bas.",
+    "period1": { "age": "0-20 ans", "description": "1 phrase." },
+    "period2": { "age": "20-40 ans", "description": "1 phrase." },
+    "period3": { "age": "40 ans et plus", "description": "1 phrase." }
   },
   "favorableDays": {
     "days": ["Lundi","Jeudi"],
     "hours": "6h-10h / 14h-18h",
-    "explanation": "2 phrases sur pourquoi ces jours et heures."
+    "explanation": "1 phrase sur pourquoi ces jours et heures."
   },
   "favorableColors": {
     "colors": [
@@ -335,7 +338,7 @@ Retourne UNIQUEMENT du JSON valide :
     ],
     "advice": "1 phrase sur comment utiliser ces couleurs."
   },
-  "number": { "value": 7, "meaning": "2 phrases sur la signification de ce nombre." },
+  "number": { "value": 7, "meaning": "1 phrase sur la signification de ce nombre." },
   "perfume": {
     "name": "nom du parfum",
     "description": "1 phrase sur ce parfum et son usage spirituel.",
@@ -378,24 +381,24 @@ Retourne UNIQUEMENT du JSON valide :
   "protection": {
     "mainDanger": "danger principal à éviter dans ta vie.",
     "protectionVerse": { "arabic": "verset SANS harakat", "meaning": "traduction" },
-    "advice": "2-3 phrases de conseils de protection spirituelle."
+    "advice": "1 phrase de conseils de protection spirituelle."
   },
   "loveLife": {
-    "profile": "2 phrases sur ton profil amoureux.",
+    "profile": "1 phrase sur ton profil amoureux.",
     "idealPartner": "description du partenaire idéal pour toi.",
     "challenge": "principal défi dans tes relations."
   },
   "career": {
     "domains": ["domaine 1","domaine 2","domaine 3"],
-    "advice": "2-3 phrases sur ta voie professionnelle idéale.",
+    "advice": "1 phrase sur ta voie professionnelle idéale.",
     "talent": "ton talent principal."
   },
   "spiritualLevel": {
     "level": "Débutant/Intermédiaire/Avancé/Maître",
-    "description": "2 phrases sur ton niveau spirituel actuel.",
+    "description": "1 phrase sur ton niveau spirituel actuel.",
     "nextStep": "ce que tu dois faire pour progresser spirituellement."
   },
-  "conclusion": "Message final chaleureux adressé directement à ${firstName}. 3-4 phrases encourageantes et profondes. Termine par BarakAllahu fik."
+  "conclusion": "Message final chaleureux adressé directement à ${firstName}. 1-2 phrases encourageantes et profondes. Termine par BarakAllahu fik."
 }
 
 RÈGLES NOMS DIVINS :
@@ -502,7 +505,7 @@ export function DestinPage() {
 
       const data: DestinData = await callGeminiWithRetry('gemini-3.5-flash', prompt, {
         temperature: 0.8,
-        maxOutputTokens: 3000,
+        maxOutputTokens: 2600,
       });
 
       const newResult: CachedResult = {

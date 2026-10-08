@@ -138,12 +138,14 @@ RÈGLE guérison :
 Si catégorie = 'Guérison / Santé' OU si le texte mentionne une maladie, une douleur ou un problème de santé : isGuerisson = true.
 Dans ce cas le patient doit SE LAVER ET BOIRE la préparation.
 
+LIMITE DE LONGUEUR : la somme de tous les textes du JSON (toutes les valeurs confondues, y compris pour chaque plante) ne doit jamais dépasser 450 mots au total. Reste concis sur chaque champ tout en gardant de la profondeur.
+
 Retourne UNIQUEMENT du JSON valide :
 
 {
   "isGuerisson": false,
   "objectiveSummary": "Résumé en une phrase de l'objectif détecté.",
-  "introduction": "2-3 phrases d'introduction personnelle. Utilise tu. Explique pourquoi ces plantes ont été choisies pour cet objectif.",
+  "introduction": "1 phrase d'introduction personnelle. Utilise tu. Explique pourquoi ces plantes ont été choisies pour cet objectif.",
   "plants": [
     {
       "number": 1,
@@ -228,7 +230,7 @@ Retourne UNIQUEMENT du JSON valide :
     "instructions": "Instructions complètes du sacrifice."
   },
   "warnings": ["Précaution importante 1","Précaution importante 2 si nécessaire"],
-  "conclusion": "Message final chaleureux et encourageant. 3 phrases adressées directement à la personne avec tu. Termine par InchaAllah."
+  "conclusion": "Message final chaleureux et encourageant. 1 phrase adressées directement à la personne avec tu. Termine par InchaAllah."
 }
 
 RÈGLES plantes :
@@ -339,7 +341,7 @@ export function PlantesPage() {
       const prompt = buildPlantesPrompt(objectiveText, category);
       const data: PlantesData = await callGeminiWithRetry('gemini-3.5-flash', prompt, {
         temperature: 0.8,
-        maxOutputTokens: 3000,
+        maxOutputTokens: 3600,
       });
 
       if (!isAdmin) {

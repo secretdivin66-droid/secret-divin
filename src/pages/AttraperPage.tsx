@@ -167,6 +167,8 @@ Utilise ces valeurs Abjad :
 ض=90 ق=100 ر=200 س=300 ت=400 ث=500 خ=600
 ذ=700 ظ=800 غ=900 ش=1000
 
+LIMITE DE LONGUEUR : la somme de tous les textes du JSON (toutes les valeurs confondues) ne doit jamais dépasser 450 mots au total. Reste concis sur chaque champ tout en gardant de la profondeur.
+
 Retourne UNIQUEMENT du JSON valide :
 
 {
@@ -233,7 +235,7 @@ Retourne UNIQUEMENT du JSON valide :
     "instructions": "Instructions complètes du sacrifice."
   },
   "warnings": ["Précaution importante 1","Précaution importante 2"],
-  "conclusion": "Message final chaleureux adressé à ${userName}. 3 phrases encourageantes. Termine par InchaAllah."
+  "conclusion": "Message final chaleureux adressé à ${userName}. 1 phrase encourageantes. Termine par InchaAllah."
 }
 
 RÈGLES NOMS DIVINS :
@@ -369,7 +371,7 @@ export function AttraperPage() {
 
       const data: AttraperData = await callGeminiWithRetry('gemini-3.5-flash', prompt, {
         temperature: 0.7,
-        maxOutputTokens: 3000,
+        maxOutputTokens: 2600,
       });
 
       const squareSize = data.talisman.squareType === '3x3' ? 3 : data.talisman.squareType === '4x4' ? 4 : 5;

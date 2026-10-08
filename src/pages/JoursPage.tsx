@@ -166,21 +166,23 @@ Planète du jour : ${planete}
 Poids du jour : ${poids}
 PM total (PM + poids jour) : ${PMtotal}
 
+LIMITE DE LONGUEUR : la somme de tous les textes du JSON (toutes les valeurs confondues) ne doit jamais dépasser 450 mots au total. Reste concis sur chaque champ tout en gardant de la profondeur.
+
 Retourne UNIQUEMENT du JSON valide :
 
 {
   "dayProfile": {
     "title": "Titre évocateur pour ce jour + planète",
-    "globalMessage": "3 phrases sur ce que signifie être né un ${selectedDay} selon la mystique islamique.",
-    "planetInfluence": "2-3 phrases sur l'influence de ${planete} sur ta personnalité et ton destin.",
+    "globalMessage": "1 phrase sur ce que signifie être né un ${selectedDay} selon la mystique islamique.",
+    "planetInfluence": "1 phrase sur l'influence de ${planete} sur ta personnalité et ton destin.",
     "planetArabic": "${JOURS_DATA[selectedDay].planeteArabe}"
   },
   "character": {
     "mainTrait": "trait dominant",
-    "description": "3 phrases sur la personnalité des natifs du ${selectedDay}.",
+    "description": "1 phrase sur la personnalité des natifs du ${selectedDay}.",
     "strengths": ["force 1","force 2","force 3","force 4"],
     "weaknesses": ["faiblesse 1","faiblesse 2","faiblesse 3"],
-    "deepNature": "2 phrases sur la nature profonde de cette combinaison prénom + jour."
+    "deepNature": "1 phrase sur la nature profonde de cette combinaison prénom + jour."
   },
   "numerology": {
     "pmPersonal": ${PM},
@@ -188,7 +190,7 @@ Retourne UNIQUEMENT du JSON valide :
     "pmTotal": ${PMtotal},
     "element": "Feu/Terre/Air/Eau",
     "elementArabic": "النار/...",
-    "numberMeaning": "2 phrases sur la signification du PM total."
+    "numberMeaning": "1 phrase sur la signification du PM total."
   },
   "divineName": {
     "arabic": "nom SANS ال",
@@ -197,7 +199,7 @@ Retourne UNIQUEMENT du JSON valide :
     "meaning": "signification",
     "repetitions": 99,
     "bestTime": "Après [prière]",
-    "reason": "2 phrases sur pourquoi ce nom pour ce jour et ce PM."
+    "reason": "1 phrase sur pourquoi ce nom pour ce jour et ce PM."
   },
   "verse": {
     "arabic": "verset SANS harakat",
@@ -213,7 +215,7 @@ Retourne UNIQUEMENT du JSON valide :
     ],
     "favorableDays": ["Lundi","Jeudi"],
     "unfavorableDays": ["Mardi"],
-    "explanation": "2 phrases sur les périodes favorables."
+    "explanation": "1 phrase sur les périodes favorables."
   },
   "talisman": {
     "squareType": "3x3",
@@ -249,8 +251,8 @@ Retourne UNIQUEMENT du JSON valide :
     "timing": "${selectedDay} matin",
     "instructions": "Instructions complètes du sacrifice."
   },
-  "dailyAdvice": "3 phrases de conseil pratique pour tirer le meilleur parti de ton énergie du ${selectedDay}. Adressé directement à ${firstName}.",
-  "conclusion": "Message final chaleureux adressé à ${firstName}. 3 phrases encourageantes. Termine par BarakAllahu fik."
+  "dailyAdvice": "1 phrase de conseil pratique pour tirer le meilleur parti de ton énergie du ${selectedDay}. Adressé directement à ${firstName}.",
+  "conclusion": "Message final chaleureux adressé à ${firstName}. 1 phrase encourageantes. Termine par BarakAllahu fik."
 }
 
 RÈGLES NOMS DIVINS :
@@ -350,7 +352,7 @@ export function JoursPage() {
 
       const data: JoursData = await callGeminiWithRetry('gemini-3.5-flash', prompt, {
         temperature: 0.8,
-        maxOutputTokens: 3000,
+        maxOutputTokens: 1800,
       });
 
       const newResult: CachedResult = { data, PM, PMtotal };

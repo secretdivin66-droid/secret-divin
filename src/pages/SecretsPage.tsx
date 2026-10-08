@@ -149,24 +149,26 @@ Sexe : ${gender}
 Objectif : ${objective}
 PM : ${PM}
 
+LIMITE DE LONGUEUR : la somme de tous les textes du JSON (toutes les valeurs confondues) ne doit jamais dépasser 450 mots au total. Reste concis sur chaque champ tout en gardant de la profondeur.
+
 Retourne UNIQUEMENT du JSON valide :
 
 {
   "secretNumber": {
     "value": ${PM},
-    "hidden": "Le chiffre caché derrière ce PM en 2 phrases.",
-    "power": "La puissance mystique de ce nombre en 2 phrases."
+    "hidden": "Le chiffre caché derrière ce PM en 1 phrase.",
+    "power": "La puissance mystique de ce nombre en 1 phrase."
   },
   "hiddenMeaning": {
-    "nameSecret": "2-3 phrases sur les secrets cachés dans le prénom ${firstName} selon la science des lettres.",
-    "motherSecret": "2 phrases sur l'influence du prénom de la mère sur le destin.",
-    "combinedPower": "2 phrases sur la puissance combinée des deux prénoms."
+    "nameSecret": "1 phrase sur les secrets cachés dans le prénom ${firstName} selon la science des lettres.",
+    "motherSecret": "1 phrase sur l'influence du prénom de la mère sur le destin.",
+    "combinedPower": "1 phrase sur la puissance combinée des deux prénoms."
   },
   "divineNames": {
     "name1": { "arabic": "nom SANS ال", "withYa": "يا + nom", "transliteration": "Ya ...", "meaning": "signification", "weight": 0 },
     "name2": { "arabic": "nom SANS ال", "withYa": "يا + nom", "transliteration": "Ya ...", "meaning": "signification", "weight": 0 },
     "combined": "يا nom1 يا nom2",
-    "reason": "2 phrases sur pourquoi ces 2 noms divins pour cet objectif."
+    "reason": "1 phrase sur pourquoi ces 2 noms divins pour cet objectif."
   },
   "verse": {
     "arabic": "verset SANS harakat",
@@ -222,7 +224,7 @@ Retourne UNIQUEMENT du JSON valide :
     "instructions": "Instructions complètes du sacrifice."
   },
   "warnings": ["Avertissement 1 important","Avertissement 2 si nécessaire"],
-  "conclusion": "Message final chaleureux adressé à ${firstName}. 3 phrases encourageantes. Termine par InchaAllah."
+  "conclusion": "Message final chaleureux adressé à ${firstName}. 1 phrase encourageantes. Termine par InchaAllah."
 }
 
 RÈGLES NOMS DIVINS :
@@ -330,7 +332,7 @@ export function SecretsPage() {
 
       const data: SecretsData = await callGeminiWithRetry('gemini-3.5-flash', prompt, {
         temperature: 0.8,
-        maxOutputTokens: 3000,
+        maxOutputTokens: 1800,
       });
 
       const newResult: CachedResult = {

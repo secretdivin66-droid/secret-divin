@@ -102,6 +102,8 @@ Rêve décrit : ${dreamText}
 Contexte : ${context}
 État actuel : ${currentState}
 
+LIMITE DE LONGUEUR : la somme de tous les textes du JSON (toutes les valeurs confondues) ne doit jamais dépasser 450 mots au total. Reste concis sur chaque champ tout en gardant de la profondeur.
+
 Retourne UNIQUEMENT du JSON valide :
 
 {
@@ -116,19 +118,19 @@ Retourne UNIQUEMENT du JSON valide :
     { "symbol": "troisième élément si présent dans le rêve", "meaning": "Sa signification." }
   ],
   "interpretation": {
-    "global": "4-5 phrases d'interprétation globale du rêve. Utilise tu. Sois profond et rassurant.",
-    "message": "Le message principal que ce rêve te transmet. 2-3 phrases directes.",
+    "global": "1-2 phrases d'interprétation globale du rêve. Utilise tu. Sois profond et rassurant.",
+    "message": "Le message principal que ce rêve te transmet. 1 phrase directes.",
     "warning": "Avertissement ou conseil de prudence si nécessaire. Sinon null.",
-    "goodNews": "La bonne nouvelle ou espoir que contient ce rêve. 1-2 phrases.",
+    "goodNews": "La bonne nouvelle ou espoir que contient ce rêve. 1 phrase.",
     "sections": [
-      { "title": "Ce que révèle ton rêve", "content": "3-4 phrases d'interprétation globale." },
-      { "title": "Les symboles de ton rêve", "content": "Analyse globale des symboles en 3-4 phrases." },
-      { "title": "Le message pour toi", "content": "2-3 phrases de message direct." }
+      { "title": "Ce que révèle ton rêve", "content": "1-2 phrases d'interprétation globale." },
+      { "title": "Les symboles de ton rêve", "content": "Analyse globale des symboles en 1-2 phrases." },
+      { "title": "Le message pour toi", "content": "1 phrase de message direct." }
     ]
   },
   "spiritual": {
-    "islamicView": "L'interprétation selon la tradition islamique (Ibn Sirin). 2-3 phrases.",
-    "africanView": "L'interprétation selon la tradition spirituelle africaine ouest-africaine. 2-3 phrases.",
+    "islamicView": "L'interprétation selon la tradition islamique (Ibn Sirin). 1 phrase.",
+    "africanView": "L'interprétation selon la tradition spirituelle africaine ouest-africaine. 1 phrase.",
     "prayer": "Courte invocation recommandée en arabe SANS harakat",
     "prayerMeaning": "Signification française de cette prière",
     "prayerRepetitions": 7,
@@ -169,7 +171,7 @@ Retourne UNIQUEMENT du JSON valide :
     "thisWeek": "Ce que tu dois faire cette semaine suite à ce rêve.",
     "avoid": "Ce qu'il faut absolument éviter après ce rêve."
   },
-  "conclusion": "Message final chaleureux et personnel. 2-3 phrases encourageantes. Termine par BarakAllahu fik."
+  "conclusion": "Message final chaleureux et personnel. 1 phrase encourageantes. Termine par BarakAllahu fik."
 }
 
 RÈGLES pour les offrandes :
@@ -272,7 +274,7 @@ export function RevesPage() {
       const prompt = buildRevesPrompt(dreamText, context, currentState);
       const data: RevesData = await callGeminiWithRetry('gemini-3.5-flash', prompt, {
         temperature: 0.85,
-        maxOutputTokens: 2500,
+        maxOutputTokens: 1800,
       });
 
       if (!isAdmin) {

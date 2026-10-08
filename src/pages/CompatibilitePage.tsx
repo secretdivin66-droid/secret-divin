@@ -127,37 +127,39 @@ Sexe : ${gender2} / PM : ${PM2} / Élément : ${element2.name}
 Score élémentaire : ${compat.score}%
 Niveau : ${compat.niveau}
 
+LIMITE DE LONGUEUR : la somme de tous les textes du JSON (toutes les valeurs confondues) ne doit jamais dépasser 450 mots au total. Reste concis sur chaque champ tout en gardant de la profondeur.
+
 Retourne UNIQUEMENT du JSON valide :
 
 {
   "summary": {
     "title": "Titre évocateur pour cette compatibilité (7 mots max)",
-    "globalMessage": "2-3 phrases résumant cette relation. Utilise les prénoms ${name1} et ${name2}.",
+    "globalMessage": "1 phrase résumant cette relation. Utilise les prénoms ${name1} et ${name2}.",
     "score": ${compat.score}
   },
   "profiles": {
     "person1": {
-      "elementDescription": "3 phrases sur la personnalité de ${name1} selon son élément ${element1.name}. Utilise tu.",
+      "elementDescription": "1 phrase sur la personnalité de ${name1} selon son élément ${element1.name}. Utilise tu.",
       "strengths": ["Force 1 de ${name1}","Force 2","Force 3"],
       "weaknesses": ["Faiblesse 1 de ${name1}","Faiblesse 2"]
     },
     "person2": {
-      "elementDescription": "3 phrases sur la personnalité de ${name2} selon son élément ${element2.name}.",
+      "elementDescription": "1 phrase sur la personnalité de ${name2} selon son élément ${element2.name}.",
       "strengths": ["Force 1 de ${name2}","Force 2","Force 3"],
       "weaknesses": ["Faiblesse 1 de ${name2}","Faiblesse 2"]
     }
   },
   "elementAnalysis": {
-    "interaction": "Comment interagissent ${element1.name} et ${element2.name} dans cette relation. 3-4 phrases.",
+    "interaction": "Comment interagissent ${element1.name} et ${element2.name} dans cette relation. 1-2 phrases.",
     "strengths": ["Point fort 1 de cette combinaison","Point fort 2","Point fort 3"],
     "tensions": ["Tension possible 1","Tension possible 2"],
-    "advice": "2-3 phrases pour harmoniser ces deux éléments."
+    "advice": "1 phrase pour harmoniser ces deux éléments."
   },
   "weightsAnalysis": {
     "difference": ${Math.abs(PM1 - PM2)},
     "balance": "Équilibré / Légèrement déséquilibré / Très déséquilibré",
-    "description": "3 phrases sur l'équilibre des poids entre ${name1} et ${name2}.",
-    "impact": "2 phrases sur l'impact de cet équilibre sur la relation."
+    "description": "1 phrase sur l'équilibre des poids entre ${name1} et ${name2}.",
+    "impact": "1 phrase sur l'impact de cet équilibre sur la relation."
   },
   "relationshipAnalysis": {
     "strengths": ["Force de la relation 1","Force de la relation 2","Force de la relation 3","Force de la relation 4"],
@@ -165,15 +167,15 @@ Retourne UNIQUEMENT du JSON valide :
     "keyDynamic": "La dynamique principale de cette relation en une phrase courte et percutante."
   },
   "advices": [
-    { "title": "Conseil 1", "content": "2 phrases. Utilise ${name1} et ${name2}." },
-    { "title": "Conseil 2", "content": "2 phrases." },
-    { "title": "Conseil 3", "content": "2 phrases." }
+    { "title": "Conseil 1", "content": "1 phrase. Utilise ${name1} et ${name2}." },
+    { "title": "Conseil 2", "content": "1 phrase." },
+    { "title": "Conseil 3", "content": "1 phrase." }
   ],
   "spiritualProtection": {
     "divineName": { "arabic": "nom SANS ال", "withYa": "يا + nom", "transliteration": "Ya ...", "meaning": "signification", "reason": "Pourquoi ce nom pour cette relation." },
     "verse": { "arabic": "verset SANS harakat", "surah": "nom sourate français", "ayah": "numéro", "meaning": "traduction française" },
     "invocation": { "arabic": "invocation SANS harakat", "meaning": "traduction française", "repetitions": 7, "when": "Quand réciter ensemble" },
-    "ritual": "2-3 phrases sur le rituel recommandé pour renforcer cette relation."
+    "ritual": "1 phrase sur le rituel recommandé pour renforcer cette relation."
   },
   "sacrifice": {
     "isRecommended": true,
@@ -186,7 +188,7 @@ Retourne UNIQUEMENT du JSON valide :
     "timing": "Quel jour et heure",
     "instructions": "Instructions complètes du sacrifice."
   },
-  "conclusion": "Message final chaleureux adressé à ${name1} et ${name2} par leurs prénoms. 3 phrases encourageantes. Termine par InchaAllah."
+  "conclusion": "Message final chaleureux adressé à ${name1} et ${name2} par leurs prénoms. 1 phrase encourageantes. Termine par InchaAllah."
 }
 
 RÈGLES noms divins : SANS ال. Avec يا.
@@ -320,7 +322,7 @@ export function CompatibilitePage() {
 
       const data: CompatData = await callGeminiWithRetry('gemini-3.5-flash', prompt, {
         temperature: 0.8,
-        maxOutputTokens: 3000,
+        maxOutputTokens: 1800,
       });
 
       if (!isAdmin) {
