@@ -2,9 +2,18 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useCreditPacks, type CreditPack } from '../hooks/useCreditPacks';
+import { initiateCreditPackCheckout as initiateSaspayCheckout } from '../lib/payments/saspayCreditsCheckout';
 import { initiateCreditPackCheckout as initiateChariowCheckout } from '../lib/payments/chariowCreditsCheckout';
 import { initiateCreditPackCheckout as initiateFedaPayCheckout } from '../lib/payments/fedapayCreditsCheckout';
 import { ChariowContactModal, type ChariowContactFields } from '../components/ChariowContactModal';
+
+// SasPay (2026-10) est désormais le prestataire PRINCIPAL — essayé en
+// silence au clic, sans collecter d'infos de contact (email/nom résolus
+// côté serveur). Le modal Chariow/FedaPay ne s'affiche qu'en repli, et
+// uniquement sur une erreur structurelle côté SasPay (jamais sur une
+// erreur business qui échouerait identiquement partout : pack inconnu,
+// profil incomplet, flag de suspension...).
+const SASPAY_FALLBACK_ERROR_CODES = new Set(['saspay_unreachable', 'unexpected_response', 'network_error', 'server_misconfigured', 'db_error']);
 
 // Repli silencieux vers FedaPay uniquement quand Chariow n'est structurellement
 // pas en mesure de traiter ce pack (pas configuré côté Chariow, ou réponse
@@ -79,12 +88,25 @@ function BuyButton({ pack }: { pack: CreditPack }) {
 
   const ctaLabel = pack.credits ? `Recharger ${pack.credits} crédits` : "Activer l'accès illimité";
 
-  function handleClick() {
+  async function handleClick() {
     if (!CREDIT_PACKS_ENABLED) {
       setErrorMessage(CREDIT_PACKS_DISABLED_MESSAGE);
       return;
     }
-    setShowContactForm(true);
+    setErrorMessage(null);
+    setLoading(true);
+    const result = await initiateSaspayCheckout({ packId: pack.id });
+    setLoading(false);
+
+    if (result.status === 'redirect') {
+      window.location.href = result.redirectUrl;
+      return;
+    }
+    if (result.errorCode && SASPAY_FALLBACK_ERROR_CODES.has(result.errorCode)) {
+      setShowContactForm(true);
+      return;
+    }
+    setErrorMessage(result.message);
   }
 
   async function handleConfirm(fields: ChariowContactFields) {
@@ -133,7 +155,7 @@ function BuyButton({ pack }: { pack: CreditPack }) {
         />
       )}
 
-      {!CREDIT_PACKS_ENABLED && errorMessage && !showContactForm && (
+      {errorMessage && !showContactForm && (
         <div
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}
           onClick={() => setErrorMessage(null)}
