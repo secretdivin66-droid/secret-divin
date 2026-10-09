@@ -12,6 +12,12 @@
 // le client — un utilisateur ne peut donc jamais payer l'abonnement d'un
 // autre marabout.
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import countries from 'npm:i18n-iso-countries@7';
+import frLocale from 'npm:i18n-iso-countries@7/langs/fr.json' with { type: 'json' };
+import enLocale from 'npm:i18n-iso-countries@7/langs/en.json' with { type: 'json' };
+
+countries.registerLocale(frLocale);
+countries.registerLocale(enLocale);
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -41,28 +47,46 @@ interface SaspaySessionResponse {
   error?: { message?: string; code?: string } | Record<string, string[]>;
 }
 
-// Pays où SasPay a une lacune connue (ex. Orange Money Guinée —
-// orange_gn marqué is_active=false dans leur catalogue, vérifié en
-// direct le 2026-10-09) — refusé ICI, avant d'appeler SasPay, plutôt que
-// de laisser le client arriver sur une page de paiement où son opérateur
-// n'apparaît pas. Le frontend route alors automatiquement vers Chariow
-// (voir MaraboutPaymentButton.tsx, qui traite
-// 'country_not_supported_by_saspay' comme un code de repli).
-const SASPAY_UNSUPPORTED_COUNTRIES = new Set(['GN']);
+// Normalise un texte libre (accents, casse, espaces/apostrophes/tirets)
+// pour le comparer à un nom de pays — marabouts.pays est saisi à la main
+// à l'inscription, jamais normalisé à la saisie.
+function normalizeCountryText(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z]/g, '');
+}
 
-// Reconnaît la Guinée dans un champ texte libre non normalisé
-// (marabouts.pays, saisi à la main à l'inscription) — couvre les
-// graphies les plus courantes, pas une liste exhaustive.
-const GUINEA_PROFILE_PATTERNS = [/guin[ée]e?/i, /\bguinea\b/i, /conakry/i, /^gn$/i];
+// Table nom-normalisé -> code ISO alpha-2, construite une fois au
+// démarrage depuis i18n-iso-countries (fr puis en, mêmes locales que
+// ChariowContactModal.tsx côté frontend) — couvre les ~245 pays/
+// territoires au lieu d'une liste de regex à la main limitée à la
+// Guinée comme avant.
+const COUNTRY_NAME_TO_CODE = new Map<string, string>();
+for (const [code, name] of Object.entries(countries.getNames('fr'))) {
+  COUNTRY_NAME_TO_CODE.set(normalizeCountryText(name as string), code);
+}
+for (const [code, name] of Object.entries(countries.getNames('en'))) {
+  const key = normalizeCountryText(name as string);
+  if (!COUNTRY_NAME_TO_CODE.has(key)) COUNTRY_NAME_TO_CODE.set(key, code);
+}
 
-// Retourne true/false quand le champ est renseigné (Guinée ou pas), null
-// seulement quand le champ est VIDE — ne pas confondre les deux : un
-// profil explicitement rempli avec un autre pays doit arrêter la
-// résolution ici, jamais tomber sur le repli IP (voir resolveCountryCode).
-function isGuineaProfileText(text: string | null | undefined): boolean | null {
+// Variantes informelles vues dans marabouts.pays (texte libre) que la
+// table ci-dessus ne reconnaît pas comme nom de pays officiel.
+const INFORMAL_COUNTRY_ALIASES: Record<string, string> = {
+  conakry: 'GN',
+  burkina: 'BF',
+  rci: 'CI',
+};
+
+type ProfileCountryResolution = string | 'EMPTY' | 'UNRECOGNIZED';
+
+function resolveProfileCountryCode(text: string | null | undefined): ProfileCountryResolution {
   const normalized = text?.trim();
-  if (!normalized) return null;
-  return GUINEA_PROFILE_PATTERNS.some((re) => re.test(normalized));
+  if (!normalized) return 'EMPTY';
+  const key = normalizeCountryText(normalized);
+  return COUNTRY_NAME_TO_CODE.get(key) ?? INFORMAL_COUNTRY_ALIASES[key] ?? 'UNRECOGNIZED';
 }
 
 // Repli IP → pays via ipwho.is (gratuit, HTTPS, aucune clé requise) —
@@ -82,10 +106,82 @@ async function countryFromIp(req: Request): Promise<string | null> {
 }
 
 async function resolveCountryCode(req: Request, profileCountry: string | null | undefined): Promise<string | null> {
-  const fromProfile = isGuineaProfileText(profileCountry);
-  if (fromProfile === true) return 'GN';
-  if (fromProfile === false) return null; // profil renseigné, explicitement pas la Guinée — pas de repli IP
-  return await countryFromIp(req); // profil vide uniquement
+  const fromProfile = resolveProfileCountryCode(profileCountry);
+  if (fromProfile === 'EMPTY') return await countryFromIp(req); // profil vide uniquement
+  if (fromProfile === 'UNRECOGNIZED') return null; // profil renseigné mais non reconnu — jamais de repli IP
+  return fromProfile; // code ISO reconnu depuis le texte du profil
+}
+
+interface SaspayNetwork {
+  country?: string;
+  code?: string;
+  is_active?: boolean;
+}
+interface SaspayCountryRow {
+  id?: string;
+  iso_code?: string;
+}
+
+// Pays forcés vers Chariow indépendamment du catalogue SasPay — décision
+// produit, pas automatique. La Guinée reste ici même si mtn_gn est actif
+// (vérifié le 2026-10-09) : Orange Money (orange_gn, inactif) y est jugé
+// trop dominant pour laisser un client guinéen sur SasPay avec un seul
+// opérateur restant. Les autres pays suivent la règle générale ci-dessous
+// (au moins un réseau actif suffit), voir l'échange du 2026-10-09 où
+// Sénégal/Bénin/Cameroun ont été explicitement exclus de ce traitement
+// strict malgré chacun un réseau mineur inactif (e_money_sn/coris_bj/
+// eu_mobile_cm).
+const SASPAY_FORCED_UNSUPPORTED_COUNTRIES = new Set(['GN']);
+
+// Vérifie en direct auprès de SasPay si AU MOINS UN réseau mobile money
+// catalogué pour ce pays est actif — un pays n'est traité comme non
+// couvert par SasPay (et basculé vers Chariow, voir
+// MaraboutPaymentButton.tsx qui traite 'country_not_supported_by_saspay'
+// comme un code de repli) que s'il a au moins un réseau catalogué et
+// qu'AUCUN n'est actif. Un pays avec un réseau mineur inactif mais
+// d'autres actifs (ex. Sénégal/Bénin/Cameroun) reste donc sur SasPay —
+// seule la Guinée est traitée plus strictement, via
+// SASPAY_FORCED_UNSUPPORTED_COUNTRIES ci-dessus. Aucun réseau catalogué
+// pour ce pays, ou tout échec réseau/API -> true (ouvert par défaut) :
+// ni l'absence de données ni un problème de ce contrôle ne doivent
+// jamais bloquer un paiement SasPay qui aurait fonctionné — même
+// principe que le repli IP ci-dessus.
+async function isSaspayCountrySupported(countryCode: string, apiKey: string): Promise<boolean> {
+  try {
+    const [networksRes, countriesRes] = await Promise.all([
+      fetch('https://api.saspay.me/api/v1/networks/?page_size=100', {
+        headers: { Authorization: `Bearer ${apiKey}` },
+        signal: AbortSignal.timeout(3000),
+      }),
+      fetch('https://api.saspay.me/api/v1/countries/?page_size=100', {
+        headers: { Authorization: `Bearer ${apiKey}` },
+        signal: AbortSignal.timeout(3000),
+      }),
+    ]);
+    const [networksJson, countriesJson] = await Promise.all([
+      networksRes.json().catch(() => null),
+      countriesRes.json().catch(() => null),
+    ]);
+
+    const networks: SaspayNetwork[] | undefined = networksJson?.data?.results;
+    const countryList: SaspayCountryRow[] | undefined = countriesJson?.data;
+    if (!Array.isArray(networks) || !Array.isArray(countryList)) return true;
+
+    const countryRow = countryList.find((c) => c.iso_code === countryCode);
+    if (!countryRow) return true;
+
+    // 'internal_adjustment' est un pseudo-réseau comptable interne à
+    // SasPay (jamais proposé au client sur leur page de paiement) —
+    // confirmé présent/inactif sur plusieurs pays sans rapport entre eux
+    // le 2026-10-09, exclu pour ne pas fausser le diagnostic.
+    const relevant = networks.filter((n) => n.country === countryRow.id && n.code !== 'internal_adjustment');
+    if (relevant.length === 0) return true;
+
+    return relevant.some((n) => n.is_active === true);
+  } catch (err) {
+    console.error('isSaspayCountrySupported: check failed, defaulting to supported', { countryCode, error: err });
+    return true;
+  }
 }
 
 Deno.serve(async (req) => {
@@ -142,7 +238,10 @@ Deno.serve(async (req) => {
     }
 
     const countryCode = await resolveCountryCode(req, marabout.pays);
-    if (countryCode && SASPAY_UNSUPPORTED_COUNTRIES.has(countryCode)) {
+    if (
+      countryCode &&
+      (SASPAY_FORCED_UNSUPPORTED_COUNTRIES.has(countryCode) || !(await isSaspayCountrySupported(countryCode, apiKey)))
+    ) {
       return jsonResponse({ error: 'country_not_supported_by_saspay' }, 400);
     }
 
