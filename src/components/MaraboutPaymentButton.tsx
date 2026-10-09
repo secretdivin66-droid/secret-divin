@@ -16,7 +16,7 @@ interface Props {
 // s'affiche qu'en repli, et seulement sur une erreur structurelle côté
 // SasPay (jamais sur une erreur business qui échouerait identiquement
 // partout).
-const SASPAY_FALLBACK_ERROR_CODES = new Set(['saspay_unreachable', 'unexpected_response', 'network_error', 'server_misconfigured', 'db_error']);
+const SASPAY_FALLBACK_ERROR_CODES = new Set(['saspay_unreachable', 'unexpected_response', 'network_error', 'server_misconfigured', 'db_error', 'country_not_supported_by_saspay']);
 
 // Repli silencieux vers FedaPay — même logique que CreditsPage.tsx : ne se
 // déclenche que quand Chariow n'est structurellement pas en mesure de

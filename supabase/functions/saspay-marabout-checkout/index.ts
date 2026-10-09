@@ -41,6 +41,53 @@ interface SaspaySessionResponse {
   error?: { message?: string; code?: string } | Record<string, string[]>;
 }
 
+// Pays où SasPay a une lacune connue (ex. Orange Money Guinée —
+// orange_gn marqué is_active=false dans leur catalogue, vérifié en
+// direct le 2026-10-09) — refusé ICI, avant d'appeler SasPay, plutôt que
+// de laisser le client arriver sur une page de paiement où son opérateur
+// n'apparaît pas. Le frontend route alors automatiquement vers Chariow
+// (voir MaraboutPaymentButton.tsx, qui traite
+// 'country_not_supported_by_saspay' comme un code de repli).
+const SASPAY_UNSUPPORTED_COUNTRIES = new Set(['GN']);
+
+// Reconnaît la Guinée dans un champ texte libre non normalisé
+// (marabouts.pays, saisi à la main à l'inscription) — couvre les
+// graphies les plus courantes, pas une liste exhaustive.
+const GUINEA_PROFILE_PATTERNS = [/guin[ée]e?/i, /\bguinea\b/i, /conakry/i, /^gn$/i];
+
+// Retourne true/false quand le champ est renseigné (Guinée ou pas), null
+// seulement quand le champ est VIDE — ne pas confondre les deux : un
+// profil explicitement rempli avec un autre pays doit arrêter la
+// résolution ici, jamais tomber sur le repli IP (voir resolveCountryCode).
+function isGuineaProfileText(text: string | null | undefined): boolean | null {
+  const normalized = text?.trim();
+  if (!normalized) return null;
+  return GUINEA_PROFILE_PATTERNS.some((re) => re.test(normalized));
+}
+
+// Repli IP → pays via ipwho.is (gratuit, HTTPS, aucune clé requise) —
+// timeout court et échec silencieux : une géoloc ratée ne doit JAMAIS
+// bloquer un paiement, juste faire perdre cette optimisation de routage.
+async function countryFromIp(req: Request): Promise<string | null> {
+  const ip = req.headers.get('cf-connecting-ip') ?? req.headers.get('x-forwarded-for')?.split(',')[0]?.trim();
+  if (!ip) return null;
+  try {
+    const res = await fetch(`https://ipwho.is/${ip}?fields=country_code,success`, { signal: AbortSignal.timeout(2000) });
+    const json = await res.json().catch(() => null);
+    if (!json || json.success === false) return null;
+    return typeof json.country_code === 'string' ? json.country_code : null;
+  } catch {
+    return null;
+  }
+}
+
+async function resolveCountryCode(req: Request, profileCountry: string | null | undefined): Promise<string | null> {
+  const fromProfile = isGuineaProfileText(profileCountry);
+  if (fromProfile === true) return 'GN';
+  if (fromProfile === false) return null; // profil renseigné, explicitement pas la Guinée — pas de repli IP
+  return await countryFromIp(req); // profil vide uniquement
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: CORS_HEADERS });
@@ -86,12 +133,17 @@ Deno.serve(async (req) => {
 
     const { data: marabout, error: maraboutError } = await adminClient
       .from('marabouts')
-      .select('id')
+      .select('id, pays')
       .eq('user_id', user.id)
       .maybeSingle();
 
     if (maraboutError || !marabout) {
       return jsonResponse({ error: 'no_marabout_profile' }, 400);
+    }
+
+    const countryCode = await resolveCountryCode(req, marabout.pays);
+    if (countryCode && SASPAY_UNSUPPORTED_COUNTRIES.has(countryCode)) {
+      return jsonResponse({ error: 'country_not_supported_by_saspay' }, 400);
     }
 
     const { data: plan, error: planError } = await adminClient

@@ -13,7 +13,7 @@ import { ChariowContactModal, type ChariowContactFields } from '../components/Ch
 // uniquement sur une erreur structurelle côté SasPay (jamais sur une
 // erreur business qui échouerait identiquement partout : pack inconnu,
 // profil incomplet, flag de suspension...).
-const SASPAY_FALLBACK_ERROR_CODES = new Set(['saspay_unreachable', 'unexpected_response', 'network_error', 'server_misconfigured', 'db_error']);
+const SASPAY_FALLBACK_ERROR_CODES = new Set(['saspay_unreachable', 'unexpected_response', 'network_error', 'server_misconfigured', 'db_error', 'country_not_supported_by_saspay']);
 
 // Repli silencieux vers FedaPay uniquement quand Chariow n'est structurellement
 // pas en mesure de traiter ce pack (pas configuré côté Chariow, ou réponse
