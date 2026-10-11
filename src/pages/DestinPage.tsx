@@ -5,7 +5,7 @@ import html2canvas from 'html2canvas';
 import { supabase } from '../lib/supabaseClient';
 import { CreditModal } from '../components/CreditModal';
 import { AudioButton } from '../components/AudioButton';
-import { calculateWeight, GENDER_BONUS, generateSquare, toArabicIndic } from '../utils/mystique';
+import { calculateWeight, GENDER_BONUS } from '../utils/mystique';
 import type { SpendCreditsResult } from '../utils/mystique';
 import { callGeminiProxy } from '../lib/geminiProxy';
 import { isAdminUser } from '../utils/roles';
@@ -95,7 +95,6 @@ interface DestinData {
     usage?: string;
   };
   talisman: {
-    squareType: string;
     divineName1: { arabic: string; withYa: string; meaning: string };
     divineName2: { arabic: string; withYa: string; meaning: string };
     // Nouveau format — optionnels pour compatibilité avec le cache.
@@ -202,26 +201,17 @@ function recipientFromR3(r: number): string {
   return 'un ENFANT';
 }
 
-// Répétitions du talisman (Étape 2 : noms divins, Étape 4 : carré magique) —
-// calculées en code à partir de calculateWeight() (inchangée, voir
-// utils/mystique.ts), pas demandées à Gemini : un LLM ne recalcule pas une
-// somme Abjad de façon fiable ni identique d'une génération à l'autre,
-// alors qu'une formule explicite en JS l'est par construction ("explicite
-// et reproductible", comme demandé). Ramène toute valeur brute > 999 à un
-// nombre à 2-3 chiffres par division entière, pour rester un nombre de
-// répétitions raisonnable à réciter.
+// Répétitions du talisman (Étape 2 : noms divins) — calculées en code à
+// partir de calculateWeight() (inchangée, voir utils/mystique.ts), pas
+// demandées à Gemini : un LLM ne recalcule pas une somme Abjad de façon
+// fiable ni identique d'une génération à l'autre, alors qu'une formule
+// explicite en JS l'est par construction ("explicite et reproductible",
+// comme demandé). Ramène toute valeur brute > 999 à un nombre à 2-3
+// chiffres par division entière, pour rester un nombre de répétitions
+// raisonnable à réciter.
 function repetitionsFromAbjad(arabicText: string): number {
   const raw = calculateWeight(arabicText);
   return raw > 999 ? Math.floor(raw / 10) : raw;
-}
-
-// Répétitions du carré magique (Étape 4) — dérivées du PM global (celui qui
-// sert déjà à générer le carré via generateSquare(PM, ...)), modulo 40 :
-// nombre traditionnellement utilisé pour les pratiques répétées dans cette
-// tradition. "|| 40" évite un résultat de 0 répétition quand PM est un
-// multiple exact de 40.
-function squareRepetitionsFromPM(pm: number): number {
-  return (pm % 40) || 40;
 }
 
 function buildDestinPrompt(params: {
@@ -339,7 +329,6 @@ Retourne UNIQUEMENT du JSON valide :
     "symbolism": "Court paragraphe expliquant le symbolisme de cette plante en lien avec l'élément ${element}."
   },
   "talisman": {
-    "squareType": "3x3/4x4/5x5",
     "divineName1": { "arabic": "nom SANS ال", "withYa": "يا + nom", "meaning": "signification" },
     "divineName2": { "arabic": "nom SANS ال", "withYa": "يا + nom", "meaning": "signification" },
     "openingFormula": "Formule d'ouverture du rituel, adaptée à la religion ${religion} (ex: Bismillah pour l'Islam).",
@@ -566,25 +555,15 @@ export function DestinPage() {
     pdf.save(`destin-${firstName}-secretdivin.pdf`);
   }
 
-  const squareSize = result
-    ? result.data.talisman.squareType === '3x3'
-      ? 3
-      : result.data.talisman.squareType === '4x4'
-      ? 4
-      : 5
-    : 3;
-  const talismanCells = result ? generateSquare(result.PM, squareSize) : [];
-
   // Cohérence garantie par construction plutôt que par instruction au LLM :
   // l'Étape 3 réutilise directement verse.repetitions (Point Verset) et
-  // l'Étape 6 réutilise directement plant.ritualDays (Point Plante), au
+  // l'Étape 5 réutilise directement plant.ritualDays (Point Plante), au
   // lieu de demander à Gemini de générer deux fois la même valeur dans deux
   // objets JSON différents — un LLM peut désobéir à "doit être identique"
   // d'une génération à l'autre, une seule source de vérité ne peut pas.
   const divineName1Reps = result ? repetitionsFromAbjad(result.data.talisman.divineName1.arabic) : 0;
   const divineName2Reps = result ? repetitionsFromAbjad(result.data.talisman.divineName2.arabic) : 0;
   const verseReps = result?.data.verse.repetitions ?? 33;
-  const squareReps = result ? squareRepetitionsFromPM(result.PM) : 0;
   // Repli sur l'ancien format "ritualDuration" (ex: "7 jours") si un
   // résultat en cache sessionStorage a été généré avant ce changement et
   // n'a pas encore le nouveau champ plant.ritualDays.
@@ -965,33 +944,7 @@ export function DestinPage() {
                   </div>
                 </div>
 
-                <div
-                  className="mx-auto mt-2"
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: `repeat(${squareSize}, 44px)`,
-                    gap: '2px',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {talismanCells.map((v, i) => (
-                    <div
-                      key={i}
-                      className="arabic flex items-center justify-center font-bold"
-                      style={{
-                        width: 44,
-                        height: 44,
-                        background: '#ffffff',
-                        border: '2px solid #f5c842',
-                        color: '#0d1545',
-                      }}
-                    >
-                      {toArabicIndic(v)}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Comment utiliser ton talisman — 6 étapes fixes ; le texte de
+                {/* Comment utiliser ton talisman — 5 étapes fixes ; le texte de
                     chaque étape est composé ici plutôt que généré par Gemini
                     (fiabilité + cohérence garantie avec les Points Verset/
                     Plante ci-dessus, voir les commentaires sur divineName1Reps/
@@ -1027,22 +980,15 @@ export function DestinPage() {
                     </div>
 
                     <div>
-                      <p className="text-white"><span className="text-or font-bold">Étape 4 — </span>Reproduis le carré ci-dessus.</p>
-                      <div className="flex mt-2">
-                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-or text-white">{squareReps} fois</span>
-                      </div>
-                    </div>
-
-                    <div>
                       <p className="text-white">
-                        <span className="text-or font-bold">Étape 5 — </span>
+                        <span className="text-or font-bold">Étape 4 — </span>
                         Prépare une décoction de {result.data.plant.nomFrancais}, plonges-y la tablette encore chaude, puis laisse infuser et refroidir.
                       </p>
                     </div>
 
                     <div>
                       <p className="text-white">
-                        <span className="text-or font-bold">Étape 6 — </span>
+                        <span className="text-or font-bold">Étape 5 — </span>
                         Lave-toi avec cette eau pendant {plantDays} jours consécutifs
                         {result.data.talisman.bathTiming ? `, ${result.data.talisman.bathTiming}` : ''}.
                         {result.data.talisman.openingFormula && result.data.talisman.closingFormula
