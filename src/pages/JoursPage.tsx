@@ -5,7 +5,7 @@ import html2canvas from 'html2canvas';
 import { supabase } from '../lib/supabaseClient';
 import { CreditModal } from '../components/CreditModal';
 import { AudioButton } from '../components/AudioButton';
-import { calculateWeight, GENDER_BONUS, generateSquare, toArabicIndic, JOURS_DATA } from '../utils/mystique';
+import { calculateWeight, GENDER_BONUS, JOURS_DATA } from '../utils/mystique';
 import type { SpendCreditsResult } from '../utils/mystique';
 import { callGeminiProxy } from '../lib/geminiProxy';
 import { isAdminUser } from '../utils/roles';
@@ -44,8 +44,6 @@ interface JoursData {
     withYa: string;
     transliteration: string;
     meaning: string;
-    repetitions: number;
-    bestTime: string;
     reason: string;
   };
   verse: {
@@ -194,8 +192,6 @@ Retourne UNIQUEMENT du JSON valide :
     "withYa": "يا + nom",
     "transliteration": "Ya ...",
     "meaning": "signification",
-    "repetitions": 99,
-    "bestTime": "Après [prière]",
     "reason": "1 phrase sur pourquoi ce nom pour ce jour et ce PM."
   },
   "verse": {
@@ -420,9 +416,6 @@ export function JoursPage() {
 
     pdf.save(`jours-${firstName}-${selectedDay}-secretdivin.pdf`);
   }
-
-  const squareSize = 3;
-  const talismanCells = result ? generateSquare(result.PMtotal, squareSize) : [];
 
   // Répétitions du rituel "Talisman de ton Jour" — calculées en code à
   // partir du PM personnel (poids mystique du nom), pas demandées à
@@ -666,12 +659,6 @@ export function JoursPage() {
               <div className="rounded-lg text-center p-8" style={{ background: '#0a0f2e', border: '1px solid #f5c842' }}>
                 <BlocTitle>Ton Nom Divin</BlocTitle>
                 <p className="arabic text-or text-[2.5em]">{result.data.divineName.withYa}</p>
-                <div className="flex justify-center mt-4">
-                  <span className="px-4 py-2 rounded-full text-sm font-bold bg-or text-white">
-                    À réciter {result.data.divineName.repetitions} fois
-                  </span>
-                </div>
-                <p className="mt-3 text-white">Meilleur moment : {result.data.divineName.bestTime}</p>
                 <p className="mt-2" style={{ color: '#a0aec0' }}>
                   {result.data.divineName.reason}
                 </p>
@@ -696,6 +683,28 @@ export function JoursPage() {
                 <div className="mt-4 flex justify-center">
                   <AudioButton text={result.data.verse.arabic} label="Écouter le verset" />
                 </div>
+              </div>
+
+              <Separateur />
+
+              {/* BLOC — Plante Mystique (déplacé juste après Verset Coranique) */}
+              <div className="rounded-lg text-center p-6" style={{ background: '#0d2b1a', border: '1px solid #f5c842' }}>
+                <BlocTitle>Plante Mystique</BlocTitle>
+                <p className="text-white font-bold">
+                  {result.data.plant.nomFrancais} / {result.data.plant.nomBambara} /{' '}
+                  <span className="italic">{result.data.plant.nomScientifique}</span>
+                </p>
+                <p className="mt-2 text-white">Partie : {result.data.plant.partie}</p>
+                <p className="text-white">{result.data.plant.usage}</p>
+                <p className="mt-2" style={{ color: '#a0aec0' }}>
+                  {result.data.plant.reason}
+                </p>
+                <button
+                  onClick={() => window.open(result.data.plant.lienWikipedia, '_blank', 'noopener,noreferrer')}
+                  className="btn-secondaire rounded mt-4"
+                >
+                  En savoir plus
+                </button>
               </div>
 
               <Separateur />
@@ -741,42 +750,7 @@ export function JoursPage() {
                   {result.data.talisman.verseForTalisman.ayah}
                 </p>
 
-                <div
-                  className="mx-auto mt-5"
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: `repeat(${squareSize}, 56px)`,
-                    gap: '2px',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {talismanCells.map((v, i) => (
-                    <div
-                      key={i}
-                      className="arabic flex items-center justify-center font-bold"
-                      style={{
-                        width: 56,
-                        height: 56,
-                        background: '#ffffff',
-                        border: '2px solid #f5c842',
-                        color: '#0d1545',
-                      }}
-                    >
-                      {toArabicIndic(v)}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex justify-center mt-4">
-                  <span
-                    className="px-4 py-2 rounded-full text-sm font-bold"
-                    style={{ background: '#1b3a1f', color: '#4caf50' }}
-                  >
-                    ✓ Somme = {result.PMtotal}
-                  </span>
-                </div>
-
-                {/* Rituel en 5 étapes fixes — calculé en code (voir
+                {/* Rituel en 4 étapes fixes — calculé en code (voir
                     divineNameWriteReps/verseWriteReps/zikrDivineNameReps
                     plus haut dans ce fichier) plutôt que généré par Gemini,
                     même principe que le talisman de DestinPage. */}
@@ -807,22 +781,13 @@ export function JoursPage() {
 
                   <div>
                     <p className="text-white">
-                      <span className="text-or font-bold">Étape 3 — </span>Reproduis le carré magique ci-dessus.
-                    </p>
-                    <div className="flex mt-2">
-                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-or text-white">3 fois</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <p className="text-white">
-                      <span className="text-or font-bold">Étape 4 — </span>Lave l'écriture pour obtenir le talisman.
+                      <span className="text-or font-bold">Étape 3 — </span>Lave l'écriture pour obtenir le talisman.
                     </p>
                   </div>
 
                   <div>
                     <p className="text-white">
-                      <span className="text-or font-bold">Étape 5 — </span>
+                      <span className="text-or font-bold">Étape 4 — </span>
                       Fais bouillir ta plante mystique ({result.data.plant.nomFrancais}), mélange l'infusion obtenue
                       avec le talisman, puis lave-toi avec ce mélange pendant 14 jours consécutifs.
                     </p>
@@ -868,28 +833,6 @@ export function JoursPage() {
                 <div className="mt-4 flex justify-center">
                   <AudioButton text={result.data.invocation.arabicWithHarakat} label="Écouter l'invocation" />
                 </div>
-              </div>
-
-              <Separateur />
-
-              {/* BLOC 10 — Plante Mystique */}
-              <div className="rounded-lg text-center p-6" style={{ background: '#0d2b1a', border: '1px solid #f5c842' }}>
-                <BlocTitle>Plante Mystique</BlocTitle>
-                <p className="text-white font-bold">
-                  {result.data.plant.nomFrancais} / {result.data.plant.nomBambara} /{' '}
-                  <span className="italic">{result.data.plant.nomScientifique}</span>
-                </p>
-                <p className="mt-2 text-white">Partie : {result.data.plant.partie}</p>
-                <p className="text-white">{result.data.plant.usage}</p>
-                <p className="mt-2" style={{ color: '#a0aec0' }}>
-                  {result.data.plant.reason}
-                </p>
-                <button
-                  onClick={() => window.open(result.data.plant.lienWikipedia, '_blank', 'noopener,noreferrer')}
-                  className="btn-secondaire rounded mt-4"
-                >
-                  En savoir plus
-                </button>
               </div>
 
               <Separateur />
