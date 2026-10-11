@@ -5,7 +5,7 @@ import html2canvas from 'html2canvas';
 import { supabase } from '../lib/supabaseClient';
 import { CreditModal } from '../components/CreditModal';
 import { AudioButton } from '../components/AudioButton';
-import { calculateWeight, GENDER_BONUS, generateSquare, JOURS_DATA } from '../utils/mystique';
+import { calculateWeight, GENDER_BONUS, generateSquare, toArabicIndic, JOURS_DATA } from '../utils/mystique';
 import type { SpendCreditsResult } from '../utils/mystique';
 import { callGeminiProxy } from '../lib/geminiProxy';
 import { isAdminUser } from '../utils/roles';
@@ -62,12 +62,9 @@ interface JoursData {
     explanation: string;
   };
   talisman: {
-    squareType: string;
     divineName: { arabic: string; withYa: string; meaning: string };
     verseForTalisman: { arabic: string; surah: string; ayah: string };
-    writingInstructions: string;
-    ritualDuration: string;
-    bestDayToStart: string;
+    expectedResult: string;
   };
   invocation: {
     arabicWithHarakat: string;
@@ -218,12 +215,9 @@ Retourne UNIQUEMENT du JSON valide :
     "explanation": "1 phrase sur les périodes favorables."
   },
   "talisman": {
-    "squareType": "3x3",
     "divineName": { "arabic": "nom SANS ال", "withYa": "يا + nom", "meaning": "signification" },
     "verseForTalisman": { "arabic": "verset SANS harakat", "surah": "sourate", "ayah": "numéro" },
-    "writingInstructions": "Instructions pour écrire le talisman du jour.",
-    "ritualDuration": "7 jours",
-    "bestDayToStart": "${selectedDay} matin"
+    "expectedResult": "5 phrases décrivant le résultat spirituel attendu après ce rituel complet (talisman écrit puis lavé, 14 jours de lavage avec la plante, zikr quotidien), adressées directement à ${firstName}."
   },
   "invocation": {
     "arabicWithHarakat": "invocation AVEC harakat contenant يا + nom divin + prénom arabe + mère arabe",
@@ -429,6 +423,14 @@ export function JoursPage() {
 
   const squareSize = 3;
   const talismanCells = result ? generateSquare(result.PMtotal, squareSize) : [];
+
+  // Répétitions du rituel "Talisman de ton Jour" — calculées en code à
+  // partir du PM personnel (poids mystique du nom), pas demandées à
+  // Gemini : même logique que DestinPage (fiabilité + reproductibilité
+  // d'une génération à l'autre).
+  const divineNameWriteReps = result ? result.PM * 2 : 0;
+  const verseWriteReps = result ? result.PM : 0;
+  const zikrDivineNameReps = result ? result.PM * 5 : 0;
 
   return (
     <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
@@ -727,9 +729,9 @@ export function JoursPage() {
 
               <Separateur />
 
-              {/* BLOC 8 — Talisman du Jour */}
+              {/* BLOC 8 — Talisman de ton Jour */}
               <div className="carte rounded-lg text-center">
-                <BlocTitle>Talisman du Jour</BlocTitle>
+                <BlocTitle>Talisman de ton Jour</BlocTitle>
                 <p className="arabic text-or text-[1.8em]">{result.data.talisman.divineName.withYa}</p>
                 <p className="text-sm mt-1 text-white">{result.data.talisman.divineName.meaning}</p>
 
@@ -751,7 +753,7 @@ export function JoursPage() {
                   {talismanCells.map((v, i) => (
                     <div
                       key={i}
-                      className="flex items-center justify-center font-bold"
+                      className="arabic flex items-center justify-center font-bold"
                       style={{
                         width: 56,
                         height: 56,
@@ -760,7 +762,7 @@ export function JoursPage() {
                         color: '#0d1545',
                       }}
                     >
-                      {v}
+                      {toArabicIndic(v)}
                     </div>
                   ))}
                 </div>
@@ -774,12 +776,80 @@ export function JoursPage() {
                   </span>
                 </div>
 
-                <p className="mt-4 text-white">{result.data.talisman.writingInstructions}</p>
+                {/* Rituel en 5 étapes fixes — calculé en code (voir
+                    divineNameWriteReps/verseWriteReps/zikrDivineNameReps
+                    plus haut dans ce fichier) plutôt que généré par Gemini,
+                    même principe que le talisman de DestinPage. */}
+                <div className="mt-6 flex flex-col gap-4 text-left">
+                  <p className="text-or font-bold text-center">Comment réaliser ton talisman ?</p>
 
-                <div className="flex justify-center mt-3">
-                  <span className="px-3 py-1 rounded-full text-sm font-bold border border-or text-or">
-                    Commencer un {result.data.talisman.bestDayToStart}
-                  </span>
+                  <div>
+                    <p className="text-white">
+                      <span className="text-or font-bold">Étape 1 — </span>Écris ton Nom Divin ci-dessus.
+                    </p>
+                    <div className="flex mt-2">
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-or text-white">
+                        {divineNameWriteReps} fois
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-white">
+                      <span className="text-or font-bold">Étape 2 — </span>Écris ton Verset Coranique ci-dessus.
+                    </p>
+                    <div className="flex mt-2">
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-or text-white">
+                        {verseWriteReps} fois
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-white">
+                      <span className="text-or font-bold">Étape 3 — </span>Reproduis le carré magique ci-dessus.
+                    </p>
+                    <div className="flex mt-2">
+                      <span className="px-3 py-1 rounded-full text-xs font-bold bg-or text-white">3 fois</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-white">
+                      <span className="text-or font-bold">Étape 4 — </span>Lave l'écriture pour obtenir le talisman.
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-white">
+                      <span className="text-or font-bold">Étape 5 — </span>
+                      Fais bouillir ta plante mystique ({result.data.plant.nomFrancais}), mélange l'infusion obtenue
+                      avec le talisman, puis lave-toi avec ce mélange pendant 14 jours consécutifs.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-5 text-left flex flex-col gap-2" style={{ borderTop: '1px solid rgba(245,200,66,0.2)' }}>
+                  <p className="text-or font-bold text-center">Zikr pendant les 14 jours de lavage</p>
+                  <p className="text-white">Fais une prière de 2 rakas, avec les sourates de ton choix.</p>
+                  <p className="text-white">Après le salam, récite dans l'ordre :</p>
+                  <div className="flex flex-wrap justify-center gap-2 mt-1">
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-or text-white">Al-Fatiha — 1 fois</span>
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-or text-white">Astagfiroullah — 70 fois</span>
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-or text-white">Salat ala Nabi — 100 fois</span>
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-or text-white">
+                      Ton Nom Divin — {zikrDivineNameReps} fois
+                    </span>
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-or text-white">
+                      Ton Verset Coranique — 14 fois
+                    </span>
+                    <span className="px-3 py-1 rounded-full text-xs font-bold bg-or text-white">Ton invocation — 3 fois</span>
+                  </div>
+                </div>
+
+                <div className="mt-6 pt-5" style={{ borderTop: '1px solid rgba(245,200,66,0.2)' }}>
+                  <p className="text-or font-bold">Résultat attendu</p>
+                  <p className="mt-2 text-white">{result.data.talisman.expectedResult}</p>
                 </div>
               </div>
 
