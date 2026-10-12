@@ -250,14 +250,14 @@ export function magicSquareSum(cells: number[], size: number): number {
 }
 
 export const JOURS_DATA: Record<string, {
-  poids: number; planete: string; planeteArabe: string;
+  planete: string; planeteArabe: string;
   couleurBordure: string; description: string;
 }> = {
-  'Lundi':    { poids: 2860, planete: 'Lune',     planeteArabe: 'القمر',    couleurBordure: '#4caf50', description: 'Jour de la Lune — douceur, intuition et spiritualité' },
-  'Mardi':    { poids: 2709, planete: 'Mars',     planeteArabe: 'المريخ',   couleurBordure: '#e53935', description: 'Jour de Mars — courage, énergie et détermination' },
-  'Mercredi': { poids: 2795, planete: 'Mercure',  planeteArabe: 'عطارد',    couleurBordure: '#f5c842', description: 'Jour de Mercure — intelligence, communication et commerce' },
-  'Jeudi':    { poids: 2856, planete: 'Jupiter',  planeteArabe: 'المشتري',  couleurBordure: '#3f51b5', description: 'Jour de Jupiter — sagesse, richesse et chance' },
-  'Vendredi': { poids: 2766, planete: 'Vénus',    planeteArabe: 'الزهرة',   couleurBordure: '#e91e63', description: 'Jour de Vénus — amour, beauté et harmonie' },
-  'Samedi':   { poids: 2847, planete: 'Saturne',  planeteArabe: 'زحل',      couleurBordure: '#673ab7', description: 'Jour de Saturne — discipline, patience et mystère' },
-  'Dimanche': { poids: 2772, planete: 'Soleil',   planeteArabe: 'الشمس',    couleurBordure: '#ff9800', description: 'Jour du Soleil — lumière, leadership et gloire' },
+  'Lundi':    { planete: 'Lune',     planeteArabe: 'القمر',    couleurBordure: '#4caf50', description: 'Jour de la Lune — douceur, intuition et spiritualité' },
+  'Mardi':    { planete: 'Mars',     planeteArabe: 'المريخ',   couleurBordure: '#e53935', description: 'Jour de Mars — courage, énergie et détermination' },
+  'Mercredi': { planete: 'Mercure',  planeteArabe: 'عطارد',    couleurBordure: '#f5c842', description: 'Jour de Mercure — intelligence, communication et commerce' },
+  'Jeudi':    { planete: 'Jupiter',  planeteArabe: 'المشتري',  couleurBordure: '#3f51b5', description: 'Jour de Jupiter — sagesse, richesse et chance' },
+  'Vendredi': { planete: 'Vénus',    planeteArabe: 'الزهرة',   couleurBordure: '#e91e63', description: 'Jour de Vénus — amour, beauté et harmonie' },
+  'Samedi':   { planete: 'Saturne',  planeteArabe: 'زحل',      couleurBordure: '#673ab7', description: 'Jour de Saturne — discipline, patience et mystère' },
+  'Dimanche': { planete: 'Soleil',   planeteArabe: 'الشمس',    couleurBordure: '#ff9800', description: 'Jour du Soleil — lumière, leadership et gloire' },
 };

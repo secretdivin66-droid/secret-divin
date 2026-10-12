@@ -33,8 +33,6 @@ interface JoursData {
   };
   numerology: {
     pmPersonal: number;
-    pmDay: number;
-    pmTotal: number;
     element: string;
     elementArabic: string;
     numberMeaning: string;
@@ -94,7 +92,6 @@ interface JoursData {
 interface CachedResult {
   data: JoursData;
   PM: number;
-  PMtotal: number;
 }
 
 async function callGeminiRaw(
@@ -142,12 +139,52 @@ function buildJoursPrompt(params: {
   motherArabic: string;
   gender: Gender;
   PM: number;
-  selectedDay: string;
-  planete: string;
-  poids: number;
-  PMtotal: number;
+  selectedDay: string | null;
+  planete: string | null;
 }): string {
-  const { firstName, nameArabic, motherName, motherArabic, gender, PM, selectedDay, planete, poids, PMtotal } = params;
+  const { firstName, nameArabic, motherName, motherArabic, gender, PM, selectedDay, planete } = params;
+  const dayKnown = selectedDay !== null;
+
+  // Le jour/la planète ne sert plus qu'à habiller le texte (ambiance,
+  // influence) — il n'entre plus dans aucun calcul (voir PM dans
+  // handleGenerate). Quand il est inconnu, on instruit explicitement
+  // Gemini à rester générique plutôt que d'inventer un jour/une planète.
+  const dayContextLine = dayKnown
+    ? `Jour de naissance : ${selectedDay}\nPlanète du jour : ${planete}`
+    : `Jour de naissance : inconnu — ne mentionne aucun jour de la semaine ni aucune planète précise, reste général sur l'énergie spirituelle de la personne.`;
+
+  const dayProfileTitle = dayKnown
+    ? 'Titre évocateur pour ce jour + planète'
+    : 'Titre évocateur pour ton profil spirituel personnel (sans mentionner de jour ni de planète)';
+  const dayProfileGlobalMessage = dayKnown
+    ? `1 phrase sur ce que signifie être né un ${selectedDay} selon la mystique islamique.`
+    : "1 phrase générale sur ta nature spirituelle profonde, sans mentionner de jour de la semaine.";
+  const dayProfilePlanetInfluence = dayKnown
+    ? `1 phrase sur l'influence de ${planete} sur ta personnalité et ton destin.`
+    : "1 phrase sur l'énergie céleste qui t'accompagne en général, sans nommer de planète précise.";
+  const dayProfilePlanetArabic = dayKnown ? JOURS_DATA[selectedDay as string].planeteArabe : '';
+
+  const characterDescription = dayKnown
+    ? `1 phrase sur la personnalité des natifs du ${selectedDay}.`
+    : '1 phrase sur ta personnalité profonde, basée sur ton prénom et ta mystique personnelle.';
+  const characterDeepNature = dayKnown
+    ? '1 phrase sur la nature profonde de cette combinaison prénom + jour.'
+    : '1 phrase sur la nature profonde de ta personnalité, basée sur ton prénom.';
+
+  const divineNameReason = dayKnown
+    ? '1 phrase sur pourquoi ce nom pour ce jour et ce PM.'
+    : '1 phrase sur pourquoi ce nom pour ton PM.';
+  const verseReason = dayKnown ? 'Pourquoi ce verset pour ce jour.' : 'Pourquoi ce verset pour toi.';
+  const plantReason = dayKnown
+    ? 'Pourquoi cette plante pour ce jour et cet objectif.'
+    : 'Pourquoi cette plante pour toi et cet objectif.';
+
+  const sacrificeTiming = dayKnown ? `${selectedDay} matin` : 'un matin, dès que possible';
+
+  const dailyAdviceInstruction = dayKnown
+    ? `1 phrase de conseil pratique pour tirer le meilleur parti de ton énergie du ${selectedDay}. Adressé directement à ${firstName}.`
+    : `1 phrase de conseil pratique pour tirer le meilleur parti de ton énergie spirituelle aujourd'hui. Adressé directement à ${firstName}.`;
+
   return `Tu es un maître de la mystique islamique ouest-africaine. Tu parles avec 'tu' en français. Ton ton est profond et rassurant.
 
 Prénom : ${firstName}
@@ -156,10 +193,7 @@ Mère : ${motherName}
 Mère arabe : ${motherArabic}
 Sexe : ${gender}
 PM personnel : ${PM}
-Jour de naissance : ${selectedDay}
-Planète du jour : ${planete}
-Poids du jour : ${poids}
-PM total (PM + poids jour) : ${PMtotal}
+${dayContextLine}
 
 LIMITE DE LONGUEUR : la somme de tous les textes du JSON (toutes les valeurs confondues) ne doit jamais dépasser 450 mots au total. Reste concis sur chaque champ tout en gardant de la profondeur.
 
@@ -167,39 +201,37 @@ Retourne UNIQUEMENT du JSON valide :
 
 {
   "dayProfile": {
-    "title": "Titre évocateur pour ce jour + planète",
-    "globalMessage": "1 phrase sur ce que signifie être né un ${selectedDay} selon la mystique islamique.",
-    "planetInfluence": "1 phrase sur l'influence de ${planete} sur ta personnalité et ton destin.",
-    "planetArabic": "${JOURS_DATA[selectedDay].planeteArabe}"
+    "title": "${dayProfileTitle}",
+    "globalMessage": "${dayProfileGlobalMessage}",
+    "planetInfluence": "${dayProfilePlanetInfluence}",
+    "planetArabic": "${dayProfilePlanetArabic}"
   },
   "character": {
     "mainTrait": "trait dominant",
-    "description": "1 phrase sur la personnalité des natifs du ${selectedDay}.",
+    "description": "${characterDescription}",
     "strengths": ["force 1","force 2","force 3","force 4"],
     "weaknesses": ["faiblesse 1","faiblesse 2","faiblesse 3"],
-    "deepNature": "1 phrase sur la nature profonde de cette combinaison prénom + jour."
+    "deepNature": "${characterDeepNature}"
   },
   "numerology": {
     "pmPersonal": ${PM},
-    "pmDay": ${poids},
-    "pmTotal": ${PMtotal},
     "element": "Feu/Terre/Air/Eau",
     "elementArabic": "النار/...",
-    "numberMeaning": "1 phrase sur la signification du PM total."
+    "numberMeaning": "1 phrase sur la signification de ce PM."
   },
   "divineName": {
     "arabic": "nom SANS ال",
     "withYa": "يا + nom",
     "transliteration": "Ya ...",
     "meaning": "signification",
-    "reason": "1 phrase sur pourquoi ce nom pour ce jour et ce PM."
+    "reason": "${divineNameReason}"
   },
   "verse": {
     "arabic": "verset SANS harakat",
     "surah": "nom sourate français",
     "ayah": "numéro",
     "meaning": "traduction française",
-    "reason": "Pourquoi ce verset pour ce jour."
+    "reason": "${verseReason}"
   },
   "favorablePeriods": {
     "dailyHours": [
@@ -228,7 +260,7 @@ Retourne UNIQUEMENT du JSON valide :
     "lienWikipedia": "https://fr.wikipedia.org/wiki/...",
     "partie": "partie utilisée",
     "usage": "comment utiliser",
-    "reason": "Pourquoi cette plante pour ce jour et cet objectif."
+    "reason": "${plantReason}"
   },
   "sacrifice": {
     "isRecommended": true,
@@ -238,10 +270,10 @@ Retourne UNIQUEMENT du JSON valide :
       { "item": "offrande 2", "quantity": "nombre", "meaning": "signification" }
     ],
     "recipient": "À qui donner",
-    "timing": "${selectedDay} matin",
+    "timing": "${sacrificeTiming}",
     "instructions": "Instructions complètes du sacrifice."
   },
-  "dailyAdvice": "1 phrase de conseil pratique pour tirer le meilleur parti de ton énergie du ${selectedDay}. Adressé directement à ${firstName}.",
+  "dailyAdvice": "${dailyAdviceInstruction}",
   "conclusion": "Message final chaleureux adressé à ${firstName}. 1 phrase encourageantes. Termine par BarakAllahu fik."
 }
 
@@ -268,6 +300,7 @@ function BlocTitle({ children }: { children: ReactNode }) {
 }
 
 const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+const UNKNOWN_DAY = 'Inconnu';
 
 export function JoursPage() {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
@@ -324,8 +357,9 @@ export function JoursPage() {
       const motherWeight = calculateWeight(motherResult.arabic);
       const PM = nameWeight + motherWeight + GENDER_BONUS[gender];
 
-      const jourData = JOURS_DATA[selectedDay];
-      const PMtotal = PM + jourData.poids;
+      const dayIsKnown = selectedDay !== UNKNOWN_DAY;
+      const jourData = dayIsKnown ? JOURS_DATA[selectedDay] : null;
+      const dayLabel = dayIsKnown ? selectedDay : 'jour inconnu';
 
       const prompt = buildJoursPrompt({
         firstName,
@@ -334,10 +368,8 @@ export function JoursPage() {
         motherArabic: motherResult.arabic,
         gender,
         PM,
-        selectedDay,
-        planete: jourData.planete,
-        poids: jourData.poids,
-        PMtotal,
+        selectedDay: dayIsKnown ? selectedDay : null,
+        planete: jourData?.planete ?? null,
       });
 
       const data: JoursData = await callGeminiWithRetry('gemini-3.5-flash', prompt, {
@@ -345,7 +377,7 @@ export function JoursPage() {
         maxOutputTokens: 1800,
       });
 
-      const newResult: CachedResult = { data, PM, PMtotal };
+      const newResult: CachedResult = { data, PM };
 
       if (!isAdmin) {
         // Débit atomique et journalisé côté serveur (fonction SECURITY DEFINER) :
@@ -353,7 +385,7 @@ export function JoursPage() {
         const { data: spendData, error: spendError } = await supabase
           .rpc('spend_credits', {
             p_tool: 'jours',
-            p_description: 'Jours — ' + firstName + ' — ' + selectedDay,
+            p_description: 'Jours — ' + firstName + ' — ' + dayLabel,
           })
           .single();
         const spend = spendData as SpendCreditsResult | null;
@@ -371,7 +403,7 @@ export function JoursPage() {
 
       await supabase.from('saved_rituals').insert({
         user_id: user.id,
-        title: 'Jour ' + selectedDay + ' — ' + firstName,
+        title: 'Jour ' + dayLabel + ' — ' + firstName,
         content: data,
         page_source: 'jours',
       });
@@ -449,7 +481,7 @@ export function JoursPage() {
         {!result && (
           <>
             {/* SECTION 2 — SÉLECTEUR DE JOUR */}
-            <div className="grid grid-cols-2 md:grid-cols-7 gap-3 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
               {DAYS.map((day) => {
                 const jd = JOURS_DATA[day];
                 const isSelected = selectedDay === day;
@@ -470,20 +502,33 @@ export function JoursPage() {
                     >
                       {jd.planete}
                     </span>
-                    <p className="text-or text-xs mt-2">Poids : {jd.poids}</p>
                   </button>
                 );
               })}
+              <button
+                onClick={() => setSelectedDay(UNKNOWN_DAY)}
+                className="rounded-lg p-4 text-center transition col-span-2 md:col-span-1"
+                style={{
+                  background: '#0d1545',
+                  border: selectedDay === UNKNOWN_DAY ? '2px solid #f5c842' : '1px solid rgba(245,200,66,0.1)',
+                }}
+              >
+                <p className={`font-bold ${selectedDay === UNKNOWN_DAY ? 'text-or' : 'text-white'}`}>
+                  Je ne connais pas mon jour
+                </p>
+              </button>
             </div>
 
             {/* SECTION 3 — FORMULAIRE */}
             {selectedDay && (
               <div className="carte rounded-lg max-w-[600px] mx-auto flex flex-col gap-5">
                 <div className="text-center">
-                  <p className="text-or font-bold">Jour sélectionné : {selectedDay}</p>
-                  <p className="text-or">
-                    Planète : {JOURS_DATA[selectedDay].planete} — Poids du jour : {JOURS_DATA[selectedDay].poids}
+                  <p className="text-or font-bold">
+                    Jour sélectionné : {selectedDay === UNKNOWN_DAY ? 'Non précisé' : selectedDay}
                   </p>
+                  {selectedDay !== UNKNOWN_DAY && (
+                    <p className="text-or">Planète : {JOURS_DATA[selectedDay].planete}</p>
+                  )}
                 </div>
 
                 <div>
@@ -574,14 +619,17 @@ export function JoursPage() {
               {/* BLOC 1 — En-tête du profil */}
               <div className="carte rounded-lg text-center">
                 <p className="text-or font-bold text-[2rem]">{firstName}</p>
-                <p className="text-white mt-2">Né(e) un {selectedDay}</p>
-                <p className="font-bold mt-1" style={{ color: JOURS_DATA[selectedDay].couleurBordure }}>
-                  {JOURS_DATA[selectedDay].planete}{' '}
-                  <span className="arabic">{JOURS_DATA[selectedDay].planeteArabe}</span>
+                <p className="text-white mt-2">
+                  {selectedDay === UNKNOWN_DAY ? 'Jour de naissance non précisé' : `Né(e) un ${selectedDay}`}
                 </p>
+                {selectedDay !== UNKNOWN_DAY && (
+                  <p className="font-bold mt-1" style={{ color: JOURS_DATA[selectedDay].couleurBordure }}>
+                    {JOURS_DATA[selectedDay].planete}{' '}
+                    <span className="arabic">{JOURS_DATA[selectedDay].planeteArabe}</span>
+                  </p>
+                )}
                 <p className="mt-3 text-sm" style={{ color: '#a0aec0' }}>
-                  PM personnel : {result.PM} | Poids {selectedDay} : {JOURS_DATA[selectedDay].poids} | PM total :{' '}
-                  {result.PMtotal}
+                  PM personnel : {result.PM}
                 </p>
               </div>
 
@@ -597,7 +645,7 @@ export function JoursPage() {
               <Separateur />
 
               {/* BLOC 3 — Numérologie */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="carte rounded-lg text-center">
                   <p className="font-bold" style={{ color: '#a0aec0' }}>
                     PM Personnel
@@ -606,15 +654,8 @@ export function JoursPage() {
                 </div>
                 <div className="carte rounded-lg text-center">
                   <p className="font-bold" style={{ color: '#a0aec0' }}>
-                    Poids {selectedDay}
+                    Élément
                   </p>
-                  <p className="text-or font-bold text-[2rem] mt-2">{JOURS_DATA[selectedDay].poids}</p>
-                </div>
-                <div className="carte rounded-lg text-center">
-                  <p className="font-bold" style={{ color: '#a0aec0' }}>
-                    PM Total
-                  </p>
-                  <p className="text-or font-bold text-[2rem] mt-2">{result.PMtotal}</p>
                   <span className="inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold bg-or text-white">
                     {result.data.numerology.element}
                   </span>
@@ -839,7 +880,7 @@ export function JoursPage() {
 
               {/* BLOC 11 — Sacrifice */}
               <div className="carte rounded-lg">
-                <BlocTitle>Sacrifice du {selectedDay}</BlocTitle>
+                <BlocTitle>{selectedDay === UNKNOWN_DAY ? 'Sacrifice conseillé' : `Sacrifice du ${selectedDay}`}</BlocTitle>
                 <p className="text-white text-center">{result.data.sacrifice.reason}</p>
                 <div className="mt-4 flex flex-col gap-2">
                   {result.data.sacrifice.offerings.map((o, i) => (
@@ -861,7 +902,7 @@ export function JoursPage() {
 
               {/* BLOC 12 — Conseils du Jour */}
               <div className="rounded-lg text-center p-6" style={{ border: '1px solid #f5c842' }}>
-                <BlocTitle>Conseils pour ton {selectedDay}</BlocTitle>
+                <BlocTitle>{selectedDay === UNKNOWN_DAY ? 'Conseils spirituels' : `Conseils pour ton ${selectedDay}`}</BlocTitle>
                 <p className="text-white">{result.data.dailyAdvice}</p>
               </div>
 
