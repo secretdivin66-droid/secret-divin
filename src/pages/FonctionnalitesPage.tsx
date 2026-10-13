@@ -75,19 +75,19 @@ const FEATURES: FeatureCard[] = [
     items: ['1 à 7 plantes selon ton besoin', 'Nom scientifique et bambara', 'Préparation du rituel complet', 'Versets coraniques associés', 'Sacrifice recommandé'],
   },
   {
-    title: 'Compatibilité',
+    title: 'Compatibilité entre deux personnes',
     titleArabic: 'التوافق',
     free: false,
     description:
-      "Analyse l'harmonie entre deux personnes à travers leurs poids mystiques et leurs éléments respectifs. Un score de compatibilité, les forces et tensions de la relation, et des conseils concrets pour l'équilibrer.",
+      "Vérifie si deux personnes sont compatibles pour un mariage.",
     items: ['Score de compatibilité', 'Analyse des deux profils', 'Interaction entre les éléments', 'Forces et défis de la relation', 'Conseils pour harmoniser'],
   },
   {
-    title: 'Attraper ou Réconcilier',
+    title: 'Attraper une personne ou réconcilier deux personnes',
     titleArabic: 'الجذب أو المصالحة',
     free: false,
     description:
-      "Génère un talisman personnalisé basé sur les noms arabes de deux personnes pour atteindre un objectif précis : mariage, réconciliation, travail, protection...",
+      "Secret pour attirer une personne ou pour réconcilier deux personnes.",
     items: ['Basé sur 2 profils (toi et ta cible)', '2 noms divins combinés', 'Carré magique sur mesure', 'Zikr quotidien avec audio', 'Plantes et parfum recommandés'],
   },
   {
