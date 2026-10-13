@@ -27,11 +27,11 @@ const FEATURES: FeatureCard[] = [
     items: ['17 points mystiques complets', 'Nom divin personnalisé', 'Verset coranique', 'Talisman avec carré magique', 'Sacrifice recommandé', 'Plante mystique', 'Export PDF', 'Lecture vocale'],
   },
   {
-    title: 'Secret de ton Jour',
+    title: 'SECRET MYSTIQUE DE TON JOUR DE NAISSANCE',
     titleArabic: 'سر يومك',
     free: false,
     description:
-      "Chaque jour de la semaine est lié à une planète et une énergie propre. En croisant ton jour de naissance avec ton poids mystique, révèle l'influence planétaire qui façonne ta personnalité et les périodes les plus favorables pour agir.",
+      "Découvre le secret mystique de ton jour de naissance, ton nom divin, ton verset coranique, ton invocation, ta plante mystique.",
     items: ['Planète associée à ton jour', 'Influence sur ta personnalité', 'Nom divin et verset adaptés', 'Talisman du jour', 'Plante recommandée'],
   },
   {
