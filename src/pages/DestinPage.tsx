@@ -24,6 +24,11 @@ interface DestinData {
     elementArabic: string;
     elementColor: string;
     explanation: string;
+    // Explication dédiée à l'élément (Feu/Terre/Air/Eau) — distincte de
+    // "explanation" (qui ne parle que du nombre PM), pour que les sections
+    // "Poids Mystique" et "Ton Élément Naturel" ne répètent plus le même
+    // texte (voir buildDestinPrompt).
+    elementExplanation: string;
   };
   dominantStar: {
     number: number;
@@ -38,16 +43,17 @@ interface DestinData {
     withYa: string;
     transliteration: string;
     meaning: string;
-    repetitions: number;
     reason: string;
   };
   verse: {
     arabic: string;
     surah: string;
     ayah: string;
+    // Transcription phonétique française, ajoutée pour l'affichage et pour
+    // la sous-section "Voici ton zikre" du Talisman (point 6).
+    transliteration: string;
     meaning: string;
     reason: string;
-    repetitions?: number;
   };
   totem: {
     animal: string;
@@ -81,18 +87,12 @@ interface DestinData {
     lienWikipedia: string;
     partie: string;
     reason: string;
-    // Champs détaillés (nouveau format) — optionnels pour rester compatible
-    // avec un résultat déjà en cache sessionStorage généré avant ce
-    // changement (voir usage? ci-dessous, ancien champ conservé en repli).
-    preparation?: string;
-    ritualDays?: number;
-    ritualTiming?: string;
-    ritualAction?: string;
-    ritualVisualization?: string;
-    ritualFinalInstruction?: string;
     symbolism?: string;
-    /** @deprecated ancien champ, remplacé par preparation/ritual* — gardé pour affichage de repli sur un résultat en cache. */
-    usage?: string;
+    // Nombre de jours du bain rituel — n'est plus affiché dans la section
+    // "Plante Mystique" (Préparation/Rituel retirés), mais reste demandé à
+    // Gemini car l'Étape 5 du Talisman Personnel plus bas en a besoin
+    // (une seule source de vérité réutilisée, pas un second calcul).
+    ritualDays?: number;
   };
   talisman: {
     divineName1: { arabic: string; withYa: string; meaning: string };
@@ -245,6 +245,19 @@ RÈGLES IMPORTANTES :
 - Adapte les recommandations à la religion : ${religion}.
 - Le verset coranique (et celui de la protection) doit être authentique et adapté à l'élément ${element} de cette personne.
 
+RÈGLE ANTI-RÉPÉTITION (très important) : chaque section du JSON doit rester
+strictement focalisée sur son propre sujet, sans reprendre l'idée ou la
+formulation d'une autre section. En particulier :
+- "pm.explanation" parle UNIQUEMENT du nombre ${PM} (le Poids Mystique).
+- "pm.elementExplanation" parle UNIQUEMENT de la signification symbolique de
+  l'élément ${element} (ex: stabilité/patience pour la Terre) — ne mentionne
+  pas le nombre ${PM} ni le calcul du Poids Mystique.
+- "dominantStar.description" parle UNIQUEMENT de l'étoile et de sa planète
+  (caractéristiques symboliques, tendances, influence) — ne reparle ni du
+  Poids Mystique ni de l'élément.
+Ne recopie jamais une phrase (même reformulée) d'une de ces trois sections
+dans une autre.
+
 RÈGLES SACRIFICE (fait déterministe, à respecter dans "sacrifice") :
 PM % 4 = ${remainder4} → type d'offrande imposé : ${offeringFromR4(remainder4)}
 PM % 3 = ${remainder3} → destinataire imposé : ${recipientFromR3(remainder3)}
@@ -262,7 +275,8 @@ Retourne UNIQUEMENT du JSON valide :
     "element": "Feu/Terre/Air/Eau",
     "elementArabic": "النار/...",
     "elementColor": "#e53935/...",
-    "explanation": "1 phrase sur ce que révèle ce PM pour toi."
+    "explanation": "1 phrase sur ce que révèle le nombre ${PM} pour toi (uniquement le nombre, pas l'élément).",
+    "elementExplanation": "1-2 phrases qui expliquent uniquement ce que symbolise l'élément ${element} (ex: stabilité, patience, ancrage et construction pour la Terre). Ne parle pas du Poids Mystique ici."
   },
   "dominantStar": {
     "number": 1,
@@ -270,23 +284,22 @@ Retourne UNIQUEMENT du JSON valide :
     "nameArabic": "الاسم",
     "planet": "Saturne/Jupiter...",
     "planetArabic": "زحل/...",
-    "description": "1 phrase sur l'influence de cette étoile."
+    "description": "1-2 phrases sur les caractéristiques symboliques, les tendances et l'influence de cette étoile et de sa planète sur la personne. Ne parle ni du Poids Mystique ni de l'élément ici."
   },
   "divineName": {
     "arabic": "nom SANS ال",
     "withYa": "يا + nom",
     "transliteration": "Ya ...",
     "meaning": "signification",
-    "repetitions": 99,
     "reason": "1 phrase sur pourquoi ce nom divin pour toi."
   },
   "verse": {
     "arabic": "verset SANS harakat",
     "surah": "nom sourate en français",
     "ayah": "numéro",
+    "transliteration": "Transcription phonétique française lisible du verset.",
     "meaning": "traduction française",
-    "reason": "Pourquoi ce verset pour toi.",
-    "repetitions": 33
+    "reason": "Pourquoi ce verset pour toi."
   },
   "totem": {
     "animal": "nom animal",
@@ -320,13 +333,8 @@ Retourne UNIQUEMENT du JSON valide :
     "lienWikipedia": "https://fr.wikipedia.org/wiki/...",
     "partie": "feuilles/écorce...",
     "reason": "Pourquoi cette plante pour toi.",
-    "preparation": "Comment préparer la décoction : quantité de plante, quantité d'eau, temps d'ébullition.",
-    "ritualDays": 7,
-    "ritualTiming": "Jour(s) précis PARMI les jours favorables de favorableDays.days ci-dessus, et moment (matin/soir).",
-    "ritualAction": "Quoi faire avec l'eau refroidie (ex: se laver le corps/le visage avec).",
-    "ritualVisualization": "Visualisation mentale à faire pendant le rituel.",
-    "ritualFinalInstruction": "Consigne finale après le rituel (ex: ne pas s'essuyer, laisser sécher naturellement).",
-    "symbolism": "Court paragraphe expliquant le symbolisme de cette plante en lien avec l'élément ${element}."
+    "symbolism": "Court paragraphe expliquant le symbolisme de cette plante en lien avec l'élément ${element}.",
+    "ritualDays": 7
   },
   "talisman": {
     "divineName1": { "arabic": "nom SANS ال", "withYa": "يا + nom", "meaning": "signification" },
@@ -373,10 +381,16 @@ RÈGLES NOMS DIVINS :
 Toujours SANS ال devant le nom. Toujours avec يا pour affichage.
 Correct : يا ودود — Incorrect : يا الودود
 
+RÈGLE VERSET (point "verse") :
+"transliteration" est une lecture phonétique en alphabet latin, lisible par
+quelqu'un qui ne lit pas l'arabe (pas de diacritiques exotiques).
+N'indique aucun nombre de fois à réciter pour le nom divin ou le verset :
+ce nombre est calculé et affiché ailleurs par l'application elle-même.
+
 RÈGLES PLANTE (point "plant") :
 Uniquement plantes africaines réelles. Toujours nom scientifique exact. Toujours lien Wikipedia valide.
 "ritualDays" doit être un nombre spirituellement cohérent (ex: 3, 7, 9, 40) — jamais choisi au hasard.
-"ritualTiming" doit obligatoirement citer un ou plusieurs jours listés dans "favorableDays.days" ci-dessus, jamais un jour non listé là.
+Ne décris aucune préparation ni aucun déroulé de rituel pour cette plante : seules sa description et sa signification sont demandées ici.
 
 RÈGLES TALISMAN (point "talisman") :
 Ce talisman est utilisé sur une tablette en bois avec une encre naturelle (safran ou charbon) : ne le répète pas dans "talisman", c'est déjà su.
@@ -556,14 +570,18 @@ export function DestinPage() {
   }
 
   // Cohérence garantie par construction plutôt que par instruction au LLM :
-  // l'Étape 3 réutilise directement verse.repetitions (Point Verset) et
-  // l'Étape 5 réutilise directement plant.ritualDays (Point Plante), au
-  // lieu de demander à Gemini de générer deux fois la même valeur dans deux
-  // objets JSON différents — un LLM peut désobéir à "doit être identique"
-  // d'une génération à l'autre, une seule source de vérité ne peut pas.
+  // l'Étape 3 (écriture du verset sur le talisman) et l'Étape 5 réutilisent
+  // directement plant.ritualDays (Point Plante), au lieu de demander à
+  // Gemini de générer deux fois la même valeur dans deux objets JSON
+  // différents — un LLM peut désobéir à "doit être identique" d'une
+  // génération à l'autre, une seule source de vérité ne peut pas.
+  // verseWriteReps (nombre de fois à ÉCRIRE le verset sur le talisman, pas
+  // à le réciter) est maintenant calculé en Abjad comme pour les noms
+  // divins, le point "verse" lui-même ne portant plus de nombre de
+  // répétitions (voir "Voici ton zikre", Étape 6, pour le nombre à réciter).
   const divineName1Reps = result ? repetitionsFromAbjad(result.data.talisman.divineName1.arabic) : 0;
   const divineName2Reps = result ? repetitionsFromAbjad(result.data.talisman.divineName2.arabic) : 0;
-  const verseReps = result?.data.verse.repetitions ?? 33;
+  const verseWriteReps = result ? repetitionsFromAbjad(result.data.verse.arabic) : 0;
   // Repli sur l'ancien format "ritualDuration" (ex: "7 jours") si un
   // résultat en cache sessionStorage a été généré avant ce changement et
   // n'a pas encore le nouveau champ plant.ritualDays.
@@ -711,14 +729,16 @@ export function DestinPage() {
               {/* BLOC 2 — PM et Élément */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="carte rounded-lg text-center">
-                  <p className="text-or font-bold text-[3rem]">{result.PM}</p>
+                  <p className="font-bold text-sm" style={{ color: '#a0aec0' }}>Poids Mystique</p>
+                  <p className="text-or font-bold text-[3rem] mt-1">{result.PM}</p>
                   <p className="mt-2 text-white">{result.data.pm.explanation}</p>
                 </div>
                 <div className="carte rounded-lg text-center">
-                  <p className="font-bold text-[2rem]" style={{ color: result.elementColor }}>
+                  <p className="font-bold text-sm" style={{ color: '#a0aec0' }}>Ton Élément Naturel</p>
+                  <p className="font-bold text-[2rem] mt-1" style={{ color: result.elementColor }}>
                     {result.element}
                   </p>
-                  <p className="mt-2 text-white">{result.data.pm.explanation}</p>
+                  <p className="mt-2 text-white">{result.data.pm.elementExplanation}</p>
                 </div>
               </div>
 
@@ -747,11 +767,6 @@ export function DestinPage() {
                 <p className="text-white mt-3">
                   {result.data.divineName.transliteration} / {result.data.divineName.meaning}
                 </p>
-                <div className="flex justify-center mt-4">
-                  <span className="px-4 py-2 rounded-full text-sm font-bold bg-or text-white">
-                    À réciter {result.data.divineName.repetitions} fois
-                  </span>
-                </div>
                 <p className="italic mt-4" style={{ color: '#a0aec0' }}>
                   {result.data.divineName.reason}
                 </p>
@@ -766,19 +781,13 @@ export function DestinPage() {
               <div className="carte rounded-lg text-center">
                 <BlocTitle>Verset Coranique</BlocTitle>
                 <p className="arabic text-or text-[1.8em]">{result.data.verse.arabic}</p>
+                <p className="mt-2 text-white">{result.data.verse.transliteration}</p>
                 <p className="mt-3 text-white">
                   Sourate {result.data.verse.surah} — Verset {result.data.verse.ayah}
                 </p>
                 <p className="italic mt-2" style={{ color: '#a0aec0' }}>
                   {result.data.verse.meaning}
                 </p>
-                {result.data.verse.repetitions && (
-                  <div className="flex justify-center mt-3">
-                    <span className="px-4 py-2 rounded-full text-sm font-bold bg-or text-white">
-                      À réciter {result.data.verse.repetitions} fois
-                    </span>
-                  </div>
-                )}
                 <p className="mt-2 text-white">{result.data.verse.reason}</p>
                 <div className="mt-4 flex justify-center">
                   <AudioButton text={result.data.verse.arabic} label="Écouter le verset" />
@@ -890,31 +899,10 @@ export function DestinPage() {
                 </p>
                 <p className="mt-2 text-white">Partie : {result.data.plant.partie}</p>
 
-                {result.data.plant.preparation ? (
-                  <>
-                    <p className="text-or font-bold mt-5">Préparation</p>
-                    <p className="mt-1 text-white">{result.data.plant.preparation}</p>
-
-                    <p className="text-or font-bold mt-5">Rituel ({plantDays} jours)</p>
-                    <div className="flex flex-col gap-1 mt-1 text-white">
-                      {result.data.plant.ritualTiming && <p>{result.data.plant.ritualTiming}</p>}
-                      {result.data.plant.ritualAction && <p>{result.data.plant.ritualAction}</p>}
-                      {result.data.plant.ritualVisualization && <p className="italic">{result.data.plant.ritualVisualization}</p>}
-                      {result.data.plant.ritualFinalInstruction && (
-                        <p style={{ color: '#a0aec0' }}>{result.data.plant.ritualFinalInstruction}</p>
-                      )}
-                    </div>
-
-                    {result.data.plant.symbolism && (
-                      <p className="mt-4 italic" style={{ color: '#a0aec0' }}>
-                        {result.data.plant.symbolism}
-                      </p>
-                    )}
-                  </>
-                ) : (
-                  // Repli : résultat en cache généré avant l'ajout de la structure
-                  // préparation/rituel détaillée — on affiche l'ancien champ libre.
-                  <p className="mt-2 text-white">Usage : {result.data.plant.usage}</p>
+                {result.data.plant.symbolism && (
+                  <p className="mt-4 italic" style={{ color: '#a0aec0' }}>
+                    {result.data.plant.symbolism}
+                  </p>
                 )}
 
                 <p className="mt-2" style={{ color: '#a0aec0' }}>
@@ -944,14 +932,14 @@ export function DestinPage() {
                   </div>
                 </div>
 
-                {/* Comment utiliser ton talisman — 5 étapes fixes ; le texte de
-                    chaque étape est composé ici plutôt que généré par Gemini
-                    (fiabilité + cohérence garantie avec les Points Verset/
-                    Plante ci-dessus, voir les commentaires sur divineName1Reps/
-                    verseReps/plantDays plus haut dans ce fichier). Repli sur
-                    l'ancien writingInstructions/ritualDuration libres si le
-                    résultat vient du cache sessionStorage (généré avant ce
-                    changement). */}
+                {/* Comment utiliser ton talisman — 6 étapes fixes (dont le zikr,
+                    Étape 6) ; le texte de chaque étape est composé ici plutôt
+                    que généré par Gemini (fiabilité + cohérence garantie avec
+                    les Points Nom Divin/Verset/Plante ci-dessus, voir les
+                    commentaires sur divineName1Reps/verseWriteReps/plantDays
+                    plus haut dans ce fichier). Repli sur l'ancien
+                    writingInstructions/ritualDuration libres si le résultat
+                    vient du cache sessionStorage (généré avant ce changement). */}
                 {result.data.talisman.openingFormula ? (
                   <div className="mt-6 flex flex-col gap-4 text-left">
                     <p className="text-or font-bold text-center">Comment utiliser ton talisman ?</p>
@@ -975,7 +963,7 @@ export function DestinPage() {
                     <div>
                       <p className="text-white"><span className="text-or font-bold">Étape 3 — </span>Écris le Verset Coranique du Point Verset ci-dessus.</p>
                       <div className="flex mt-2">
-                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-or text-white">{verseReps} fois</span>
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-or text-white">{verseWriteReps} fois</span>
                       </div>
                     </div>
 
@@ -997,6 +985,40 @@ export function DestinPage() {
                       </p>
                       <div className="flex mt-2">
                         <span className="px-3 py-1 rounded-full text-xs font-bold bg-or text-white">{plantDays} jours</span>
+                      </div>
+                    </div>
+
+                    {/* Étape 6 — Voici ton zikre : réutilise le Nom Divin
+                        (Point 4) et le Verset Coranique (Point 5) déjà
+                        affichés plus haut, pas de nouvelle génération. Le
+                        nombre de répétitions du nom divin est le Poids
+                        Mystique lui-même (result.PM), tel que demandé — pas
+                        repetitionsFromAbjad (réservé à l'écriture du
+                        talisman, Étapes 2/3 ci-dessus). Le verset se récite
+                        7 fois, un nombre fixe indépendant du profil. */}
+                    <div>
+                      <p className="text-white font-bold">
+                        <span className="text-or font-bold">Étape 6 — </span>Voici ton zikre
+                      </p>
+                      <div className="flex flex-col gap-3 mt-3 text-left">
+                        <div>
+                          <p className="arabic text-or text-[1.6em]">{result.data.divineName.withYa}</p>
+                          <p className="text-sm mt-1 text-white">{result.data.divineName.transliteration}</p>
+                          <div className="flex mt-2">
+                            <span className="px-3 py-1 rounded-full text-xs font-bold bg-or text-white">
+                              {result.PM} fois
+                            </span>
+                          </div>
+                        </div>
+                        <div>
+                          <p className="arabic text-or text-[1.4em]">{result.data.verse.arabic}</p>
+                          <p className="text-sm mt-1 text-white">{result.data.verse.transliteration}</p>
+                          <p className="text-sm italic mt-1" style={{ color: '#a0aec0' }}>{result.data.verse.meaning}</p>
+                          <div className="flex mt-2">
+                            <span className="px-3 py-1 rounded-full text-xs font-bold bg-or text-white">7 fois</span>
+                          </div>
+                        </div>
+                        <p className="italic text-white">Tu peux réciter ce zikre continuellement.</p>
                       </div>
                     </div>
                   </div>
