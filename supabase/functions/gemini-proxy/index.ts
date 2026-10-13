@@ -28,10 +28,10 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 // gemini-3.1-flash-lite (clé GEMINI_API_KEY_USER_TOOLS renouvelée en même
 // temps) — vérifié en direct que ce modèle accepte bien thinkingBudget: 0
 // (voir plus bas) avant la bascule, même type de piège que celui rencontré
-// sur gemini-3.6-flash côté auto-blog. gemini-3.5-flash reste dans la
-// liste pendant la transition, le temps que le frontend déployé envoie
-// uniquement le nouveau nom — à retirer une fois confirmé.
-const ALLOWED_MODELS = new Set(['gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash-preview-tts']);
+// sur gemini-3.6-flash côté auto-blog. gemini-3.5-flash gardé temporairement
+// en double liste le temps du déploiement frontend, retiré une fois celui-ci
+// confirmé en prod (même jour).
+const ALLOWED_MODELS = new Set(['gemini-3.1-flash-lite', 'gemini-2.5-flash-preview-tts']);
 
 const MAX_OUTPUT_TOKENS = 4000;
 
