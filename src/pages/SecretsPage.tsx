@@ -126,7 +126,7 @@ async function translateName(name: string): Promise<GeminiNameResult> {
 Retourne UNIQUEMENT du JSON :
 { "arabic": "النص", "weight": 0 }
 Nom : ${name}`;
-  return callGeminiWithRetry('gemini-3.5-flash', prompt, { temperature: 0.1, maxOutputTokens: 200 });
+  return callGeminiWithRetry('gemini-3.1-flash-lite', prompt, { temperature: 0.1, maxOutputTokens: 200 });
 }
 
 function buildSecretsPrompt(params: {
@@ -330,7 +330,7 @@ export function SecretsPage() {
         PM,
       });
 
-      const data: SecretsData = await callGeminiWithRetry('gemini-3.5-flash', prompt, {
+      const data: SecretsData = await callGeminiWithRetry('gemini-3.1-flash-lite', prompt, {
         temperature: 0.8,
         maxOutputTokens: 1800,
       });

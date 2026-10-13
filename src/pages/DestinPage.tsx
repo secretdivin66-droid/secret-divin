@@ -181,7 +181,7 @@ async function translateName(name: string): Promise<GeminiNameResult> {
 Retourne UNIQUEMENT du JSON :
 { "arabic": "النص", "weight": 0 }
 Nom : ${name}`;
-  return callGeminiWithRetry('gemini-3.5-flash', prompt, { temperature: 0.1, maxOutputTokens: 200 });
+  return callGeminiWithRetry('gemini-3.1-flash-lite', prompt, { temperature: 0.1, maxOutputTokens: 200 });
 }
 
 // Règle de sacrifice déterministe (PM%4 -> type d'offrande, PM%3 ->
@@ -471,7 +471,7 @@ export function DestinPage() {
         element,
       });
 
-      const data: DestinData = await callGeminiWithRetry('gemini-3.5-flash', prompt, {
+      const data: DestinData = await callGeminiWithRetry('gemini-3.1-flash-lite', prompt, {
         temperature: 0.8,
         maxOutputTokens: 2600,
       });

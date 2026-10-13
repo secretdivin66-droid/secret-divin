@@ -226,7 +226,7 @@ export function GeomanciePage() {
       }
 
       const prompt = buildGeomanciePrompt(questionText);
-      const data: GeomancieData = await callGeminiWithRetry('gemini-3.5-flash', prompt, {
+      const data: GeomancieData = await callGeminiWithRetry('gemini-3.1-flash-lite', prompt, {
         temperature: 0.7,
         maxOutputTokens: 1800,
       });

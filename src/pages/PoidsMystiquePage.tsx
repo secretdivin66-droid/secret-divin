@@ -57,7 +57,7 @@ function getUniqueLetters(text: string): LetterBreakdown[] {
 // gemini-proxy (jamais de clé API côté client), parse le JSON retourné, et
 // retente une fois si Gemini a renvoyé un JSON mal formé.
 async function callGeminiRaw(prompt: string): Promise<{ arabic: string }> {
-  const json = await callGeminiProxy('gemini-3.5-flash', {
+  const json = await callGeminiProxy('gemini-3.1-flash-lite', {
     contents: [{ parts: [{ text: prompt }] }],
     generationConfig: { temperature: 0.3, maxOutputTokens: 400 },
   });

@@ -23,7 +23,15 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 // répond normalement avec la même clé.
 // gemini-2.5-flash-preview-tts (utilisé uniquement par src/utils/tts.ts)
 // fonctionne toujours, contrairement à son équivalent non-TTS.
-const ALLOWED_MODELS = new Set(['gemini-3.5-flash', 'gemini-2.5-flash-preview-tts']);
+//
+// 2026-10-13 : bascule des outils de gemini-3.5-flash vers
+// gemini-3.1-flash-lite (clé GEMINI_API_KEY_USER_TOOLS renouvelée en même
+// temps) — vérifié en direct que ce modèle accepte bien thinkingBudget: 0
+// (voir plus bas) avant la bascule, même type de piège que celui rencontré
+// sur gemini-3.6-flash côté auto-blog. gemini-3.5-flash reste dans la
+// liste pendant la transition, le temps que le frontend déployé envoie
+// uniquement le nouveau nom — à retirer une fois confirmé.
+const ALLOWED_MODELS = new Set(['gemini-3.1-flash-lite', 'gemini-3.5-flash', 'gemini-2.5-flash-preview-tts']);
 
 const MAX_OUTPUT_TOKENS = 4000;
 
@@ -111,7 +119,10 @@ Deno.serve(async (req) => {
     // Aucun des usages de ce proxy (fiches outils, blog, chat) n'a besoin
     // de raisonnement complexe. Ignoré pour la TTS (responseModalities
     // AUDIO), non testé avec thinkingConfig et non concerné par le
-    // problème (modèle distinct).
+    // problème (modèle distinct). gemini-3.1-flash-lite accepte aussi
+    // thinkingBudget: 0 sans erreur — vérifié en direct le 2026-10-13
+    // avant la bascule (contrairement à gemini-3.6-flash côté auto-blog,
+    // qui le rejette).
     if (model !== 'gemini-2.5-flash-preview-tts') {
       body.generationConfig = { ...body.generationConfig, thinkingConfig: { thinkingBudget: 0 } };
     }
