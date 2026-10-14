@@ -161,16 +161,22 @@ async function callGeminiRaw(
   return JSON.parse(clean);
 }
 
+// Jusqu'à 3 tentatives au total (2 retries) sur une réponse malformée
+// (JSON invalide, ou réponse vide — ex: filtrée/tronquée côté Gemini) :
+// un seul retry laissait parfois passer un deuxième échec transitoire et
+// affichait l'erreur générique à l'utilisateur pour rien.
 async function callGeminiWithRetry(
   model: string,
   prompt: string,
-  generationConfig: { temperature: number; maxOutputTokens: number }
+  generationConfig: { temperature: number; maxOutputTokens: number },
+  attempt = 1
 ): Promise<any> {
   try {
     return await callGeminiRaw(model, prompt, generationConfig);
   } catch (err) {
-    if (err instanceof SyntaxError) {
-      return await callGeminiRaw(model, prompt, generationConfig);
+    const isRetryable = err instanceof SyntaxError || (err instanceof Error && err.message === 'empty');
+    if (isRetryable && attempt < 3) {
+      return callGeminiWithRetry(model, prompt, generationConfig, attempt + 1);
     }
     throw err;
   }
@@ -527,8 +533,15 @@ export function DestinPage() {
         content: data,
         page_source: 'destin',
       });
-    } catch {
-      setError('Erreur de connexion. Vérifie ta clé API et réessaie.');
+    } catch (err) {
+      // Distingue la session expirée (cause fréquente et facile à corriger
+      // pour l'utilisateur) du cas générique réseau/Gemini, plutôt que de
+      // toujours afficher le même message pour des causes différentes.
+      if (err instanceof Error && err.message === 'no-user') {
+        setError('Ta session a expiré. Reconnecte-toi puis réessaie.');
+      } else {
+        setError('Erreur de connexion. Vérifie ta clé API et réessaie.');
+      }
     } finally {
       setLoading(false);
     }
