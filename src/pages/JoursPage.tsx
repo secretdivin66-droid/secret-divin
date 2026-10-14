@@ -18,11 +18,12 @@ interface GeminiNameResult {
 }
 
 interface JoursData {
+  // "dayProfile" porte désormais UNIQUEMENT l'étoile maîtresse (la planète
+  // du jour) et sa signification — le poids mystique est présenté une
+  // seule fois, dans l'en-tête (voir BLOC 1), jamais réinterprété ici.
   dayProfile: {
     title: string;
-    globalMessage: string;
     planetInfluence: string;
-    planetArabic: string;
   };
   character: {
     mainTrait: string;
@@ -34,8 +35,10 @@ interface JoursData {
   numerology: {
     pmPersonal: number;
     element: string;
-    elementArabic: string;
-    numberMeaning: string;
+    // Explication courte et autonome de l'élément naturel, distincte de
+    // toute interprétation du poids mystique ou de l'étoile — affichée
+    // dans la carte "Ton élément naturel" (voir BLOC dédié plus bas).
+    elementExplanation: string;
   };
   divineName: {
     arabic: string;
@@ -154,15 +157,11 @@ function buildJoursPrompt(params: {
     : `Jour de naissance : inconnu — ne mentionne aucun jour de la semaine ni aucune planète précise, reste général sur l'énergie spirituelle de la personne.`;
 
   const dayProfileTitle = dayKnown
-    ? 'Titre évocateur pour ce jour + planète'
+    ? 'Titre évocateur pour cette étoile maîtresse (la planète du jour)'
     : 'Titre évocateur pour ton profil spirituel personnel (sans mentionner de jour ni de planète)';
-  const dayProfileGlobalMessage = dayKnown
-    ? `1 phrase sur ce que signifie être né un ${selectedDay} selon la mystique islamique.`
-    : "1 phrase générale sur ta nature spirituelle profonde, sans mentionner de jour de la semaine.";
   const dayProfilePlanetInfluence = dayKnown
-    ? `1 phrase sur l'influence de ${planete} sur ta personnalité et ton destin.`
-    : "1 phrase sur l'énergie céleste qui t'accompagne en général, sans nommer de planète précise.";
-  const dayProfilePlanetArabic = dayKnown ? JOURS_DATA[selectedDay as string].planeteArabe : '';
+    ? `1-2 phrases qui expliquent UNIQUEMENT la signification de l'étoile maîtresse ${planete} : ses caractéristiques symboliques, ses tendances, son influence sur la personnalité et le destin de la personne. Ne parle ni du Poids Mystique ni de l'élément ici.`
+    : "1-2 phrases sur l'énergie céleste qui t'accompagne en général, sans nommer de planète précise et sans parler du Poids Mystique.";
 
   const characterDescription = dayKnown
     ? `1 phrase sur la personnalité des natifs du ${selectedDay}.`
@@ -197,14 +196,27 @@ ${dayContextLine}
 
 LIMITE DE LONGUEUR : la somme de tous les textes du JSON (toutes les valeurs confondues) ne doit jamais dépasser 450 mots au total. Reste concis sur chaque champ tout en gardant de la profondeur.
 
+ORDRE ET RÈGLE ANTI-RÉPÉTITION (très important) : le Poids Mystique (${PM})
+est déjà annoncé une seule fois, avant même ce JSON, dans la présentation
+initiale adressée à ${firstName} — ne le réinterprète JAMAIS nulle part dans
+ce JSON. Chaque section reste strictement focalisée sur son propre sujet :
+- "dayProfile.planetInfluence" parle UNIQUEMENT de l'étoile maîtresse
+  (la planète du jour) — jamais du Poids Mystique, jamais de l'élément.
+- "numerology.elementExplanation" parle UNIQUEMENT de la signification de
+  l'élément — jamais du Poids Mystique, jamais de l'étoile maîtresse.
+Ne recopie jamais une phrase (même reformulée) d'une de ces deux sections
+dans l'autre.
+
+IMPORTANT : ne rédige AUCUNE phrase d'introduction ou de salutation en dehors
+du JSON. Ta réponse doit commencer directement par le caractère { et ne
+contenir strictement rien avant.
+
 Retourne UNIQUEMENT du JSON valide :
 
 {
   "dayProfile": {
     "title": "${dayProfileTitle}",
-    "globalMessage": "${dayProfileGlobalMessage}",
-    "planetInfluence": "${dayProfilePlanetInfluence}",
-    "planetArabic": "${dayProfilePlanetArabic}"
+    "planetInfluence": "${dayProfilePlanetInfluence}"
   },
   "character": {
     "mainTrait": "trait dominant",
@@ -216,8 +228,7 @@ Retourne UNIQUEMENT du JSON valide :
   "numerology": {
     "pmPersonal": ${PM},
     "element": "Feu/Terre/Air/Eau",
-    "elementArabic": "النار/...",
-    "numberMeaning": "1 phrase sur la signification de ce PM."
+    "elementExplanation": "1-2 phrases qui expliquent uniquement ce que symbolise l'élément (ex: stabilité, patience, constance et sens des responsabilités pour la Terre)."
   },
   "divineName": {
     "arabic": "nom SANS ال",
@@ -456,6 +467,9 @@ export function JoursPage() {
   const divineNameWriteReps = result ? result.PM * 2 : 0;
   const verseWriteReps = result ? result.PM : 0;
   const zikrDivineNameReps = result ? result.PM * 5 : 0;
+  // Étoile maîtresse = planète du jour (JOURS_DATA), nulle si le jour est
+  // inconnu — même donnée déterministe déjà utilisée ailleurs sur la page.
+  const jourData = selectedDay && selectedDay !== UNKNOWN_DAY ? JOURS_DATA[selectedDay] : null;
 
   return (
     <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
@@ -616,52 +630,49 @@ export function JoursPage() {
             <div id="jours-content">
               <Separateur />
 
-              {/* BLOC 1 — En-tête du profil */}
+              {/* BLOC 1 — En-tête : nom, poids mystique et étoile maîtresse.
+                  Phrase composée en code (valeurs déjà calculées/déterministes),
+                  pas par Gemini — le Poids Mystique n'apparaît plus nulle part
+                  ailleurs sur la page (voir RÈGLE ANTI-RÉPÉTITION du prompt). */}
               <div className="carte rounded-lg text-center">
                 <p className="text-or font-bold text-[2rem]">{firstName}</p>
-                <p className="text-white mt-2">
+                <p className="text-white mt-3">
+                  Ton poids mystique est de <span className="font-bold text-or">{result.PM}</span>.
+                  {jourData && (
+                    <>
+                      {' '}Ton étoile maîtresse est <span className="font-bold text-or">{jourData.planete}</span>.
+                    </>
+                  )}
+                </p>
+                {jourData && (
+                  <p className="arabic mt-1" style={{ color: jourData.couleurBordure }}>{jourData.planeteArabe}</p>
+                )}
+                <p className="mt-2 text-sm" style={{ color: '#a0aec0' }}>
                   {selectedDay === UNKNOWN_DAY ? 'Jour de naissance non précisé' : `Né(e) un ${selectedDay}`}
                 </p>
-                {selectedDay !== UNKNOWN_DAY && (
-                  <p className="font-bold mt-1" style={{ color: JOURS_DATA[selectedDay].couleurBordure }}>
-                    {JOURS_DATA[selectedDay].planete}{' '}
-                    <span className="arabic">{JOURS_DATA[selectedDay].planeteArabe}</span>
-                  </p>
-                )}
-                <p className="mt-3 text-sm" style={{ color: '#a0aec0' }}>
-                  PM personnel : {result.PM}
-                </p>
               </div>
 
               <Separateur />
 
-              {/* BLOC 2 — Profil du Jour */}
+              {/* BLOC 2 — Étoile Maîtresse : explication exclusivement centrée
+                  sur l'étoile/la planète, directement après l'en-tête. */}
               <div className="carte rounded-lg text-center">
                 <BlocTitle>{result.data.dayProfile.title}</BlocTitle>
-                <p className="text-white">{result.data.dayProfile.globalMessage}</p>
-                <p className="mt-3 text-white">{result.data.dayProfile.planetInfluence}</p>
+                <p className="text-white">{result.data.dayProfile.planetInfluence}</p>
               </div>
 
               <Separateur />
 
-              {/* BLOC 3 — Numérologie */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="carte rounded-lg text-center">
-                  <p className="font-bold" style={{ color: '#a0aec0' }}>
-                    PM Personnel
-                  </p>
-                  <p className="text-or font-bold text-[2rem] mt-2">{result.PM}</p>
-                </div>
-                <div className="carte rounded-lg text-center">
-                  <p className="font-bold" style={{ color: '#a0aec0' }}>
-                    Élément
-                  </p>
-                  <span className="inline-block mt-2 px-3 py-1 rounded-full text-xs font-bold bg-or text-white">
-                    {result.data.numerology.element}
-                  </span>
-                </div>
+              {/* BLOC 3 — Ton élément naturel : carte dédiée, titre exact
+                  demandé, explication autonome (ne reparle ni du PM ni de
+                  l'étoile). */}
+              <div className="carte rounded-lg text-center">
+                <BlocTitle>Ton élément naturel</BlocTitle>
+                <span className="inline-block px-3 py-1 rounded-full text-xs font-bold bg-or text-white">
+                  {result.data.numerology.element}
+                </span>
+                <p className="mt-3 text-white">{result.data.numerology.elementExplanation}</p>
               </div>
-              <p className="text-center mt-4 text-white">{result.data.numerology.numberMeaning}</p>
 
               <Separateur />
 
@@ -918,7 +929,7 @@ export function JoursPage() {
 
             <div className="flex justify-center mb-4">
               <AudioButton
-                text={`${result.data.dayProfile.globalMessage} ${result.data.character.description} ${result.data.dailyAdvice} ${result.data.conclusion}`}
+                text={`${result.data.dayProfile.planetInfluence} ${result.data.character.description} ${result.data.dailyAdvice} ${result.data.conclusion}`}
                 label="Écouter les secrets de mon jour"
               />
             </div>
