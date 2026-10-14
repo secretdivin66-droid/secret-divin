@@ -7,7 +7,10 @@ import { CreditModal } from '../components/CreditModal';
 import { AudioButton } from '../components/AudioButton';
 import { callGeminiProxy } from '../lib/geminiProxy';
 import { isAdminUser } from '../utils/roles';
+import { calculateWeight, GENDER_BONUS } from '../utils/mystique';
 import type { SpendCreditsResult } from '../utils/mystique';
+
+type Gender = 'homme' | 'femme';
 
 const CATEGORIES = [
   'Guérison / Santé',
@@ -19,6 +22,11 @@ const CATEGORIES = [
   'Chance / Bénédiction',
   'Autre',
 ];
+
+interface GeminiNameResult {
+  arabic: string;
+  weight?: number;
+}
 
 interface PlantData {
   number: number;
@@ -38,7 +46,6 @@ interface VerseData {
   ayah: string;
   meaning: string;
   why: string;
-  writingInstructions: string;
 }
 
 interface PlantesData {
@@ -47,30 +54,14 @@ interface PlantesData {
   introduction: string;
   plants: PlantData[];
   verses: VerseData[];
+  // "talismanPreparation"/"plantPreparation" (étapes libres) et "mixing"
+  // retirés : l'Étape A/B/C de "Préparation Complète" sont désormais des
+  // instructions fixes (voir le rendu) — seule la quantité d'eau pour les
+  // plantes reste réutilisée telle quelle (déjà fiable, pas de raison de
+  // la regénérer).
   preparation: {
     materials: string[];
-    talismanPreparation: { step1: string; step2: string; step3: string; talismanWaterUse: string };
-    plantPreparation: { step1: string; step2: string; step3: string; step4: string; fumigationInstructions: string };
-    mixing: string;
-  };
-  ritual: {
-    isGuerisson: boolean;
-    washingInstructions: string;
-    drinkingInstructions: string | null;
-    fumigationInstructions: string;
-    duration: string;
-    bestTime: string;
-    daysToAvoid: string | null;
-    dailyRitual: string[];
-    importantNotes: string[];
-  };
-  prayer: {
-    opening: string;
-    openingMeaning: string;
-    mainPrayer: string;
-    mainPrayerMeaning: string;
-    repetitions: number;
-    when: string;
+    plantWaterQuantity: string;
   };
   divineName: {
     arabic: string;
@@ -90,6 +81,11 @@ interface PlantesData {
   };
   warnings: string[];
   conclusion: string;
+}
+
+interface CachedResult {
+  data: PlantesData;
+  PM: number;
 }
 
 async function callGeminiRaw(
@@ -122,11 +118,57 @@ async function callGeminiWithRetry(
   }
 }
 
-function buildPlantesPrompt(objectiveText: string, category: string): string {
+async function translateName(name: string): Promise<GeminiNameResult> {
+  const prompt = `Translittère ce nom en arabe SANS harakat.
+Retourne UNIQUEMENT du JSON :
+{ "arabic": "النص", "weight": 0 }
+Nom : ${name}`;
+  return callGeminiWithRetry('gemini-3.1-flash-lite', prompt, { temperature: 0.1, maxOutputTokens: 200 });
+}
+
+// Règle de sacrifice déterministe identique à celle déjà utilisée ailleurs
+// sur SecretDivin (PM%4 -> type d'offrande, PM%3 -> destinataire) —
+// réutilisée telle quelle, pas une nouvelle règle inventée pour cette page.
+function offeringFromR4(r: number): string {
+  if (r === 1) return 'choses du FEU (galettes, pain grillé)';
+  if (r === 2) return 'choses de la TERRE (manioc, igname)';
+  if (r === 3) return 'FRUITS (mangues, bananes, oranges)';
+  return 'POISSON (frais ou séché)';
+}
+function recipientFromR3(r: number): string {
+  if (r === 1) return 'un HOMME';
+  if (r === 2) return 'une FEMME';
+  return 'un ENFANT';
+}
+
+// Détermine si le travail relève de la protection/désenvoûtement à partir
+// des données déjà disponibles (catégorie choisie, ou texte libre si
+// "Autre") — aucune nouvelle règle de sélection des plantes n'est créée,
+// cette détection ne sert qu'à choisir le texte de l'Étape C (parfum ou non).
+function isProtectionWorkType(category: string, customWorkType: string): boolean {
+  if (category === 'Protection / Désenvoutement') return true;
+  if (category === 'Autre') {
+    const lower = customWorkType.toLowerCase();
+    return /protection|désenvoût|desenvout|envoûtement|envoutement|sorcellerie|mauvais\s?(œ|oe)il/.test(lower);
+  }
+  return false;
+}
+
+function buildPlantesPrompt(params: {
+  objectiveText: string;
+  category: string;
+  workTypeForPrompt: string;
+  PM: number;
+}): string {
+  const { objectiveText, category, workTypeForPrompt, PM } = params;
+  const remainder4 = PM % 4;
+  const remainder3 = ((PM % 3) + 3) % 3;
   return `Tu es un maître herboriste de la tradition mystique islamique ouest-africaine. Tu combines la phytothérapie traditionnelle africaine avec la science des versets coraniques. Tu parles avec 'tu' en français. Ton ton est chaleureux, sage et professionnel.
 
 Objectif décrit : ${objectiveText}
 Catégorie : ${category}
+Type de travail précis (à utiliser pour adapter le sacrifice) : ${workTypeForPrompt}
+Poids Mystique (PM) de la personne : ${PM}
 
 RÈGLE nombre de plantes :
 Objectif simple (1 problème clair) : 1 à 3 plantes.
@@ -136,7 +178,15 @@ Maximum absolu : 7 plantes.
 
 RÈGLE guérison :
 Si catégorie = 'Guérison / Santé' OU si le texte mentionne une maladie, une douleur ou un problème de santé : isGuerisson = true.
-Dans ce cas le patient doit SE LAVER ET BOIRE la préparation.
+
+RÈGLE SACRIFICE (fait déterministe, à respecter dans "sacrifice" si isRecommended=true) :
+PM % 4 = ${remainder4} → type d'offrande imposé : ${offeringFromR4(remainder4)}
+PM % 3 = ${remainder3} → destinataire imposé : ${recipientFromR3(remainder3)}
+Les offrandes de "sacrifice.offerings" doivent appartenir à cette catégorie et
+"sacrifice.recipient" doit correspondre à ce destinataire, adaptés au type de
+travail "${workTypeForPrompt}". Si, pour ce type de travail précis, aucun
+sacrifice n'est réellement pertinent, mets "isRecommended": false plutôt que
+d'inventer une correspondance approximative.
 
 LIMITE DE LONGUEUR : la somme de tous les textes du JSON (toutes les valeurs confondues, y compris pour chaque plante) ne doit jamais dépasser 450 mots au total. Reste concis sur chaque champ tout en gardant de la profondeur.
 
@@ -165,8 +215,7 @@ Retourne UNIQUEMENT du JSON valide :
       "surah": "nom sourate français",
       "ayah": "numéro",
       "meaning": "traduction française",
-      "why": "Pourquoi ce verset pour cet objectif et ces plantes.",
-      "writingInstructions": "Comment écrire ce verset sur la tablette en bois avec encre naturelle."
+      "why": "Pourquoi ce verset pour cet objectif et ces plantes."
     }
   ],
   "preparation": {
@@ -176,39 +225,7 @@ Retourne UNIQUEMENT du JSON valide :
       "Encre naturelle (safran, charbon ou encre noire)",
       "Un récipient propre pour recueillir l'eau"
     ],
-    "talismanPreparation": {
-      "step1": "Écrire le(s) verset(s) sur la tablette en bois avec l'encre naturelle",
-      "step2": "Laisser sécher la tablette complètement",
-      "step3": "Faire tremper la tablette dans de l'eau propre pendant [durée selon objectif]",
-      "talismanWaterUse": "Comment utiliser l'eau du talisman (mélanger avec eau des plantes)"
-    },
-    "plantPreparation": {
-      "step1": "Comment préparer les plantes (laver, couper, séparer les parties...)",
-      "step2": "Quantité d'eau à utiliser pour la décoction",
-      "step3": "Comment faire bouillir (durée exacte, feu doux ou fort)",
-      "step4": "Comment filtrer et laisser refroidir",
-      "fumigationInstructions": "Comment faire la fumigation avec les plantes séchées si applicable."
-    },
-    "mixing": "Comment mélanger l'eau des plantes et l'eau du talisman pour obtenir la préparation finale."
-  },
-  "ritual": {
-    "isGuerisson": false,
-    "washingInstructions": "Instructions détaillées pour se laver avec le mélange final.",
-    "drinkingInstructions": "Instructions pour boire si isGuerisson=true. Sinon null.",
-    "fumigationInstructions": "Instructions complètes pour la fumigation si applicable.",
-    "duration": "14 jours",
-    "bestTime": "Matin avant le lever du soleil / Après Fajr",
-    "daysToAvoid": "Jours à éviter si applicable. Sinon null.",
-    "dailyRitual": ["Étape 1 du rituel quotidien","Étape 2","Étape 3","Étape 4"],
-    "importantNotes": ["Note importante 1","Note importante 2","Note importante 3"]
-  },
-  "prayer": {
-    "opening": "بسم الله الرحمن الرحيم",
-    "openingMeaning": "Au nom d'Allah le Tout Miséricordieux, le Très Miséricordieux",
-    "mainPrayer": "Invocation principale en arabe SANS harakat",
-    "mainPrayerMeaning": "Signification en français",
-    "repetitions": 7,
-    "when": "Pendant le bain rituel / Après Fajr / Avant de dormir"
+    "plantWaterQuantity": "Quantité d'eau à utiliser pour la décoction des plantes."
   },
   "divineName": {
     "arabic": "nom SANS ال",
@@ -291,24 +308,36 @@ function StepList({ steps }: { steps: string[] }) {
 }
 
 export function PlantesPage() {
+  const [firstName, setFirstName] = useState('');
+  const [motherName, setMotherName] = useState('');
+  const [gender, setGender] = useState<Gender>('homme');
   const [objectiveText, setObjectiveText] = useState('');
   const [category, setCategory] = useState(CATEGORIES[0]);
+  const [customWorkType, setCustomWorkType] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<PlantesData | null>(null);
+  const [result, setResult] = useState<CachedResult | null>(null);
 
   const [showCreditModal, setShowCreditModal] = useState(false);
   const [modalBalance, setModalBalance] = useState(0);
 
-  const isDisabled = objectiveText.trim().length < 20;
-  const isGuerisson = result ? detectIsGuerisson(result, category, objectiveText) : false;
+  const isDisabled =
+    !firstName.trim() ||
+    !motherName.trim() ||
+    objectiveText.trim().length < 20 ||
+    (category === 'Autre' && !customWorkType.trim());
+  const isGuerisson = result ? detectIsGuerisson(result.data, category, objectiveText) : false;
+  // Type de travail réellement utilisé pour adapter le sacrifice et le
+  // parfum (Étape C) : la catégorie choisie, ou le texte libre si "Autre".
+  const workTypeForPrompt = category === 'Autre' ? customWorkType : category;
+  const isProtectionWork = isProtectionWorkType(category, customWorkType);
 
   async function handleGenerate() {
     if (isDisabled) return;
     setError(null);
 
-    const cacheKey = `plantes_${objectiveText.substring(0, 50)}_${category}`;
+    const cacheKey = `plantes_${firstName}_${motherName}_${gender}_${objectiveText.substring(0, 50)}_${category}_${customWorkType}`;
     const cached = sessionStorage.getItem(cacheKey);
     if (cached) {
       setResult(JSON.parse(cached));
@@ -338,7 +367,12 @@ export function PlantesPage() {
         return;
       }
 
-      const prompt = buildPlantesPrompt(objectiveText, category);
+      const [nameResult, motherResult] = await Promise.all([translateName(firstName), translateName(motherName)]);
+      const nameWeight = calculateWeight(nameResult.arabic);
+      const motherWeight = calculateWeight(motherResult.arabic);
+      const PM = nameWeight + motherWeight + GENDER_BONUS[gender];
+
+      const prompt = buildPlantesPrompt({ objectiveText, category, workTypeForPrompt, PM });
       const data: PlantesData = await callGeminiWithRetry('gemini-3.1-flash-lite', prompt, {
         temperature: 0.8,
         maxOutputTokens: 3600,
@@ -363,8 +397,9 @@ export function PlantesPage() {
         }
       }
 
-      sessionStorage.setItem(cacheKey, JSON.stringify(data));
-      setResult(data);
+      const newResult: CachedResult = { data, PM };
+      sessionStorage.setItem(cacheKey, JSON.stringify(newResult));
+      setResult(newResult);
 
       await supabase.from('saved_rituals').insert({
         user_id: user.id,
@@ -380,8 +415,12 @@ export function PlantesPage() {
   }
 
   function handleReset() {
+    setFirstName('');
+    setMotherName('');
+    setGender('homme');
     setObjectiveText('');
     setCategory(CATEGORIES[0]);
+    setCustomWorkType('');
     setResult(null);
     setError(null);
   }
@@ -412,6 +451,12 @@ export function PlantesPage() {
     pdf.save('plantes-secretdivin.pdf');
   }
 
+  // Poids mystique du Nom Divin (Abjad, même calculateWeight() que partout
+  // ailleurs) — sert de nombre de répétitions pour écrire le verset
+  // (Étape A.2), distinct du Poids Mystique de la personne (Étape A.1),
+  // qui lui n'apparaît QUE dans cette première instruction.
+  const divineNameWeight = result ? calculateWeight(result.data.divineName.arabic) : 0;
+
   return (
     <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
       <div className="max-w-4xl mx-auto">
@@ -436,6 +481,58 @@ export function PlantesPage() {
         {/* SECTION 2 — FORMULAIRE */}
         {!result && (
           <div className="carte rounded-lg max-w-[700px] mx-auto flex flex-col gap-5">
+            <div>
+              <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>
+                Prénom de la personne
+              </label>
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+                className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>
+                Prénom de la mère
+              </label>
+              <input
+                type="text"
+                value={motherName}
+                onChange={(e) => setMotherName(e.target.value)}
+                required
+                className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>
+                Sexe
+              </label>
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setGender('homme')}
+                  className={`flex-1 py-2 rounded font-bold transition ${
+                    gender === 'homme' ? 'bg-or text-white' : 'border border-or text-or bg-transparent'
+                  }`}
+                >
+                  Homme
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setGender('femme')}
+                  className={`flex-1 py-2 rounded font-bold transition ${
+                    gender === 'femme' ? 'bg-or text-white' : 'border border-or text-or bg-transparent'
+                  }`}
+                >
+                  Femme
+                </button>
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm mb-2" style={{ color: '#a0aec0' }}>
                 Décris ton objectif ou ton problème
@@ -465,6 +562,19 @@ export function PlantesPage() {
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
+              {category === 'Autre' && (
+                <div className="mt-3">
+                  <label className="block text-sm mb-1" style={{ color: '#a0aec0' }}>
+                    Précise ton travail
+                  </label>
+                  <input
+                    type="text"
+                    value={customWorkType}
+                    onChange={(e) => setCustomWorkType(e.target.value)}
+                    className="w-full bg-bleu border border-or/30 rounded px-3 py-2 text-white focus:outline-none focus:border-or"
+                  />
+                </div>
+              )}
             </div>
 
             <button
@@ -498,10 +608,10 @@ export function PlantesPage() {
             <div id="plantes-content">
               <Separateur />
 
-              {/* EN-TÊTE RÉSULTATS */}
+              {/* EN-TÊTE RÉSULTATS — présentation et description du travail */}
               <div className="carte rounded-lg text-center">
                 <span className="inline-block px-4 py-2 rounded-full text-sm font-bold bg-or text-white">
-                  {result.objectiveSummary}
+                  {result.data.objectiveSummary}
                 </span>
                 {isGuerisson && (
                   <div className="rounded-lg p-4 mt-4" style={{ background: '#1b3a1f', border: '1px solid #4caf50' }}>
@@ -510,18 +620,19 @@ export function PlantesPage() {
                     </p>
                   </div>
                 )}
-                <p className="italic text-white mt-4">{result.introduction}</p>
+                <p className="italic text-white mt-4">{result.data.introduction}</p>
               </div>
 
               <Separateur />
 
-              {/* BLOC 1 — Tes Plantes */}
-              <div>
+              {/* CARTE — Tes plantes (les deux plantes regroupées dans une
+                  seule carte principale, chacune dans son propre bloc). */}
+              <div className="carte rounded-lg">
                 <BlocTitle>
-                  Tes Plantes ({result.plants.length} plante{result.plants.length > 1 ? 's' : ''})
+                  Tes plantes ({result.data.plants.length} plante{result.data.plants.length > 1 ? 's' : ''})
                 </BlocTitle>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {result.plants.map((p) => (
+                  {result.data.plants.map((p) => (
                     <div key={p.number} className="rounded-lg overflow-hidden" style={{ border: '1px solid #f5c842' }}>
                       <div className="px-4 py-2 bg-or">
                         <p className="text-white font-bold">
@@ -550,194 +661,134 @@ export function PlantesPage() {
 
               <Separateur />
 
-              {/* BLOC 2 — Versets */}
-              <div className="carte rounded-lg">
-                <BlocTitle>{result.verses.length > 1 ? 'Versets Coraniques' : 'Verset Coranique'}</BlocTitle>
-                <div className="flex flex-col gap-4">
-                  {result.verses.map((v, i) => (
-                    <div key={i} className="text-center">
-                      <p className="arabic text-or text-[1.8em]">{v.arabic}</p>
-                      <p className="mt-2 text-white">
-                        Sourate {v.surah} — Verset {v.ayah}
-                      </p>
-                      <p className="italic mt-1" style={{ color: '#a0aec0' }}>{v.meaning}</p>
-                      <p className="mt-2 text-white">{v.why}</p>
-                      <div className="rounded-lg p-4 mt-3" style={{ background: '#0a0f2e', border: '1px solid rgba(21,101,192,0.4)' }}>
-                        <p className="text-sm text-white">{v.writingInstructions}</p>
+              {/* CARTE — Nom Divin et Verset Coranique, regroupés (le Nom
+                  Divin apparaît donc juste après "Tes plantes", comme
+                  demandé, fusionné avec le verset plutôt que dupliqué dans
+                  2 cartes distinctes). */}
+              <div className="rounded-lg text-center p-8" style={{ background: '#0a0f2e', border: '1px solid #f5c842' }}>
+                <BlocTitle>Nom Divin et Verset Coranique</BlocTitle>
+                <p className="arabic text-or text-[2.5em]">{result.data.divineName.withYa}</p>
+                <p className="mt-3 text-white">
+                  {result.data.divineName.transliteration} • {result.data.divineName.meaning}
+                </p>
+                <div className="flex justify-center mt-4">
+                  <span className="px-4 py-2 rounded-full text-sm font-bold bg-or text-white">
+                    À réciter {result.data.divineName.repetitions} fois
+                  </span>
+                </div>
+                <p className="italic mt-3" style={{ color: '#a0aec0' }}>{result.data.divineName.reason}</p>
+                <div className="mt-4 flex justify-center">
+                  <AudioButton text={result.data.divineName.withYa} label="Écouter le nom divin" />
+                </div>
+
+                <div className="mt-6 pt-5" style={{ borderTop: '1px solid rgba(245,200,66,0.2)' }}>
+                  <p className="text-or font-bold mb-4">{result.data.verses.length > 1 ? 'Versets Coraniques' : 'Verset Coranique'}</p>
+                  <div className="flex flex-col gap-5">
+                    {result.data.verses.map((v, i) => (
+                      <div key={i}>
+                        <p className="arabic text-or text-[1.8em]">{v.arabic}</p>
+                        <p className="mt-2 text-white">
+                          Sourate {v.surah} — Verset {v.ayah}
+                        </p>
+                        <p className="italic mt-1" style={{ color: '#a0aec0' }}>{v.meaning}</p>
+                        <p className="mt-2 text-white">{v.why}</p>
+                        <div className="mt-3 flex justify-center">
+                          <AudioButton text={v.arabic} label="Écouter le verset" />
+                        </div>
                       </div>
-                      <div className="mt-3 flex justify-center">
-                        <AudioButton text={v.arabic} label="Écouter le verset" />
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
 
               <Separateur />
 
-              {/* BLOC 3 — Préparation Complète */}
+              {/* CARTE — Préparation Complète : étapes A/B/C fixes. Le Poids
+                  Mystique de la personne n'apparaît QU'ici (Étape A.1) ;
+                  l'Étape A.2 utilise le poids mystique du Nom Divin
+                  (divineNameWeight, calculateWeight() — distinct du PM de
+                  la personne), jamais le même nombre répété. */}
               <div className="carte rounded-lg">
                 <BlocTitle>Préparation Complète</BlocTitle>
 
                 <p className="font-bold mb-2" style={{ color: '#a0aec0' }}>Matériel nécessaire</p>
                 <div className="rounded-lg p-4 mb-6" style={{ background: '#0a0f2e', border: '1px solid rgba(21,101,192,0.3)' }}>
-                  {result.preparation.materials.map((m, i) => (
+                  {result.data.preparation.materials.map((m, i) => (
                     <p key={i} className="text-white text-sm">✅ {m}</p>
                   ))}
                 </div>
 
-                <p className="text-or font-bold mb-3">Étape A — Prépare le Talisman</p>
+                <p className="text-or font-bold mb-3">Étape A — Prépare le talisman</p>
                 <StepList
                   steps={[
-                    result.preparation.talismanPreparation.step1,
-                    result.preparation.talismanPreparation.step2,
-                    result.preparation.talismanPreparation.step3,
+                    `Écrire le Nom Divin ${result.data.divineName.withYa} en arabe. Ton poids mystique est de ${result.PM}.`,
+                    `Écrire le verset coranique en arabe, ${divineNameWeight} fois (poids mystique du Nom Divin).`,
+                    'Laisser sécher la tablette à l\'ombre.',
+                    'Laver la tablette avec 2 litres d\'eau propre et recueillir l\'eau dans un récipient propre.',
                   ]}
                 />
-                <div className="rounded-lg p-4 mb-6" style={{ background: '#0a0f2e', border: '1px solid rgba(21,101,192,0.3)' }}>
-                  <p className="text-sm text-white">{result.preparation.talismanPreparation.talismanWaterUse}</p>
-                </div>
 
-                <p className="text-or font-bold mb-3">Étape B — Prépare les Plantes</p>
+                <p className="text-or font-bold mb-3 mt-6">Étape B — Prépare les plantes</p>
                 <StepList
                   steps={[
-                    result.preparation.plantPreparation.step1,
-                    result.preparation.plantPreparation.step2,
-                    result.preparation.plantPreparation.step3,
-                    result.preparation.plantPreparation.step4,
+                    'Laver les plantes et préparer les parties indiquées dans les fiches.',
+                    result.data.preparation.plantWaterQuantity,
+                    'Faire bouillir les plantes pendant 1 heure à feu doux.',
+                    'Laisser refroidir, puis filtrer l\'infusion.',
                   ]}
                 />
-                {result.preparation.plantPreparation.fumigationInstructions && (
-                  <div className="rounded-lg p-4 mb-6" style={{ background: '#0a0f2e', border: '1px solid rgba(21,101,192,0.3)' }}>
-                    <p className="text-sm text-white">{result.preparation.plantPreparation.fumigationInstructions}</p>
-                  </div>
-                )}
 
-                <p className="text-or font-bold mb-3">Étape C — Mélange Final</p>
+                <p className="text-or font-bold mb-3 mt-6">Étape C — Prépare le mélange final</p>
                 <div className="rounded-lg p-5" style={{ border: '2px solid #f5c842' }}>
-                  <p className="text-white">{result.preparation.mixing}</p>
+                  <p className="text-white">
+                    {isProtectionWork
+                      ? "Mélanger l'eau du talisman avec l'infusion des plantes adaptées. Ne pas ajouter de parfum. Conserver le mélange dans un récipient propre."
+                      : "Mélanger l'eau du talisman avec l'infusion des plantes. Ajouter un parfum sans alcool au mélange destiné au lavage. Conserver le mélange dans un récipient propre."}
+                  </p>
+                </div>
+
+                <div className="rounded-lg p-4 mt-5 text-center" style={{ background: '#1b3a1f', border: '1px solid #4caf50' }}>
+                  <p className="text-green-400 font-bold text-sm">
+                    Utilise le mélange pour te laver de la tête aux pieds pendant 14 jours.
+                  </p>
                 </div>
               </div>
 
               <Separateur />
 
-              {/* BLOC 4 — Le Rituel */}
+              {/* CARTE — Sacrifice conseillé (remplace "Le Rituel" et
+                  "Prière et Invocation", supprimées) — règle PM%4/PM%3
+                  déterministe, identique à celle déjà utilisée ailleurs sur
+                  le site (voir buildPlantesPrompt). */}
               <div className="carte rounded-lg">
-                <BlocTitle>Le Rituel ({result.ritual.duration})</BlocTitle>
-                <p className="text-center text-white">Meilleur moment : {result.ritual.bestTime}</p>
-
-                {isGuerisson && (
-                  <div className="rounded-lg p-4 mt-4" style={{ background: '#1b3a1f', border: '1px solid #4caf50' }}>
-                    <p className="text-green-400 text-sm font-bold text-center">
-                      Rituel de Guérison — lavage ET consommation quotidiens
-                    </p>
-                  </div>
-                )}
-
-                <p className="font-bold mt-4 mb-3" style={{ color: '#a0aec0' }}>Rituel quotidien</p>
-                <StepList steps={result.ritual.dailyRitual} />
-
-                <div className="rounded-lg p-4 mt-3" style={{ background: '#0a0f2e', border: '1px solid rgba(245,200,66,0.2)' }}>
-                  <p className="text-or font-bold mb-1">Lavage</p>
-                  <p className="text-white text-sm">{result.ritual.washingInstructions}</p>
-                </div>
-
-                {isGuerisson && result.ritual.drinkingInstructions && (
-                  <div className="rounded-lg p-4 mt-3" style={{ background: '#1b3a1f' }}>
-                    <p className="text-green-400 font-bold mb-1">Comment boire</p>
-                    <p className="text-white text-sm">{result.ritual.drinkingInstructions}</p>
-                  </div>
-                )}
-
-                {result.ritual.fumigationInstructions && (
-                  <div className="rounded-lg p-4 mt-3" style={{ background: '#0a0f2e', border: '1px solid rgba(245,200,66,0.2)' }}>
-                    <p className="text-or font-bold mb-1">Fumigation</p>
-                    <p className="text-white text-sm">{result.ritual.fumigationInstructions}</p>
-                  </div>
-                )}
-
-                {result.ritual.daysToAvoid && (
-                  <div className="rounded-lg p-4 mt-3" style={{ background: '#3a2410', border: '1px solid #ff9800' }}>
-                    <p className="text-orange-300 text-sm">Jours à éviter : {result.ritual.daysToAvoid}</p>
-                  </div>
-                )}
-
-                {result.ritual.importantNotes.length > 0 && (
-                  <div className="flex flex-col gap-2 mt-5">
-                    {result.ritual.importantNotes.map((n, i) => (
-                      <div key={i} className="rounded p-3" style={{ background: '#1a1a2e' }}>
-                        <p className="text-sm" style={{ color: '#a0aec0' }}>✅ {n}</p>
-                      </div>
-                    ))}
-                  </div>
+                <BlocTitle>Sacrifice conseillé</BlocTitle>
+                {result.data.sacrifice.isRecommended ? (
+                  <>
+                    <p className="text-white text-center">{result.data.sacrifice.reason}</p>
+                    <div className="mt-4 flex flex-col gap-2">
+                      {result.data.sacrifice.offerings.map((o, i) => (
+                        <p key={i} className="text-sm text-white">
+                          {o.item} — {o.quantity} → {o.meaning}
+                        </p>
+                      ))}
+                    </div>
+                    <p className="mt-3 text-sm" style={{ color: '#a0aec0' }}>À donner à : {result.data.sacrifice.recipient}</p>
+                    <p className="text-sm" style={{ color: '#a0aec0' }}>Moment : {result.data.sacrifice.timing}</p>
+                    <p className="mt-3 text-white">{result.data.sacrifice.instructions}</p>
+                  </>
+                ) : (
+                  <p className="text-white text-center">
+                    Aucun sacrifice spécifique n'est défini pour ce type de travail.
+                  </p>
                 )}
               </div>
 
-              <Separateur />
-
-              {/* BLOC 5 — Prière et Invocation */}
-              <div className="carte rounded-lg text-center">
-                <BlocTitle>Prière et Invocation</BlocTitle>
-                <p className="arabic text-or text-[1.4em]">{result.prayer.opening}</p>
-                <p className="italic text-white mt-1 text-sm">{result.prayer.openingMeaning}</p>
-                <div className="my-4 h-px" style={{ background: 'rgba(245,200,66,0.2)' }} />
-                <p className="arabic text-or text-[1.8em]">{result.prayer.mainPrayer}</p>
-                <p className="italic text-white mt-2">{result.prayer.mainPrayerMeaning}</p>
-                <div className="flex justify-center gap-2 mt-4 flex-wrap">
-                  <span className="px-3 py-1 rounded-full text-sm font-bold bg-or text-white">
-                    À réciter {result.prayer.repetitions} fois
-                  </span>
-                  <span className="px-3 py-1 rounded-full text-sm font-bold border border-or text-or">{result.prayer.when}</span>
-                </div>
-                <div className="mt-4 flex justify-center">
-                  <AudioButton text={result.prayer.mainPrayer} label="Écouter la prière" />
-                </div>
-              </div>
-
-              <Separateur />
-
-              {/* BLOC 6 — Nom Divin */}
-              <div className="rounded-lg text-center p-8" style={{ background: '#0a0f2e', border: '1px solid #f5c842' }}>
-                <BlocTitle>Ton Nom Divin</BlocTitle>
-                <p className="arabic text-or text-[2.5em]">{result.divineName.withYa}</p>
-                <p className="mt-3 text-white">
-                  {result.divineName.transliteration} • {result.divineName.meaning}
-                </p>
-                <div className="flex justify-center mt-4">
-                  <span className="px-4 py-2 rounded-full text-sm font-bold bg-or text-white">
-                    À réciter {result.divineName.repetitions} fois
-                  </span>
-                </div>
-                <p className="italic mt-3" style={{ color: '#a0aec0' }}>{result.divineName.reason}</p>
-                <div className="mt-4 flex justify-center">
-                  <AudioButton text={result.divineName.withYa} label="Écouter le nom divin" />
-                </div>
-              </div>
-
-              <Separateur />
-
-              {/* BLOC 7 — Sacrifice Recommandé */}
-              <div className="carte rounded-lg">
-                <BlocTitle>Sacrifice Recommandé</BlocTitle>
-                <p className="text-white text-center">{result.sacrifice.reason}</p>
-                <div className="mt-4 flex flex-col gap-2">
-                  {result.sacrifice.offerings.map((o, i) => (
-                    <p key={i} className="text-sm text-white">
-                      {o.item} — {o.quantity} → {o.meaning}
-                    </p>
-                  ))}
-                </div>
-                <p className="mt-3 text-sm" style={{ color: '#a0aec0' }}>À donner à : {result.sacrifice.recipient}</p>
-                <p className="text-sm" style={{ color: '#a0aec0' }}>Moment : {result.sacrifice.timing}</p>
-                <p className="mt-3 text-white">{result.sacrifice.instructions}</p>
-              </div>
-
-              {/* BLOC 8 — Avertissements */}
-              {result.warnings.length > 0 && (
+              {/* Avertissements */}
+              {result.data.warnings.length > 0 && (
                 <>
                   <Separateur />
                   <div className="flex flex-col gap-2">
-                    {result.warnings.map((w, i) => (
+                    {result.data.warnings.map((w, i) => (
                       <div key={i} className="rounded-lg p-4" style={{ background: '#3a2410', border: '1px solid #ff9800' }}>
                         <p className="text-orange-300 text-sm">✦ {w}</p>
                       </div>
@@ -748,16 +799,16 @@ export function PlantesPage() {
 
               <Separateur />
 
-              {/* BLOC 9 — Conclusion */}
+              {/* Conclusion */}
               <div className="rounded-lg text-center p-8" style={{ background: '#0d1545', border: '1px solid #f5c842' }}>
-                <p className="italic text-white">{result.conclusion}</p>
+                <p className="italic text-white">{result.data.conclusion}</p>
               </div>
             </div>
 
             <Separateur />
 
             <div className="flex justify-center mb-4">
-              <AudioButton text={`${result.introduction} ${result.conclusion}`} label="Écouter le rituel" />
+              <AudioButton text={`${result.data.introduction} ${result.data.conclusion}`} label="Écouter le rituel" />
             </div>
 
             <div className="flex flex-col md:flex-row gap-3">
