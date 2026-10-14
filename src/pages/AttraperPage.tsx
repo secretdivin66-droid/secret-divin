@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import type { ReactNode, CSSProperties } from 'react';
+import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { supabase } from '../lib/supabaseClient';
@@ -7,7 +8,7 @@ import { CreditModal } from '../components/CreditModal';
 import { AudioButton } from '../components/AudioButton';
 import { callGeminiProxy } from '../lib/geminiProxy';
 import { isAdminUser } from '../utils/roles';
-import { calculateWeight, GENDER_BONUS, generateSquare, LAYOUTS, toArabicIndic } from '../utils/mystique';
+import { calculateWeight, GENDER_BONUS } from '../utils/mystique';
 import type { SpendCreditsResult } from '../utils/mystique';
 
 type Gender = 'homme' | 'femme';
@@ -25,8 +26,6 @@ const OBJECTIFS = [
   'Autre',
 ];
 
-const CELL_SIZES: Record<number, number> = { 3: 64, 4: 56, 5: 48 };
-
 interface GeminiNameResult {
   arabic: string;
   weight?: number;
@@ -39,15 +38,6 @@ interface DivineNameInfo {
   meaning: string;
 }
 
-interface ZikrStep {
-  order: number;
-  title: string;
-  arabic: string;
-  arabicWithHarakat: string;
-  repetitions: number;
-  note: string | null;
-}
-
 interface AttraperData {
   divineNames: {
     name1: DivineNameInfo;
@@ -55,28 +45,26 @@ interface AttraperData {
     combined: string;
     reason: string;
   };
-  verse: { arabic: string; surah: string; ayah: string; meaning: string; reason: string };
+  verse: { arabic: string; arabicWithHarakat: string; surah: string; ayah: string; meaning: string; reason: string };
   invocation: {
     arabicNoHarakat: string;
     arabicWithHarakat: string;
     meaning: string;
-    repetitions: number;
   };
   talisman: {
+    // Restreint à 3x3/4x4 (voir RÈGLES TALISMAN) : ce sont les deux seuls
+    // formats pour lesquels l'étape "écrire le carré" a une règle de
+    // répétition définie (3 fois / 4 fois).
     squareType: string;
-    choiceReason: string;
-    writingOrder: string[];
-    bathInstructions: string;
-    ritualDuration: string;
-    bestDayToStart: string;
+    // Nombre de jours du lavage (Étape 7), contraint entre 7 et 14 —
+    // demandé en nombre plutôt qu'en texte libre pour un affichage fiable
+    // et pour que le Zikr quotidien (même durée) puisse le réutiliser
+    // directement sans le reparser.
+    ritualDurationDays: number;
   };
-  zikr: {
-    steps: ZikrStep[];
-    bestTime: string;
-    duration: string;
-    important: string;
-  };
-  plants: { nomFrancais: string; nomBambara: string; nomScientifique: string; lienWikipedia: string; partie: string; preparation: string }[];
+  // Juste les noms, intégrés en texte dans l'Étape 6 — plus de cartes
+  // dédiées, donc plus besoin du nom scientifique/bambara/lien Wikipedia.
+  plants: { nomFrancais: string }[];
   sacrifice: {
     isRecommended: boolean;
     reason: string;
@@ -97,8 +85,12 @@ interface CachedResult {
   userMotherArabic: string;
   targetNameArabic: string;
   targetMotherArabic: string;
+  // Poids de l'invocation (méthode de calcul inchangée : calculateWeight
+  // sur invocation.arabicNoHarakat) — ne sert plus à générer un carré
+  // localement, mais à le transmettre tel quel à la fonctionnalité Carré
+  // Magique via l'URL, pour que l'utilisateur y retrouve EXACTEMENT le
+  // même carré qu'avant (même nombre, même somme magique).
   invocationWeight: number;
-  cells: number[];
   squareSize: number;
 }
 
@@ -179,6 +171,7 @@ Retourne UNIQUEMENT du JSON valide :
   },
   "verse": {
     "arabic": "verset SANS harakat",
+    "arabicWithHarakat": "même verset AVEC tous les harakat",
     "surah": "nom sourate français",
     "ayah": "numéro",
     "meaning": "traduction française",
@@ -186,35 +179,16 @@ Retourne UNIQUEMENT du JSON valide :
   },
   "invocation": {
     "arabicNoHarakat": "invocation complète SANS harakat contenant : يا nom1 + يا nom2 + prénom arabe utilisateur + ibn/bint + prénom arabe mère utilisateur + prénom arabe cible + ibn/bint + prénom arabe mère cible + verset",
-    "arabicWithHarakat": "même invocation AVEC tous les harakat pour le zikr quotidien",
-    "meaning": "traduction française complète de l'invocation",
-    "repetitions": 41
+    "arabicWithHarakat": "même invocation AVEC tous les harakat",
+    "meaning": "traduction française complète de l'invocation"
   },
   "talisman": {
-    "squareType": "3x3 ou 4x4 ou 5x5",
-    "choiceReason": "Pourquoi ce type de carré pour cet objectif et ces PM.",
-    "writingOrder": ["Bismillah en haut de la tablette","Salat sur le Prophète","Les 2 noms divins avec يا","Le verset coranique","Le carré magique","Les noms arabes des 2 personnes"],
-    "bathInstructions": "Instructions complètes pour laver la tablette et préparer le bain rituel.",
-    "ritualDuration": "7 jours",
-    "bestDayToStart": "Quel jour commencer ce rituel"
-  },
-  "zikr": {
-    "steps": [
-      { "order": 1, "title": "Bismillah", "arabic": "بسم الله الرحمن الرحيم", "arabicWithHarakat": "بِسْمِ اللهِ الرَّحْمَنِ الرَّحِيمِ", "repetitions": 1, "note": "Toujours commencer par Bismillah" },
-      { "order": 2, "title": "Astaghfirullah", "arabic": "أستغفر الله", "arabicWithHarakat": "أَسْتَغْفِرُ اللهَ", "repetitions": 100, "note": null },
-      { "order": 3, "title": "Salat sur le Prophète", "arabic": "اللهم صل على سيدنا محمد", "arabicWithHarakat": "اللَّهُمَّ صَلِّ عَلَى سَيِّدِنَا مُحَمَّدٍ", "repetitions": 100, "note": null },
-      { "order": 4, "title": "Les 2 Noms Divins", "arabic": "[divineNames.combined]", "arabicWithHarakat": "[avec harakat complets]", "repetitions": 99, "note": "يا sans ال obligatoire. Jamais يا الودود." },
-      { "order": 5, "title": "Le Verset Coranique", "arabic": "[verse.arabic]", "arabicWithHarakat": "[verset avec harakat]", "repetitions": 7, "note": null },
-      { "order": 6, "title": "L'Invocation Complète", "arabic": "[invocation.arabicWithHarakat]", "arabicWithHarakat": "[invocation.arabicWithHarakat]", "repetitions": 41, "note": "Réciter lentement et avec concentration. Penser à ${targetName} pendant la récitation." },
-      { "order": 7, "title": "Clôture Salat", "arabic": "اللهم صل على سيدنا محمد", "arabicWithHarakat": "اللَّهُمَّ صَلِّ عَلَى سَيِّدِنَا مُحَمَّدٍ", "repetitions": 3, "note": "Terminer par Al-Hamdulillah." }
-    ],
-    "bestTime": "Après Fajr ou avant de dormir",
-    "duration": "[talisman.ritualDuration]",
-    "important": "Ne pas interrompre le rituel en cours de route. Faire le zikr chaque jour sans interruption."
+    "squareType": "3x3 ou 4x4",
+    "ritualDurationDays": 7
   },
   "plants": [
-    { "nomFrancais": "nom français", "nomBambara": "nom bambara", "nomScientifique": "nom scientifique exact", "lienWikipedia": "https://fr.wikipedia.org/wiki/...", "partie": "feuilles/écorce/racines", "preparation": "Comment préparer et utiliser avec le bain rituel." },
-    { "nomFrancais": "deuxième plante", "nomBambara": "nom bambara", "nomScientifique": "nom scientifique exact", "lienWikipedia": "https://fr.wikipedia.org/wiki/...", "partie": "partie utilisée", "preparation": "Instructions de préparation." }
+    { "nomFrancais": "nom français" },
+    { "nomFrancais": "deuxième plante" }
   ],
   "sacrifice": {
     "isRecommended": true,
@@ -237,8 +211,14 @@ Correct : يا ودود يا جامع
 Incorrect : يا الودود يا الجامع
 
 RÈGLES PLANTES :
-2 à 3 plantes africaines réelles.
-Nom scientifique exact. Lien Wikipedia valide.`;
+2 à 3 plantes africaines réelles, uniquement leur nom français (pas de
+nom scientifique ni de lien ici, ces plantes sont juste citées dans le
+texte de l'étape de préparation du mélange).
+
+RÈGLES TALISMAN :
+"squareType" doit être EXACTEMENT "3x3" ou "4x4" (jamais 5x5 ni un autre
+format) : ce sont les deux seuls formats utilisés par cette page.
+"ritualDurationDays" doit être un nombre entier entre 7 et 14 inclus.`;
 }
 
 function Separateur() {
@@ -257,26 +237,6 @@ function FadeIn({ children }: { children: ReactNode }) {
 
 function BlocTitle({ children }: { children: ReactNode }) {
   return <h2 className="text-or font-bold text-center mb-4">{children}</h2>;
-}
-
-function TalismanGrid({ values, size, variant }: { values: (number | string)[]; size: number; variant: 'base' | 'french' | 'arabic' }) {
-  const cellClass = variant === 'arabic' ? 'font-bold arabic' : 'font-bold';
-  const cellStyle: CSSProperties =
-    variant === 'base'
-      ? { background: '#f5f5f5', color: '#0d1545', border: '1px solid #e0e0e0' }
-      : variant === 'french'
-      ? { background: '#ffffff', color: '#0d1545', border: '2px solid #f5c842' }
-      : { background: '#0d1545', color: '#f5c842', direction: 'rtl' };
-
-  return (
-    <div className="att-grid mx-auto" style={{ display: 'grid', gridTemplateColumns: `repeat(${size}, auto)`, gap: '2px', justifyContent: 'center' }}>
-      {values.map((v, i) => (
-        <div key={i} className={`att-cell flex items-center justify-center ${cellClass}`} style={{ ...cellStyle, fontSize: '0.9em' }}>
-          {v}
-        </div>
-      ))}
-    </div>
-  );
 }
 
 export function AttraperPage() {
@@ -367,9 +327,10 @@ export function AttraperPage() {
         maxOutputTokens: 2600,
       });
 
-      const squareSize = data.talisman.squareType === '3x3' ? 3 : data.talisman.squareType === '4x4' ? 4 : 5;
+      // Carré non généré ici : la page renvoie vers la fonctionnalité Carré
+      // Magique (squareSize sert à présélectionner le bon format là-bas).
+      const squareSize = data.talisman.squareType === '4x4' ? 4 : 3;
       const invocationWeight = calculateWeight(data.invocation.arabicNoHarakat);
-      const cells = generateSquare(invocationWeight, squareSize);
 
       if (!isAdmin) {
         // Débit atomique et journalisé côté serveur (fonction SECURITY DEFINER) :
@@ -399,7 +360,6 @@ export function AttraperPage() {
         targetNameArabic: targetNameResult.arabic,
         targetMotherArabic: targetMotherResult.arabic,
         invocationWeight,
-        cells,
         squareSize,
       };
 
@@ -483,17 +443,37 @@ export function AttraperPage() {
     );
   }
 
-  const desktopCellSize = CELL_SIZES[result?.squareSize ?? 3];
+  // Nombre de répétitions des noms divins à l'écriture (Étape 3) = somme des
+  // deux poids mystiques, tel que demandé — une simple addition de valeurs
+  // déjà calculées, pas une nouvelle méthode de calcul.
+  const combinedPM = result ? result.PMuser + result.PMtarget : 0;
+  // Durée du lavage (Étape 7 et Zikr quotidien, qui doit couvrir exactement
+  // la même période) : on garde le nombre calculé par le système s'il
+  // existe, sinon on retombe sur la plage "7 à 14" demandée.
+  const ritualDays = result?.data.talisman.ritualDurationDays;
+  const ritualDaysText = ritualDays ? String(ritualDays) : '7 à 14';
+  const plantsListText = result ? result.data.plants.map((p) => p.nomFrancais).join(', ') : '';
+
+  // Zikr quotidien en 7 étapes fixes (formules/répétitions/horaires déjà
+  // standards du système, voir Jours de Naissance pour le même principe) —
+  // les étapes 4/5/6 réutilisent directement les Noms Divins/Verset/
+  // Invocation déjà générés plus haut au lieu de demander à Gemini de se
+  // recopier lui-même : c'est cette auto-référence qui causait l'affichage
+  // brut de "invocation.arabicWithHarakat" à l'écran.
+  const zikrSteps = result
+    ? [
+        { order: 1, title: 'Bismillah', arabic: 'بِسْمِ اللهِ الرَّحْمَنِ الرَّحِيمِ', repetitions: 1, note: 'Toujours commencer par Bismillah.' },
+        { order: 2, title: 'Astaghfirullah', arabic: 'أَسْتَغْفِرُ اللهَ', repetitions: 100, note: null as string | null },
+        { order: 3, title: 'Salat sur le Prophète', arabic: 'اللَّهُمَّ صَلِّ عَلَى سَيِّدِنَا مُحَمَّدٍ', repetitions: 100, note: null as string | null },
+        { order: 4, title: 'Les 2 Noms Divins', arabic: result.data.divineNames.combined, repetitions: 99, note: 'يا sans ال obligatoire. Jamais يا الودود.' },
+        { order: 5, title: 'Le Verset Coranique', arabic: result.data.verse.arabicWithHarakat || result.data.verse.arabic, repetitions: 7, note: null as string | null },
+        { order: 6, title: "L'Invocation Complète", arabic: result.data.invocation.arabicWithHarakat, repetitions: 41, note: `Réciter lentement et avec concentration. Penser à ${targetName} pendant la récitation.` },
+        { order: 7, title: 'Clôture Salat', arabic: 'اللَّهُمَّ صَلِّ عَلَى سَيِّدِنَا مُحَمَّدٍ', repetitions: 3, note: 'Terminer par Al-Hamdulillah.' },
+      ]
+    : [];
 
   return (
     <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
-      <style>{`
-        .att-cell { width: 40px; height: 40px; }
-        @media (min-width: 768px) {
-          .att-cell { width: ${desktopCellSize}px; height: ${desktopCellSize}px; }
-        }
-      `}</style>
-
       <div className="max-w-4xl mx-auto">
         {/* SECTION 1 — EN-TÊTE */}
         <h1 className="text-center font-bold text-or text-[2rem]">Pour Attraper</h1>
@@ -678,7 +658,7 @@ export function AttraperPage() {
               {/* BLOC 3 — Verset Coranique */}
               <div className="carte rounded-lg text-center">
                 <BlocTitle>Verset Coranique</BlocTitle>
-                <p className="arabic text-or text-[1.8em]">{result.data.verse.arabic}</p>
+                <p className="arabic text-or text-[1.8em]">{result.data.verse.arabicWithHarakat || result.data.verse.arabic}</p>
                 <p className="mt-3 text-white">
                   Sourate {result.data.verse.surah} — Verset {result.data.verse.ayah}
                 </p>
@@ -691,7 +671,118 @@ export function AttraperPage() {
 
               <Separateur />
 
-              {/* BLOC 4 — Invocation Personnalisée */}
+              {/* BLOC — Comment écrire ton talisman : 7 étapes fixes.
+                  Le carré magique (Étape 5) n'est plus généré ni affiché ici
+                  — on renvoie vers la fonctionnalité Carré Magique, avec le
+                  même poids (invocationWeight, calcul inchangé) et le même
+                  format (squareSize) pré-remplis via l'URL, pour que
+                  l'utilisateur y retrouve exactement le même carré. */}
+              <div className="carte rounded-lg">
+                <BlocTitle>Comment écrire ton talisman</BlocTitle>
+                <div className="flex flex-col gap-5 text-left">
+                  <div>
+                    <p className="text-white font-bold">Étape 1 — Bismillah</p>
+                    <p className="arabic text-or text-[1.6em] mt-1">بسم الله الرحمن الرحيم</p>
+                    <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>Écris Bismillah 1 fois.</p>
+                  </div>
+
+                  <div>
+                    <p className="text-white font-bold">Étape 2 — Salat</p>
+                    <p className="arabic text-or text-[1.6em] mt-1">اللهم صل على سيدنا محمد</p>
+                    <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>Écris la salat 1 fois.</p>
+                  </div>
+
+                  <div>
+                    <p className="text-white font-bold">Étape 3 — Noms divins</p>
+                    <p className="arabic text-or text-[1.6em] mt-1">{result.data.divineNames.combined}</p>
+                    <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>Écris ces noms divins {combinedPM} fois.</p>
+                  </div>
+
+                  <div>
+                    <p className="text-white font-bold">Étape 4 — Verset coranique</p>
+                    <p className="arabic text-or text-[1.6em] mt-1">{result.data.verse.arabicWithHarakat || result.data.verse.arabic}</p>
+                    <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>Écris ce verset 14 fois.</p>
+                  </div>
+
+                  <div>
+                    <p className="text-white font-bold">Étape 5 — Carré magique</p>
+                    <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>
+                      Écris le carré magique {result.data.talisman.squareType} — {result.squareSize} fois.
+                    </p>
+                    <Link
+                      to={`/carres-magiques?pm=${result.invocationWeight}&size=${result.squareSize}`}
+                      className="btn-secondaire rounded inline-block mt-2"
+                    >
+                      Générer mon carré magique ({result.data.talisman.squareType})
+                    </Link>
+                    <p className="text-sm mt-3 text-white">
+                      Lave l'écriture avec de l'eau propre, puis conserve-la dans un récipient propre.
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-white font-bold">Étape 6 — Préparer le mélange</p>
+                    <p className="text-sm mt-1 text-white">
+                      Choisis un parfum sans alcool. Fais bouillir les plantes recommandées pour ton talisman
+                      ({plantsListText}), puis prépare une infusion. Mélange cette infusion au parfum et ajoute le
+                      talisman que tu as écrit.
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-white font-bold">Étape 7 — Lavage</p>
+                    <p className="text-sm mt-1 text-white">
+                      Se laver avec le mélange préparé pendant {ritualDaysText} jours consécutifs, sans interruption.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <Separateur />
+
+              {/* BLOC — Zikr Quotidien : reprend directement les Noms
+                  Divins/Verset/Invocation déjà générés plus haut (voir
+                  zikrSteps) ; la durée reste identique à celle du lavage
+                  ci-dessus (ritualDaysText), une seule source de vérité. */}
+              <div className="carte rounded-lg">
+                <BlocTitle>Zikr Quotidien</BlocTitle>
+                <p className="text-center text-white text-sm">
+                  Meilleur moment : Après Fajr ou avant de dormir — Durée : {ritualDaysText} jours
+                </p>
+
+                <div className="flex flex-col gap-4 mt-5">
+                  {zikrSteps.map((step) => (
+                    <div key={step.order} className="rounded-lg p-4" style={{ background: '#0a0f2e', border: '1px solid rgba(245,200,66,0.2)' }}>
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="w-7 h-7 shrink-0 rounded-full bg-or text-white font-bold flex items-center justify-center text-sm">
+                          {step.order}
+                        </span>
+                        <p className="text-or font-bold">{step.title}</p>
+                      </div>
+                      <p className="arabic text-or text-[1.5em] text-center">{step.arabic}</p>
+                      <div className="flex justify-center mt-3">
+                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-or text-white">
+                          {step.repetitions} fois
+                        </span>
+                      </div>
+                      {step.note && (
+                        <p className="text-sm italic mt-2 text-center" style={{ color: '#a0aec0' }}>{step.note}</p>
+                      )}
+                      <div className="mt-3 flex justify-center">
+                        <AudioButton text={step.arabic} label="Écouter" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="rounded-lg p-4 mt-5" style={{ border: '1px solid #f5c842' }}>
+                  <p className="text-white text-sm">Ne pas interrompre le rituel en cours de route. Faire le zikr chaque jour sans interruption.</p>
+                </div>
+              </div>
+
+              <Separateur />
+
+              {/* BLOC — Invocation Personnalisée (déplacée après le Zikr) */}
               <div className="carte rounded-lg text-center">
                 <BlocTitle>Invocation Personnalisée</BlocTitle>
                 <p className="text-sm" style={{ color: '#a0aec0' }}>Version pour écrire (sans harakat)</p>
@@ -707,128 +798,6 @@ export function AttraperPage() {
                 </div>
                 <div className="mt-4 flex justify-center">
                   <AudioButton text={result.data.invocation.arabicWithHarakat} label="Écouter l'invocation" />
-                </div>
-              </div>
-
-              <Separateur />
-
-              {/* BLOC 5 — Carré Magique */}
-              <div className="carte rounded-lg text-center">
-                <BlocTitle>Carré Magique</BlocTitle>
-                <p className="text-white">{result.data.talisman.choiceReason}</p>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mt-4">
-                  <div>
-                    <p className="text-sm mb-2" style={{ color: '#a0aec0' }}>Base</p>
-                    <TalismanGrid values={LAYOUTS[result.squareSize]} size={result.squareSize} variant="base" />
-                  </div>
-                  <div>
-                    <p className="text-sm mb-2" style={{ color: '#a0aec0' }}>Français</p>
-                    <TalismanGrid values={result.cells} size={result.squareSize} variant="french" />
-                  </div>
-                  <div>
-                    <p className="text-sm mb-2" style={{ color: '#a0aec0' }}>Arabe</p>
-                    <TalismanGrid values={result.cells.map((v) => toArabicIndic(v))} size={result.squareSize} variant="arabic" />
-                  </div>
-                </div>
-
-                <div className="flex justify-center mt-4">
-                  <span className="px-4 py-2 rounded-full text-sm font-bold" style={{ background: '#1b3a1f', color: '#4caf50' }}>
-                    ✓ Somme = {result.invocationWeight}
-                  </span>
-                </div>
-              </div>
-
-              <Separateur />
-
-              {/* BLOC 6 — Comment Écrire le Talisman */}
-              <div className="carte rounded-lg">
-                <BlocTitle>Comment Écrire le Talisman</BlocTitle>
-                <div className="flex flex-col gap-3" style={{ borderLeft: '2px solid rgba(245,200,66,0.3)', paddingLeft: '1rem' }}>
-                  {result.data.talisman.writingOrder.map((step, i) => (
-                    <div key={i} className="flex gap-3 items-start">
-                      <span className="w-6 h-6 shrink-0 rounded-full bg-or text-white font-bold flex items-center justify-center text-xs">
-                        {i + 1}
-                      </span>
-                      <p className="text-white text-sm mt-0.5">{step}</p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="rounded-lg p-4 mt-5" style={{ background: '#0a0f2e', border: '1px solid rgba(21,101,192,0.3)' }}>
-                  <p className="text-sm text-white">{result.data.talisman.bathInstructions}</p>
-                </div>
-
-                <div className="flex justify-center gap-2 mt-4 flex-wrap">
-                  <span className="px-3 py-1 rounded-full text-sm font-bold bg-or text-white">
-                    Commencer un {result.data.talisman.bestDayToStart}
-                  </span>
-                  <span className="px-3 py-1 rounded-full text-sm font-bold border border-or text-or">
-                    Durée : {result.data.talisman.ritualDuration}
-                  </span>
-                </div>
-              </div>
-
-              <Separateur />
-
-              {/* BLOC 7 — Plantes et Parfum */}
-              <div>
-                <BlocTitle>Plantes et Parfum</BlocTitle>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  {result.data.plants.map((p, i) => (
-                    <div key={i} className="rounded-lg text-center p-6" style={{ background: '#0d2b1a', border: '1px solid #f5c842' }}>
-                      <p className="text-white font-bold">
-                        {p.nomFrancais} / {p.nomBambara} / <span className="italic">{p.nomScientifique}</span>
-                      </p>
-                      <p className="mt-2 text-white text-sm">Partie : {p.partie}</p>
-                      <p className="text-white text-sm">{p.preparation}</p>
-                      <button
-                        onClick={() => window.open(p.lienWikipedia, '_blank', 'noopener,noreferrer')}
-                        className="btn-secondaire rounded mt-4"
-                      >
-                        En savoir plus
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <Separateur />
-
-              {/* BLOC 8 — Zikr Quotidien */}
-              <div className="carte rounded-lg">
-                <BlocTitle>Zikr Quotidien</BlocTitle>
-                <p className="text-center text-white text-sm">
-                  Meilleur moment : {result.data.zikr.bestTime} — Durée : {result.data.zikr.duration}
-                </p>
-
-                <div className="flex flex-col gap-4 mt-5">
-                  {result.data.zikr.steps.map((step) => (
-                    <div key={step.order} className="rounded-lg p-4" style={{ background: '#0a0f2e', border: '1px solid rgba(245,200,66,0.2)' }}>
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="w-7 h-7 shrink-0 rounded-full bg-or text-white font-bold flex items-center justify-center text-sm">
-                          {step.order}
-                        </span>
-                        <p className="text-or font-bold">{step.title}</p>
-                      </div>
-                      <p className="arabic text-or text-[1.5em] text-center">{step.arabicWithHarakat}</p>
-                      <div className="flex justify-center mt-3">
-                        <span className="px-3 py-1 rounded-full text-xs font-bold bg-or text-white">
-                          {step.repetitions} fois
-                        </span>
-                      </div>
-                      {step.note && (
-                        <p className="text-sm italic mt-2 text-center" style={{ color: '#a0aec0' }}>{step.note}</p>
-                      )}
-                      <div className="mt-3 flex justify-center">
-                        <AudioButton text={step.arabicWithHarakat} label="Écouter" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="rounded-lg p-4 mt-5" style={{ border: '1px solid #f5c842' }}>
-                  <p className="text-white text-sm">{result.data.zikr.important}</p>
                 </div>
               </div>
 

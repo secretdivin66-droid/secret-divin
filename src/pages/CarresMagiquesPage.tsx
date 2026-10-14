@@ -103,12 +103,18 @@ export function CarresMagiquesPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const pmFromUrl = searchParams.get('pm');
+  // Permet à d'autres fonctionnalités (ex: Attraper une personne ou
+  // réconcilier deux personnes) de renvoyer vers ce générateur déjà réglé
+  // sur le bon format, au lieu de dupliquer leur propre générateur de
+  // carré — repli sur 3 si absent ou hors des tailles valides (3 à 9).
+  const sizeFromUrl = parseInt(searchParams.get('size') ?? '', 10);
+  const initialSquareSize = sizeFromUrl >= 3 && sizeFromUrl <= 9 ? sizeFromUrl : 3;
 
   const [firstName, setFirstName] = useState('');
   const [motherName, setMotherName] = useState('');
   const [gender, setGender] = useState<Gender>('homme');
   const [manualPM, setManualPM] = useState('');
-  const [squareSize, setSquareSize] = useState(3);
+  const [squareSize, setSquareSize] = useState(initialSquareSize);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
