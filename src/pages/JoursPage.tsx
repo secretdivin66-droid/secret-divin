@@ -65,11 +65,10 @@ interface JoursData {
     verseForTalisman: { arabic: string; surah: string; ayah: string };
     expectedResult: string;
   };
+  // Invocation en 3 phrases arabe + traduction française, à la première
+  // personne, adressée directement à Allah — jamais le nom de l'utilisateur.
   invocation: {
-    arabicWithHarakat: string;
-    meaning: string;
-    repetitions: number;
-    when: string;
+    lines: { arabic: string; french: string }[];
   };
   plant: {
     nomFrancais: string;
@@ -259,10 +258,11 @@ Retourne UNIQUEMENT du JSON valide :
     "expectedResult": "5 phrases décrivant le résultat spirituel attendu après ce rituel complet (talisman écrit puis lavé, 14 jours de lavage avec la plante, zikr quotidien), adressées directement à ${firstName}."
   },
   "invocation": {
-    "arabicWithHarakat": "invocation AVEC harakat contenant يا + nom divin + prénom arabe + mère arabe",
-    "meaning": "traduction française",
-    "repetitions": 99,
-    "when": "Quand réciter"
+    "lines": [
+      { "arabic": "Phrase 1 AVEC harakat, à la première personne du singulier, adressée directement à Allah (يا + un de Ses Noms, verbe à l'impératif dirigé vers Lui). Aucun prénom.", "french": "Traduction française fidèle de la phrase 1." },
+      { "arabic": "Phrase 2, même principe, un autre Nom d'Allah.", "french": "Traduction française fidèle de la phrase 2." },
+      { "arabic": "Phrase 3, même principe, un autre Nom d'Allah.", "french": "Traduction française fidèle de la phrase 3." }
+    ]
   },
   "plant": {
     "nomFrancais": "nom français",
@@ -289,7 +289,17 @@ Retourne UNIQUEMENT du JSON valide :
 }
 
 RÈGLES NOMS DIVINS :
-Sans ال, avec يا. Correct : يا ودود — Incorrect : يا الودود`;
+Sans ال, avec يا. Correct : يا ودود — Incorrect : يا الودود
+
+RÈGLES INVOCATION (point "invocation") :
+Exactement 3 lignes, ni plus ni moins. Chaque ligne arabe est une phrase
+complète à la première personne du singulier (verbes/pronoms "-ni"/"-i"),
+qui s'adresse DIRECTEMENT à Allah par l'un de Ses Noms (forme vocative
+"يا..."), jamais à une tierce personne. N'utilise AUCUN prénom (ni ${firstName}
+ni ${motherName}) dans ces 3 lignes. "french" est une traduction fidèle et
+naturelle de la ligne arabe correspondante, pas une paraphrase libre. Ne
+reprends aucune formule déjà utilisée dans "talisman" ou ailleurs dans ce
+JSON.`;
 }
 
 function Separateur() {
@@ -863,27 +873,27 @@ export function JoursPage() {
                     <span className="px-3 py-1 rounded-full text-xs font-bold bg-or text-white">Ton invocation — 3 fois</span>
                   </div>
                 </div>
-
-                <div className="mt-6 pt-5" style={{ borderTop: '1px solid rgba(245,200,66,0.2)' }}>
-                  <p className="text-or font-bold">Résultat attendu</p>
-                  <p className="mt-2 text-white">{result.data.talisman.expectedResult}</p>
-                </div>
               </div>
 
               <Separateur />
 
-              {/* BLOC 9 — Invocation */}
+              {/* BLOC 9 — Invocation : 3 phrases arabe + traduction française,
+                  1ère personne, adressées directement à Allah (pas de prénom). */}
               <div className="carte rounded-lg text-center">
                 <BlocTitle>Invocation</BlocTitle>
-                <p className="arabic text-or text-[1.6em]">{result.data.invocation.arabicWithHarakat}</p>
-                <p className="italic mt-3 text-white">{result.data.invocation.meaning}</p>
-                <div className="flex justify-center mt-4">
-                  <span className="px-3 py-1 rounded-full text-sm font-bold bg-or text-white">
-                    {result.data.invocation.repetitions} fois — {result.data.invocation.when}
-                  </span>
+                <div className="flex flex-col gap-4">
+                  {result.data.invocation.lines.map((line, i) => (
+                    <div key={i}>
+                      <p className="arabic text-or text-[1.4em]">{line.arabic}</p>
+                      <p className="italic mt-1 text-white">{line.french}</p>
+                    </div>
+                  ))}
                 </div>
                 <div className="mt-4 flex justify-center">
-                  <AudioButton text={result.data.invocation.arabicWithHarakat} label="Écouter l'invocation" />
+                  <AudioButton
+                    text={result.data.invocation.lines.map((l) => l.arabic).join(' ')}
+                    label="Écouter l'invocation"
+                  />
                 </div>
               </div>
 
@@ -907,6 +917,15 @@ export function JoursPage() {
                   Moment : {result.data.sacrifice.timing}
                 </p>
                 <p className="mt-3 text-white">{result.data.sacrifice.instructions}</p>
+              </div>
+
+              <Separateur />
+
+              {/* BLOC — Résultat attendu : déplacé hors de la carte Talisman,
+                  carte indépendante au même style que les autres. */}
+              <div className="carte rounded-lg text-center">
+                <BlocTitle>Résultat attendu</BlocTitle>
+                <p className="text-white">{result.data.talisman.expectedResult}</p>
               </div>
 
               <Separateur />
