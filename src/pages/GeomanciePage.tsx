@@ -70,16 +70,23 @@ async function callGeminiRaw(
   return JSON.parse(clean);
 }
 
+// Jusqu'à 3 tentatives au total (2 retries) sur une réponse malformée
+// (JSON invalide, ou réponse vide) : le prompt de cette page est plus
+// lourd (données FIGURES/MAISONS intégrées) et le schéma de sortie plus
+// complexe que les autres outils, donc plus exposé à une réponse tronquée
+// occasionnelle — un seul retry laissait parfois passer un deuxième échec.
 async function callGeminiWithRetry(
   model: string,
   prompt: string,
-  generationConfig: { temperature: number; maxOutputTokens: number }
+  generationConfig: { temperature: number; maxOutputTokens: number },
+  attempt = 1
 ): Promise<any> {
   try {
     return await callGeminiRaw(model, prompt, generationConfig);
   } catch (err) {
-    if (err instanceof SyntaxError) {
-      return await callGeminiRaw(model, prompt, generationConfig);
+    const isRetryable = err instanceof SyntaxError || (err instanceof Error && err.message === 'empty');
+    if (isRetryable && attempt < 3) {
+      return callGeminiWithRetry(model, prompt, generationConfig, attempt + 1);
     }
     throw err;
   }
@@ -226,9 +233,13 @@ export function GeomanciePage() {
       }
 
       const prompt = buildGeomanciePrompt(questionText);
+      // 2400 plutôt que 1800 : le schéma de sortie (16 maisons + lecture
+      // ciblée + interprétation à sections + sacrifices) est plus dense ici
+      // que sur les autres outils, 1800 laissait trop peu de marge avant
+      // une troncature du JSON.
       const data: GeomancieData = await callGeminiWithRetry('gemini-3.1-flash-lite', prompt, {
         temperature: 0.7,
-        maxOutputTokens: 1800,
+        maxOutputTokens: 2400,
       });
 
       if (!isAdmin) {
@@ -259,8 +270,15 @@ export function GeomanciePage() {
         content: data,
         page_source: 'geomancie',
       });
-    } catch {
-      setError('Erreur de connexion. Vérifie ta clé API et réessaie.');
+    } catch (err) {
+      // Distingue la session expirée (cause fréquente et facile à corriger
+      // pour l'utilisateur) du cas générique réseau/Gemini, plutôt que de
+      // toujours afficher le même message pour des causes différentes.
+      if (err instanceof Error && err.message === 'no-user') {
+        setError('Ta session a expiré. Reconnecte-toi puis réessaie.');
+      } else {
+        setError('Erreur de connexion. Vérifie ta clé API et réessaie.');
+      }
     } finally {
       setLoading(false);
     }
