@@ -10,6 +10,8 @@ import { calculateWeight, GENDER_BONUS } from '../utils/mystique';
 import type { SpendCreditsResult } from '../utils/mystique';
 import { callGeminiProxy } from '../lib/geminiProxy';
 import { isAdminUser } from '../utils/roles';
+import { selectPlantsForObjective, isProtectionWorkType } from '../utils/plantsSelection';
+import type { PlantData } from '../utils/plantsSelection';
 
 type Gender = 'homme' | 'femme';
 
@@ -85,6 +87,10 @@ interface CachedResult {
   nameArabic: string;
   motherArabic: string;
   PM: number;
+  // Plantes adaptées à l'objectif sélectionné (Étape 7 de "Comment utiliser
+  // ce secret ?") — sélectionnées via la même logique que "Plantes
+  // Mystiques" (voir ../utils/plantsSelection), pas une nouvelle base.
+  plants: PlantData[];
 }
 
 async function callGeminiRaw(
@@ -358,16 +364,24 @@ export function SecretsPage() {
         PM,
       });
 
-      const data: SecretsData = await callGeminiWithRetry('gemini-3.1-flash-lite', prompt, {
-        temperature: 0.8,
-        maxOutputTokens: 1800,
-      });
+      // Plantes de l'Étape 7, sélectionnées en parallèle avec la même
+      // logique que "Plantes Mystiques" (voir ../utils/plantsSelection) —
+      // objectif = libellé choisi dans le select, cette page n'a pas de
+      // description libre comme "Plantes Mystiques".
+      const [data, plants] = await Promise.all([
+        callGeminiWithRetry('gemini-3.1-flash-lite', prompt, {
+          temperature: 0.8,
+          maxOutputTokens: 1800,
+        }) as Promise<SecretsData>,
+        selectPlantsForObjective({ objectiveText: objective, workType: objective, PM }),
+      ]);
 
       const newResult: CachedResult = {
         data,
         nameArabic: nameResult.arabic,
         motherArabic: motherResult.arabic,
         PM,
+        plants,
       };
 
       if (!isAdmin) {
@@ -465,7 +479,7 @@ export function SecretsPage() {
   // pas confondre avec divineNamesWriteReps ci-dessus (somme des poids des
   // 2 noms divins, utilisée uniquement pour l'écriture du talisman).
   const divineNameZikrReps = result ? result.PM * 3 : 0;
-  const isProtection = objective === 'Protection spirituelle';
+  const isProtection = isProtectionWorkType(objective);
 
   return (
     <div className="min-h-screen px-4 py-8" style={{ background: '#0a0f2e' }}>
@@ -728,10 +742,38 @@ export function SecretsPage() {
 
                   <div>
                     <p className="text-white font-bold">Étape 7 — Ajouter le parfum et les plantes</p>
-                    <p className="text-sm mt-1 text-white">
+                    <p className="text-sm mt-1" style={{ color: '#a0aec0' }}>
+                      Travail sélectionné : {objective}
+                    </p>
+
+                    <p className="text-or font-bold mt-4">
+                      {isProtection ? 'Plantes adaptées à la protection' : 'Plantes adaptées à ton objectif'}
+                    </p>
+                    {result.plants.length > 0 && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                        {result.plants.map((p) => (
+                          <div key={p.number} className="rounded-lg overflow-hidden" style={{ border: '1px solid #f5c842' }}>
+                            <div className="px-4 py-2 bg-or">
+                              <p className="text-white font-bold text-sm">
+                                Plante {p.number} — {p.nomFrancais}
+                              </p>
+                            </div>
+                            <div className="p-4 text-center" style={{ background: '#0d2b1a' }}>
+                              <p className="text-white font-bold text-sm">
+                                {p.nomBambara} / <span className="italic">{p.nomScientifique}</span>
+                              </p>
+                              <p className="text-white text-sm mt-1">Partie : {p.partie}</p>
+                              <p className="text-white text-sm">Quantité : {p.quantite}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <p className="text-sm mt-4 text-white">
                       {isProtection
-                        ? "Prépare une infusion avec la plante adaptée à la protection, puis utilise-la selon les indications affichées pour ton secret."
-                        : "Choisis un parfum sans alcool et ajoute une infusion de la plante Timitimi préparée séparément. Mélange ensuite l'infusion au parfum et au liquide obtenu à partir de l'écriture."}
+                        ? "Prépare une infusion avec les plantes indiquées. Laisse refroidir, puis filtre la préparation. Utilise-la conformément aux instructions de ton talisman."
+                        : "Prépare une infusion avec les plantes indiquées. Laisse refroidir, puis filtre la préparation. Ajoute ensuite un parfum sans alcool adapté à ton objectif, conformément aux instructions de ton talisman."}
                     </p>
                   </div>
                 </div>

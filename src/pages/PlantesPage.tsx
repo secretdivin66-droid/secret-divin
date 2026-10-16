@@ -9,6 +9,8 @@ import { callGeminiProxy } from '../lib/geminiProxy';
 import { isAdminUser } from '../utils/roles';
 import { calculateWeight, GENDER_BONUS } from '../utils/mystique';
 import type { SpendCreditsResult } from '../utils/mystique';
+import { PLANT_COUNT_RULE, PLANT_SPECIES_RULES, plantsArraySchemaSnippet, isProtectionWorkType } from '../utils/plantsSelection';
+import type { PlantData } from '../utils/plantsSelection';
 
 type Gender = 'homme' | 'femme';
 
@@ -26,18 +28,6 @@ const CATEGORIES = [
 interface GeminiNameResult {
   arabic: string;
   weight?: number;
-}
-
-interface PlantData {
-  number: number;
-  nomFrancais: string;
-  nomBambara: string;
-  nomScientifique: string;
-  lienWikipedia: string;
-  partie: string;
-  quantite: string;
-  properties: string;
-  why: string;
 }
 
 interface VerseData {
@@ -141,19 +131,6 @@ function recipientFromR3(r: number): string {
   return 'un ENFANT';
 }
 
-// Détermine si le travail relève de la protection/désenvoûtement à partir
-// des données déjà disponibles (catégorie choisie, ou texte libre si
-// "Autre") — aucune nouvelle règle de sélection des plantes n'est créée,
-// cette détection ne sert qu'à choisir le texte de l'Étape C (parfum ou non).
-function isProtectionWorkType(category: string, customWorkType: string): boolean {
-  if (category === 'Protection / Désenvoutement') return true;
-  if (category === 'Autre') {
-    const lower = customWorkType.toLowerCase();
-    return /protection|désenvoût|desenvout|envoûtement|envoutement|sorcellerie|mauvais\s?(œ|oe)il/.test(lower);
-  }
-  return false;
-}
-
 function buildPlantesPrompt(params: {
   objectiveText: string;
   category: string;
@@ -170,11 +147,7 @@ Catégorie : ${category}
 Type de travail précis (à utiliser pour adapter le sacrifice) : ${workTypeForPrompt}
 Poids Mystique (PM) de la personne : ${PM}
 
-RÈGLE nombre de plantes :
-Objectif simple (1 problème clair) : 1 à 3 plantes.
-Objectif complexe (plusieurs problèmes) : 4 à 5 plantes.
-Objectif très complexe : 6 à 7 plantes.
-Maximum absolu : 7 plantes.
+${PLANT_COUNT_RULE}
 
 RÈGLE guérison :
 Si catégorie = 'Guérison / Santé' OU si le texte mentionne une maladie, une douleur ou un problème de santé : isGuerisson = true.
@@ -196,19 +169,7 @@ Retourne UNIQUEMENT du JSON valide :
   "isGuerisson": false,
   "objectiveSummary": "Résumé en une phrase de l'objectif détecté.",
   "introduction": "1 phrase d'introduction personnelle. Utilise tu. Explique pourquoi ces plantes ont été choisies pour cet objectif.",
-  "plants": [
-    {
-      "number": 1,
-      "nomFrancais": "Nom français",
-      "nomBambara": "Nom bambara",
-      "nomScientifique": "Nom scientifique exact",
-      "lienWikipedia": "https://fr.wikipedia.org/wiki/...",
-      "partie": "feuilles/écorce/racines/tout",
-      "quantite": "une grosse poignée de feuilles / 3 morceaux d'écorce / ...",
-      "properties": "Propriétés spirituelles et physiques pour cet objectif.",
-      "why": "Pourquoi cette plante est choisie pour cet objectif spécifique."
-    }
-  ],
+  "plants": ${plantsArraySchemaSnippet()},
   "verses": [
     {
       "arabic": "verset SANS harakat",
@@ -250,9 +211,7 @@ Retourne UNIQUEMENT du JSON valide :
   "conclusion": "Message final chaleureux et encourageant. 1 phrase adressées directement à la personne avec tu. Termine par InchaAllah."
 }
 
-RÈGLES plantes :
-Uniquement vraies plantes africaines connues en médecine traditionnelle. Toujours nom bambara. Toujours nom scientifique exact. Toujours lien Wikipedia valide.
-Plantes disponibles en Afrique de l'Ouest. Varier les parties utilisées.
+${PLANT_SPECIES_RULES}
 
 RÈGLES versets :
 Versets authentiques du Coran. SANS harakat. Compatibles avec l'objectif.
@@ -331,7 +290,7 @@ export function PlantesPage() {
   // Type de travail réellement utilisé pour adapter le sacrifice et le
   // parfum (Étape C) : la catégorie choisie, ou le texte libre si "Autre".
   const workTypeForPrompt = category === 'Autre' ? customWorkType : category;
-  const isProtectionWork = isProtectionWorkType(category, customWorkType);
+  const isProtectionWork = isProtectionWorkType(workTypeForPrompt);
 
   async function handleGenerate() {
     if (isDisabled) return;
