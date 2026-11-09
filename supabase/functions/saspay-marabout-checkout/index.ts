@@ -212,6 +212,15 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: 'not_authenticated' }, 401);
     }
 
+    // Coupe-circuit SasPay (désactivation manuelle) — SASPAY_API_KEY reste
+    // en place, nécessaire à saspay-webhook pour revérifier les sessions
+    // déjà créées avant la désactivation. 'saspay_disabled' est traité
+    // comme code de repli vers Chariow côté MaraboutPaymentButton.tsx,
+    // comme tout autre échec structurel SasPay.
+    if (Deno.env.get('SASPAY_ENABLED') === 'false') {
+      return jsonResponse({ error: 'saspay_disabled' }, 503);
+    }
+
     const body: InitiateCheckoutBody = await req.json();
     const { tier, returnUrl } = body;
 
